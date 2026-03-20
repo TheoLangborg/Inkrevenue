@@ -5,16 +5,41 @@ const initialForm = {
   studio: "",
   email: "",
   phone: "",
-  message: ""
+  message: "",
+  privacyConsent: false,
+  marketingConsent: false
 };
+
+function getTrackingPayload() {
+  if (typeof window === "undefined") {
+    return {};
+  }
+
+  const currentUrl = new URL(window.location.href);
+
+  return {
+    pageUrl: currentUrl.toString(),
+    referrerUrl: document.referrer || "",
+    utmSource: currentUrl.searchParams.get("utm_source") || "",
+    utmMedium: currentUrl.searchParams.get("utm_medium") || "",
+    utmCampaign: currentUrl.searchParams.get("utm_campaign") || "",
+    utmContent: currentUrl.searchParams.get("utm_content") || "",
+    utmTerm: currentUrl.searchParams.get("utm_term") || "",
+    gclid: currentUrl.searchParams.get("gclid") || "",
+    fbclid: currentUrl.searchParams.get("fbclid") || ""
+  };
+}
 
 export default function App() {
   const [formData, setFormData] = useState(initialForm);
   const [status, setStatus] = useState({ state: "idle", message: "" });
 
   const handleChange = (event) => {
-    const { name, value } = event.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const { name, type, value, checked } = event.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value
+    }));
   };
 
   const handleSubmit = async (event) => {
@@ -25,22 +50,28 @@ export default function App() {
       const response = await fetch("/api/booking", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({
+          ...formData,
+          ...getTrackingPayload()
+        })
       });
+      const payload = await response.json().catch(() => null);
 
       if (!response.ok) {
-        throw new Error("Bad response");
+        throw new Error(payload?.message || "Det gick inte att skicka just nu.");
       }
 
       setStatus({
         state: "success",
-        message: "Tack! Vi återkommer med tider för strategisamtal inom kort."
+        message:
+          payload?.data?.successMessage ||
+          "Tack! Vi återkommer med tider för strategisamtal inom kort."
       });
       setFormData(initialForm);
     } catch (error) {
       setStatus({
         state: "error",
-        message: "Det gick inte att skicka just nu. Försök igen eller mejla oss."
+        message: error.message || "Det gick inte att skicka just nu. Försök igen eller mejla oss."
       });
     }
   };
@@ -385,6 +416,30 @@ export default function App() {
                 value={formData.message}
                 onChange={handleChange}
               ></textarea>
+            </label>
+            <label className="consent-row" htmlFor="privacyConsent">
+              <input
+                id="privacyConsent"
+                type="checkbox"
+                name="privacyConsent"
+                checked={formData.privacyConsent}
+                onChange={handleChange}
+                required
+              />
+              <span>
+                Jag godkänner att Ink Revenue sparar mina uppgifter för att kunna
+                kontakta mig om strategisamtal.
+              </span>
+            </label>
+            <label className="consent-row" htmlFor="marketingConsent">
+              <input
+                id="marketingConsent"
+                type="checkbox"
+                name="marketingConsent"
+                checked={formData.marketingConsent}
+                onChange={handleChange}
+              />
+              <span>Jag vill även kunna få uppföljning och relevant information via mejl.</span>
             </label>
             <button className="btn btn-primary" type="submit" disabled={status.state === "loading"}>
               {status.state === "loading" ? "Skickar..." : "Skicka bokningsförfrågan"}

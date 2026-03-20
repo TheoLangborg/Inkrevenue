@@ -1,5 +1,18 @@
 {
-  "dependencies": {
-    "git": "^0.1.5"
+  "name": "ink-revenue-site",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev": "concurrently --names \"backend,frontend\" --prefix-colors \"magenta,blue\" \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:frontend": "npm --workspace frontend run dev",
+    "dev:backend": "npm --workspace backend run dev",
+    "build": "npm --workspace frontend run build"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
   }
 }
