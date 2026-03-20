@@ -52,7 +52,7 @@ export function HomePage() {
             <div className="brand-mark">Ink Revenue</div>
           </div>
 
-          <h1>Vi hjälper tatueringsstudior att få fler rätt kunder och kunder att hitta rätt tatuerare.</h1>
+          <h1>Vi hjälper tatueringsstudior att få fler kunder och kunder att hitta rätt tatuerare.</h1>
           <p className="lead">
             Ink Revenue hjälper studior att synas bättre, ta emot fler relevanta förfrågningar och
             bygga en tydlig digital närvaro. För kunder innebär det att det blir enklare att hitta

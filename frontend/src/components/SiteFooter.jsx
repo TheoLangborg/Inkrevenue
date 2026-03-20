@@ -19,8 +19,15 @@ export function SiteFooter() {
           <SiteLink href="/#bokning">Boka strategisamtal</SiteLink>
         </div>
 
-        <p>Kontakta oss på: +46732009483</p>
-        <p>Mejl: info@inkrevenue.se</p>
+        <div className="footer__contact">
+          <p>Kontakta oss:</p>
+          <p>
+            Telefon: <a href="tel:+46732009483">+46732009483</a>
+          </p>
+          <p>
+            Mejl: <a href="mailto:info@inkrevenue.se">info@inkrevenue.se</a>
+          </p>
+        </div>
 
         <div className="socials">
           <a

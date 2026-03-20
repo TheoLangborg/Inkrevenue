@@ -16,12 +16,14 @@ export function SiteHeader({ currentPath }) {
         <nav className="site-nav" aria-label="Huvudnavigation">
           <SiteLink
             className={`site-nav__link ${currentPath === "/" ? "site-nav__link--active" : ""}`}
+            aria-current={currentPath === "/" ? "page" : undefined}
             href="/"
           >
             Hem
           </SiteLink>
           <SiteLink
             className={`site-nav__link ${isStudiosSection ? "site-nav__link--active" : ""}`}
+            aria-current={isStudiosSection ? "page" : undefined}
             href="/studios"
           >
             Studios
