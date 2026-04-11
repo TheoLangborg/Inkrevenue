@@ -27,7 +27,7 @@ export function StudiosDirectoryPage() {
     getPublicStudios()
       .then((response) => {
         if (active) {
-          setStudios(response);
+          setStudios(Array.isArray(response) ? response.filter(Boolean) : []);
           setError("");
         }
       })

@@ -1,5 +1,9 @@
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
 
+function normalizeArrayPayload(payload) {
+  return Array.isArray(payload) ? payload.filter(Boolean) : [];
+}
+
 async function request(path, options = {}) {
   const response = await fetch(`${API_BASE}${path}`, {
     headers: {
@@ -22,7 +26,7 @@ async function request(path, options = {}) {
 }
 
 export function getPublicStudios() {
-  return request("/api/public/studios");
+  return request("/api/public/studios").then(normalizeArrayPayload);
 }
 
 export function getPublicStudioBySlug(slug) {
