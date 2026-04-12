@@ -5,7 +5,6 @@ export function SiteHeader({ currentPath }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const navRef = useRef(null);
   const strategyHref = currentPath === "/" ? "#bokning" : "/#bokning";
-  const pricingHref = currentPath === "/" ? "#priser" : "/#priser";
   const isStudiosSection =
     currentPath === "/studios" || currentPath.startsWith("/studio/");
 
@@ -59,13 +58,6 @@ export function SiteHeader({ currentPath }) {
             onClick={() => setMenuOpen(false)}
           >
             Studios
-          </SiteLink>
-          <SiteLink
-            className="site-nav__link"
-            href={pricingHref}
-            onClick={() => setMenuOpen(false)}
-          >
-            Priser
           </SiteLink>
           <SiteLink
             className="btn btn-primary site-header__cta"
