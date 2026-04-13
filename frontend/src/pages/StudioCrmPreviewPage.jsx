@@ -46,12 +46,21 @@ export function StudioCrmPreviewPage() {
     window.addEventListener("message", handleMessage);
 
     if (window.parent && window.parent !== window) {
-      window.parent.postMessage(
-        {
-          type: READY_MESSAGE_TYPE
-        },
-        parentOrigin || "*"
-      );
+      function sendReady() {
+        window.parent.postMessage({ type: READY_MESSAGE_TYPE }, parentOrigin || "*");
+      }
+
+      // Send immediately, then retry a few times to handle race conditions
+      // where the parent's message listener hasn't mounted yet.
+      sendReady();
+      const t1 = setTimeout(sendReady, 200);
+      const t2 = setTimeout(sendReady, 800);
+
+      return () => {
+        window.removeEventListener("message", handleMessage);
+        clearTimeout(t1);
+        clearTimeout(t2);
+      };
     }
 
     return () => window.removeEventListener("message", handleMessage);
