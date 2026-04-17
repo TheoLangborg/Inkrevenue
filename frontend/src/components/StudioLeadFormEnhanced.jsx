@@ -1,8 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { loadStripe } from "@stripe/stripe-js";
+import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { FormLegalLinks } from "./FormLegalLinks";
 import { useLegalConsent } from "../contexts/LegalConsentContext";
 import {
   createPublicStudioLead,
+  createStudioPaymentIntent,
   previewPublicStudioBooking
 } from "../services/publicSiteApi";
 import { useAbandonedFormDraft } from "../hooks/useAbandonedFormDraft";
@@ -21,8 +24,7 @@ const baseForm = {
   budget: "",
   description: "",
   website: "",
-  preferredStartTime: "",
-  preferredEndTime: "",
+  preferredSlots: [],
   requestedDurationMinutes: ""
 };
 
@@ -73,9 +75,46 @@ function getCalendarGridEnd(date) {
   return gridEnd;
 }
 
-function getSelectedSlotLabel(dateEntry, preferredStartTime) {
-  if (!dateEntry?.slots?.length || !preferredStartTime) return "";
-  return dateEntry.slots.find((slot) => slot.startTime === preferredStartTime)?.label || "";
+function getWeekStart(date) {
+  const d = new Date(date);
+  const day = (d.getDay() + 6) % 7; // Monday = 0
+  d.setDate(d.getDate() - day);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function buildWeeks(availabilityData) {
+  const startDate = parseDateKey(availabilityData?.startDate);
+  if (!startDate) return [];
+  const availableDates = new Map(
+    (availabilityData?.dates || []).map((d) => [d.date, d])
+  );
+  const daysToShow = Math.max(1, Number.parseInt(String(availabilityData?.days || ""), 10) || 1);
+  const endDate = addDays(startDate, daysToShow - 1);
+  const weeks = [];
+  let weekCursor = getWeekStart(startDate);
+  while (weekCursor <= endDate) {
+    const days = [];
+    for (let i = 0; i < 7; i++) {
+      const d = addDays(weekCursor, i);
+      const key = formatDateKey(d);
+      const entry = availableDates.get(key) || null;
+      const inRange = d >= startDate && d <= endDate;
+      days.push({
+        key,
+        date: key,
+        dayNumber: d.getDate(),
+        weekdayLabel: WEEKDAY_LABELS[i],
+        monthLabel: d.toLocaleDateString("sv-SE", { day: "numeric", month: "short" }),
+        inRange,
+        slots: entry?.slots || [],
+        isAvailable: inRange && (entry?.slots?.length || 0) > 0
+      });
+    }
+    weeks.push({ key: formatDateKey(weekCursor), days });
+    weekCursor = addDays(weekCursor, 7);
+  }
+  return weeks;
 }
 
 function getCalendarDayText(day) {
@@ -158,6 +197,31 @@ function buildCalendarMonths(availabilityData) {
   return months;
 }
 
+function buildSizeOptions(studio) {
+  const thresholds = studio?.bookingFlow?.estimatorSummary?.sizeThresholds;
+  if (!thresholds) return null;
+
+  const { tinyMaxCentimeters, smallMaxCentimeters, mediumMaxCentimeters, largeMaxCentimeters } = thresholds;
+
+  const options = [];
+
+  if (tinyMaxCentimeters > 0) {
+    options.push({ value: `${tinyMaxCentimeters}cm`, label: `Mycket liten (upp till ${tinyMaxCentimeters} cm)` });
+  }
+  if (smallMaxCentimeters > 0 && smallMaxCentimeters > tinyMaxCentimeters) {
+    options.push({ value: `${smallMaxCentimeters}cm`, label: `Liten (upp till ${smallMaxCentimeters} cm)` });
+  }
+  if (mediumMaxCentimeters > 0 && mediumMaxCentimeters > smallMaxCentimeters) {
+    options.push({ value: `${mediumMaxCentimeters}cm`, label: `Mellanstor (upp till ${mediumMaxCentimeters} cm)` });
+  }
+  if (largeMaxCentimeters > 0 && largeMaxCentimeters > mediumMaxCentimeters) {
+    options.push({ value: `${largeMaxCentimeters}cm`, label: `Stor (upp till ${largeMaxCentimeters} cm)` });
+  }
+  options.push({ value: "extra_large", label: "Extra stor / helarm / rygg" });
+
+  return options.length >= 2 ? options : null;
+}
+
 function hasEnoughDetailsForCalendar(formData) {
   return Boolean(
     String(formData.tattooStyle || "").trim() &&
@@ -170,8 +234,7 @@ function hasEnoughDetailsForCalendar(formData) {
 function clearRequestedTimeSelection(currentFormData, requestedDurationMinutes = "") {
   return {
     ...currentFormData,
-    preferredStartTime: "",
-    preferredEndTime: "",
+    preferredSlots: [],
     requestedDurationMinutes: String(requestedDurationMinutes || "")
   };
 }
@@ -204,6 +267,67 @@ function computeFieldError(name, formData) {
 const STEP_TATTOO_FIELDS = ["tattooStyle", "placement", "size", "description"];
 const STEP_CONTACT_FIELDS = ["name", "email"];
 
+// --- PaymentStep: Stripe-kortformulär, renderas inne i <Elements> ---
+function PaymentStep({ amountSek, paymentIntentId, onConfirmed, onCancel, submitting }) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [payError, setPayError] = useState("");
+  const [paying, setPaying] = useState(false);
+
+  async function handlePay() {
+    if (!stripe || !elements || paying || submitting) return;
+    setPaying(true);
+    setPayError("");
+
+    const { error, paymentIntent } = await stripe.confirmPayment({
+      elements,
+      redirect: "if_required"
+    });
+
+    if (error) {
+      setPayError(error.message || "Betalningen misslyckades. Försök igen.");
+      setPaying(false);
+      return;
+    }
+
+    if (paymentIntent?.status === "succeeded") {
+      await onConfirmed(paymentIntent.id);
+    } else {
+      setPayError("Betalningen bekräftades inte. Kontakta studion om beloppet dragits.");
+      setPaying(false);
+    }
+  }
+
+  return (
+    <div className="form-payment-step">
+      <div className="form-payment-step-header">
+        <strong>Betala {amountSek} kr</strong>
+        <span>Säker betalning via Stripe</span>
+      </div>
+      <PaymentElement />
+      {payError ? <p className="form-payment-step-error">{payError}</p> : null}
+      <div className="form-payment-step-actions">
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={onCancel}
+          disabled={paying || submitting}
+        >
+          Tillbaka
+        </button>
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={handlePay}
+          disabled={!stripe || paying || submitting}
+        >
+          {paying || submitting ? "Bearbetar..." : `Betala ${amountSek} kr`}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function StudioLeadFormEnhanced({
   studio,
   titleText = "",
@@ -214,12 +338,19 @@ export function StudioLeadFormEnhanced({
   const [formData, setFormData] = useState(() => buildInitialForm());
   const [status, setStatus] = useState({ state: "idle", message: "" });
   const [availability, setAvailability] = useState(() => createAvailabilityState());
-  const [selectedDate, setSelectedDate] = useState("");
-  const [visibleMonthIndex, setVisibleMonthIndex] = useState(0);
+  const [visibleWeekIndex, setVisibleWeekIndex] = useState(0);
   const [inspirationImage, setInspirationImage] = useState(null);
   const [imageProcessing, setImageProcessing] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [touched, setTouched] = useState(new Set());
+
+  // Stripe Connect state
+  const [stripePromise, setStripePromise] = useState(null);
+  const [paymentIntentClientSecret, setPaymentIntentClientSecret] = useState(null);
+  const [paymentIntentId, setPaymentIntentId] = useState(null);
+  const [paymentReady, setPaymentReady] = useState(false); // true after PaymentIntent created
+  const [paymentSuccess, setPaymentSuccess] = useState(null); // { amountSek, studioName } after confirmed payment
+
   const canSubmit = Boolean(studio?.slug);
   const { hasAcceptedConsent, openLegalModal } = useLegalConsent();
   const fileInputRef = useRef(null);
@@ -236,6 +367,27 @@ export function StudioLeadFormEnhanced({
     ];
   }, [canShowCalendar]);
 
+  // Ladda Stripe.js om studion har ett aktivt Connect-konto
+  useEffect(() => {
+    const pk = studio?.payment?.stripePublishableKey;
+    const accountId = studio?.payment?.stripeConnectAccountId;
+    if (pk && accountId && !stripePromise) {
+      setStripePromise(loadStripe(pk, { stripeAccount: accountId }));
+    }
+  }, [studio?.payment?.stripePublishableKey, studio?.payment?.stripeConnectAccountId]);
+
+  const needsPayment = Boolean(
+    studio?.payment?.stripeConnectReady &&
+    (studio?.payment?.depositRequired || studio?.payment?.bookingFeeEnabled)
+  );
+
+  function getPaymentAmount() {
+    if (!studio?.payment) return 0;
+    if (studio.payment.depositRequired) return studio.payment.depositAmountSek;
+    if (studio.payment.bookingFeeEnabled) return studio.payment.bookingFeeAmountSek;
+    return 0;
+  }
+
   const hasEnoughDetails = useMemo(() => hasEnoughDetailsForCalendar(formData), [formData]);
   const draftPayload = useMemo(
     () => ({
@@ -247,8 +399,9 @@ export function StudioLeadFormEnhanced({
       size: formData.size,
       budget: formData.budget,
       description: formData.description,
-      preferredStartTime: formData.preferredStartTime,
-      preferredEndTime: formData.preferredEndTime,
+      preferredSlots: formData.preferredSlots,
+      preferredStartTime: formData.preferredSlots?.[0]?.startTime || "",
+      preferredEndTime: formData.preferredSlots?.[0]?.endTime || "",
       requestedDurationMinutes: formData.requestedDurationMinutes,
       privacyConsent: hasAcceptedConsent,
       marketingConsent: false,
@@ -262,26 +415,23 @@ export function StudioLeadFormEnhanced({
     payload: draftPayload,
     enabled: canSubmit
   });
+  const isCheckingAvailability = Boolean(
+    canShowCalendar && hasEnoughDetails && availability.state === "loading"
+  );
+  const weeks = useMemo(
+    () => buildWeeks(availability.data),
+    [availability.data]
+  );
+  const visibleWeek = useMemo(
+    () => weeks[visibleWeekIndex] || null,
+    [weeks, visibleWeekIndex]
+  );
   const requiresTimeSelection = Boolean(
     canShowCalendar &&
       hasEnoughDetails &&
       availability.state === "success" &&
-      availability.data?.eligibleForDirectBooking
-  );
-  const isCheckingAvailability = Boolean(
-    canShowCalendar && hasEnoughDetails && availability.state === "loading"
-  );
-  const selectedDateEntry = useMemo(
-    () => availability.data?.dates?.find((d) => d.date === selectedDate) || null,
-    [availability.data, selectedDate]
-  );
-  const calendarMonths = useMemo(
-    () => buildCalendarMonths(availability.data),
-    [availability.data]
-  );
-  const visibleMonth = useMemo(
-    () => calendarMonths[visibleMonthIndex] || null,
-    [calendarMonths, visibleMonthIndex]
+      availability.data?.eligibleForDirectBooking &&
+      weeks.some((w) => w.days.some((d) => d.slots.length > 0))
   );
 
   useEffect(() => {
@@ -289,8 +439,7 @@ export function StudioLeadFormEnhanced({
     setFormData(buildInitialForm());
     setStatus({ state: "idle", message: "" });
     setAvailability(createAvailabilityState());
-    setSelectedDate("");
-    setVisibleMonthIndex(0);
+    setVisibleWeekIndex(0);
     setInspirationImage(null);
     setCurrentStep(0);
     setTouched(new Set());
@@ -301,12 +450,12 @@ export function StudioLeadFormEnhanced({
     previewRequestIdRef.current += 1;
     if (!canShowCalendar) {
       setAvailability(createAvailabilityState());
-      setSelectedDate("");
+      setVisibleWeekIndex(0);
       return;
     }
     if (!hasEnoughDetails) {
       setAvailability(createAvailabilityState());
-      setSelectedDate("");
+      setVisibleWeekIndex(0);
       setFormData((current) => clearRequestedTimeSelection(current));
       return;
     }
@@ -325,21 +474,17 @@ export function StudioLeadFormEnhanced({
         .then((response) => {
           if (!active) return;
           setAvailability(createAvailabilityState({ state: "success", data: response }));
+          setVisibleWeekIndex(0);
           setFormData((current) => {
-            const slotStillAvailable = response?.dates?.some((dateEntry) =>
-              dateEntry.slots?.some((slot) => slot.startTime === current.preferredStartTime)
+            const allSlotTimes = new Set(
+              (response?.dates || []).flatMap((d) => d.slots?.map((s) => s.startTime) || [])
             );
-            if (slotStillAvailable) return current;
+            const stillValid = (current.preferredSlots || []).filter((s) => allSlotTimes.has(s.startTime));
             return {
               ...current,
-              preferredStartTime: "",
-              preferredEndTime: "",
-              requestedDurationMinutes: String(response?.suggestedDurationMinutes || "")
+              preferredSlots: stillValid,
+              requestedDurationMinutes: String(response?.suggestedDurationMinutes || current.requestedDurationMinutes || "")
             };
-          });
-          setSelectedDate((current) => {
-            if (response?.dates?.some((d) => d.date === current)) return current;
-            return response?.dates?.[0]?.date || "";
           });
         })
         .catch((error) => {
@@ -352,11 +497,9 @@ export function StudioLeadFormEnhanced({
           );
           setFormData((current) => ({
             ...current,
-            preferredStartTime: "",
-            preferredEndTime: "",
+            preferredSlots: [],
             requestedDurationMinutes: ""
           }));
-          setSelectedDate("");
         });
     }, 300);
     return () => {
@@ -374,21 +517,6 @@ export function StudioLeadFormEnhanced({
     formData.description
   ]);
 
-  useEffect(() => {
-    if (!calendarMonths.length) {
-      setVisibleMonthIndex(0);
-      return;
-    }
-    const selectedMonthIndex = selectedDate
-      ? calendarMonths.findIndex((month) =>
-          month.days.some((day) => day.inCurrentMonth && day.date === selectedDate)
-        )
-      : -1;
-    setVisibleMonthIndex((currentIndex) => {
-      if (selectedMonthIndex >= 0) return selectedMonthIndex;
-      return Math.min(currentIndex, calendarMonths.length - 1);
-    });
-  }, [calendarMonths, selectedDate]);
 
   function handleChange(event) {
     const { name, type, value, checked } = event.target;
@@ -408,14 +536,19 @@ export function StudioLeadFormEnhanced({
     return computeFieldError(name, formData);
   }
 
-  function handleSlotSelect(slot, dateValue) {
-    setSelectedDate(dateValue);
-    setFormData((current) => ({
-      ...current,
-      preferredStartTime: slot.startTime,
-      preferredEndTime: slot.endTime,
-      requestedDurationMinutes: String(slot.durationMinutes || "")
-    }));
+  function handleSlotToggle(slot) {
+    setFormData((current) => {
+      const already = (current.preferredSlots || []).some((s) => s.startTime === slot.startTime);
+      // Direct booking = single selection; toggling a selected slot deselects it
+      const next = already
+        ? []
+        : [{ startTime: slot.startTime, endTime: slot.endTime, durationMinutes: slot.durationMinutes, label: slot.label }];
+      return {
+        ...current,
+        preferredSlots: next,
+        requestedDurationMinutes: String(slot.durationMinutes || current.requestedDurationMinutes || "")
+      };
+    });
   }
 
   async function handleImageChange(event) {
@@ -456,8 +589,8 @@ export function StudioLeadFormEnhanced({
       if (STEP_TATTOO_FIELDS.some((f) => computeFieldError(f, formData))) return;
     }
     if (stepId === "time") {
-      if (requiresTimeSelection && !formData.preferredStartTime) {
-        setStatus({ state: "error", message: "Välj en ledig tid innan du fortsätter." });
+      if (requiresTimeSelection && (!formData.preferredSlots || formData.preferredSlots.length === 0)) {
+        setStatus({ state: "error", message: "Välj minst en ledig tid innan du fortsätter." });
         return;
       }
       setStatus({ state: "idle", message: "" });
@@ -470,6 +603,52 @@ export function StudioLeadFormEnhanced({
     setStatus({ state: "idle", message: "" });
     setCurrentStep((s) => s - 1);
     scrollToTop();
+  }
+
+  async function submitLead(extraPayload = {}) {
+    const selectedSlot = formData.preferredSlots?.[0] || null;
+    const response = await createPublicStudioLead(studio.slug, {
+      ...formData,
+      privacyConsent: true,
+      marketingConsent: false,
+      draftId,
+      preferredStartTime: selectedSlot?.startTime || "",
+      preferredEndTime: selectedSlot?.endTime || "",
+      requestedDurationMinutes: String(selectedSlot?.durationMinutes || formData.requestedDurationMinutes || ""),
+      source: getLeadSourceFromUrl(),
+      inspirationImage: inspirationImage
+        ? {
+            fileName: inspirationImage.fileName,
+            contentType: inspirationImage.contentType,
+            dataUrl: inspirationImage.dataUrl
+          }
+        : null,
+      ...getTrackingPayload(),
+      ...extraPayload
+    });
+    if (extraPayload.paymentIntentId) {
+      setPaymentSuccess({
+        amountSek: getPaymentAmount(),
+        studioName: studio?.publicProfile?.name || studio?.name || "studion"
+      });
+    } else {
+      setStatus({
+        state: "success",
+        message:
+          response?.successMessage ||
+          "Tack! Din förfrågan är skickad. Studion återkopplar normalt inom 24 timmar via e-post eller telefon."
+      });
+    }
+    setFormData(buildInitialForm());
+    setVisibleWeekIndex(0);
+    setInspirationImage(null);
+    setCurrentStep(0);
+    setTouched(new Set());
+    setPaymentReady(false);
+    setPaymentIntentClientSecret(null);
+    setPaymentIntentId(null);
+    clearDraft();
+    if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
   async function handleSubmit(event) {
@@ -494,48 +673,86 @@ export function StudioLeadFormEnhanced({
     const newTouched = new Set([...touched, ...STEP_CONTACT_FIELDS]);
     setTouched(newTouched);
     if (STEP_CONTACT_FIELDS.some((f) => computeFieldError(f, formData))) return;
+
+    // Om studion har Stripe Connect aktivt — skapa PaymentIntent och visa betalningsformulär
+    if (needsPayment && !paymentReady) {
+      setStatus({ state: "loading", message: "Förbereder betalning..." });
+      try {
+        const amountSek = getPaymentAmount();
+        const pi = await createStudioPaymentIntent(studio.slug, {
+          amountSek,
+          metadata: {
+            leadName: formData.name,
+            leadEmail: formData.email,
+            studioSlug: studio.slug
+          }
+        });
+        setPaymentIntentClientSecret(pi.clientSecret);
+        setPaymentIntentId(pi.paymentIntentId);
+        setPaymentReady(true);
+        setStatus({ state: "idle", message: "" });
+      } catch (error) {
+        setStatus({
+          state: "error",
+          message: error.message || "Kunde inte starta betalningen. Försök igen."
+        });
+      }
+      return;
+    }
+
+    // Inget Stripe-krav — skicka lead direkt
     setStatus({ state: "loading", message: "Skickar din förfrågan..." });
     try {
-      const response = await createPublicStudioLead(studio.slug, {
-        ...formData,
-        privacyConsent: true,
-        marketingConsent: false,
-        draftId,
-        source: getLeadSourceFromUrl(),
-        inspirationImage: inspirationImage
-          ? {
-              fileName: inspirationImage.fileName,
-              contentType: inspirationImage.contentType,
-              dataUrl: inspirationImage.dataUrl
-            }
-          : null,
-        ...getTrackingPayload()
-      });
-      setStatus({
-        state: "success",
-        message:
-          response?.successMessage ||
-          "Tack! Din förfrågan är skickad. Studion återkopplar normalt inom 24 timmar via e-post eller telefon."
-      });
-      setFormData(buildInitialForm());
-      setSelectedDate("");
-      setInspirationImage(null);
-      setCurrentStep(0);
-      setTouched(new Set());
-      clearDraft();
-      if (fileInputRef.current) fileInputRef.current.value = "";
+      await submitLead();
     } catch (error) {
       setStatus({
         state: "error",
-        message:
-          error.message ||
-          "Det gick inte att skicka just nu. Försök igen lite senare."
+        message: error.message || "Det gick inte att skicka just nu. Försök igen lite senare."
       });
     }
   }
 
+  // Kallas av PaymentStep efter lyckad Stripe-betalning
+  const handlePaymentConfirmed = useCallback(async (confirmedPaymentIntentId) => {
+    setStatus({ state: "loading", message: "Registrerar din bokning..." });
+    try {
+      await submitLead({ paymentIntentId: confirmedPaymentIntentId });
+    } catch (error) {
+      setStatus({
+        state: "error",
+        message: error.message || "Betalningen gick igenom men bokningen kunde inte sparas. Kontakta studion."
+      });
+    }
+  }, [formData, draftId, inspirationImage, studio]);
+
   const stepId = steps[currentStep]?.id;
   const progressPercent = Math.round(((currentStep + 1) / steps.length) * 100);
+
+  if (paymentSuccess) {
+    return (
+      <div className="payment-confirmed" ref={formTopRef}>
+        <div className="payment-confirmed__icon">
+          <svg viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <circle cx="26" cy="26" r="25" strokeWidth="2" />
+            <path d="M14 27l8 8 16-16" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
+        <h2 className="payment-confirmed__title">Betalning genomförd</h2>
+        <p className="payment-confirmed__amount">{paymentSuccess.amountSek} kr</p>
+        <p className="payment-confirmed__message">
+          Din förfrågan är skickad till <strong>{paymentSuccess.studioName}</strong> och depositionsavgiften är betald.
+          Du får en bekräftelse via e-post inom kort.
+        </p>
+        <button
+          type="button"
+          className="payment-confirmed__btn"
+          onClick={() => setPaymentSuccess(null)}
+        >
+          Skicka ny förfrågan
+        </button>
+      </div>
+    );
+  }
 
   return (
     <form
@@ -629,16 +846,38 @@ export function StudioLeadFormEnhanced({
 
             <label htmlFor="lead-size" className={getFieldError("size") ? "has-error" : ""}>
               Storlek <span className="field-required">*</span>
-              <input
-                id="lead-size"
-                type="text"
-                name="size"
-                placeholder="Liten, medium eller i cm"
-                value={formData.size}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                aria-invalid={!!getFieldError("size")}
-              />
+              {(() => {
+                const sizeOptions = buildSizeOptions(studio);
+                if (sizeOptions) {
+                  return (
+                    <select
+                      id="lead-size"
+                      name="size"
+                      value={formData.size}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      aria-invalid={!!getFieldError("size")}
+                    >
+                      <option value="">Välj storlek...</option>
+                      {sizeOptions.map((opt) => (
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                      ))}
+                    </select>
+                  );
+                }
+                return (
+                  <input
+                    id="lead-size"
+                    type="text"
+                    name="size"
+                    placeholder="Liten, medium eller i cm"
+                    value={formData.size}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    aria-invalid={!!getFieldError("size")}
+                  />
+                );
+              })()}
               {getFieldError("size") ? (
                 <span className="field-error" role="alert">{getFieldError("size")}</span>
               ) : null}
@@ -724,111 +963,85 @@ export function StudioLeadFormEnhanced({
             <p className="form-status form-status--error">{availability.message}</p>
           ) : null}
 
-          {availability.state === "success" && availability.data?.eligibleForDirectBooking ? (
+          {availability.state === "success" && weeks.some((w) => w.days.some((d) => d.slots.length > 0)) ? (
             <section className="studio-booking-picker">
-              {visibleMonth ? (
-                <div className="studio-booking-picker__section">
-                  <div className="studio-booking-picker__calendar-toolbar">
-                    <button
-                      className="studio-booking-picker__calendar-nav"
-                      type="button"
-                      onClick={() => setVisibleMonthIndex((i) => i - 1)}
-                      disabled={visibleMonthIndex === 0}
-                    >
-                      Föregående
-                    </button>
-                    <strong>{visibleMonth.label}</strong>
-                    <button
-                      className="studio-booking-picker__calendar-nav"
-                      type="button"
-                      onClick={() => setVisibleMonthIndex((i) => i + 1)}
-                      disabled={visibleMonthIndex >= calendarMonths.length - 1}
-                    >
-                      Nästa
-                    </button>
-                  </div>
-                  <section className="studio-booking-picker__calendar">
-                    <div className="studio-booking-picker__calendar-weekdays">
-                      {WEEKDAY_LABELS.map((label) => (
-                        <span key={label}>{label}</span>
-                      ))}
-                    </div>
-                    <div className="studio-booking-picker__calendar-grid">
-                      {visibleMonth.days.map((day) => (
-                        <button
-                          key={day.key}
-                          className={`studio-booking-picker__calendar-day ${
-                            day.inCurrentMonth
-                              ? ""
-                              : "studio-booking-picker__calendar-day--outside"
-                          } ${
-                            day.inLoadedRange
-                              ? ""
-                              : "studio-booking-picker__calendar-day--disabled"
-                          } ${
-                            day.isAvailable
-                              ? "studio-booking-picker__calendar-day--available"
-                              : ""
-                          } ${
-                            selectedDate === day.date
-                              ? "studio-booking-picker__calendar-day--active"
-                              : ""
-                          }`}
-                          type="button"
-                          disabled={!day.isSelectable}
-                          aria-label={day.label}
-                          onClick={() => setSelectedDate(day.date)}
-                        >
-                          <span className="studio-booking-picker__calendar-day-number">
-                            {day.dayNumber}
-                          </span>
-                          <span className="studio-booking-picker__calendar-day-meta">
-                            {getCalendarDayText(day)}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  </section>
-                </div>
+              {availability.data?.estimatedTotalDurationMinutes ? (
+                <p className="week-picker__estimate">
+                  Uppskattad tid: <strong>{formatDurationLabel(availability.data.estimatedTotalDurationMinutes)}</strong>
+                  {availability.data?.artistName ? ` · ${availability.data.artistName}` : ""}
+                </p>
               ) : null}
-
-              {selectedDateEntry ? (
-                <div className="studio-booking-picker__section">
-                  <div className="studio-booking-picker__section-header">
-                    <strong>Välj tid</strong>
-                    <span>{selectedDateEntry.label}</span>
+              {visibleWeek ? (
+                <div className="week-picker">
+                  <div className="week-picker__toolbar">
+                    <button
+                      className="week-picker__nav"
+                      type="button"
+                      onClick={() => setVisibleWeekIndex((i) => i - 1)}
+                      disabled={visibleWeekIndex === 0}
+                      aria-label="Föregående vecka"
+                    >
+                      ‹
+                    </button>
+                    <span className="week-picker__range">
+                      {visibleWeek.days[0].monthLabel} – {visibleWeek.days[6].monthLabel}
+                    </span>
+                    <button
+                      className="week-picker__nav"
+                      type="button"
+                      onClick={() => setVisibleWeekIndex((i) => i + 1)}
+                      disabled={visibleWeekIndex >= weeks.length - 1}
+                      aria-label="Nästa vecka"
+                    >
+                      ›
+                    </button>
                   </div>
-                  <div className="studio-booking-picker__times">
-                    {selectedDateEntry.slots.map((slot) => (
-                      <button
-                        key={slot.startTime}
-                        className={`studio-booking-picker__time ${
-                          formData.preferredStartTime === slot.startTime
-                            ? "studio-booking-picker__time--active"
-                            : ""
-                        }`}
-                        type="button"
-                        onClick={() => handleSlotSelect(slot, selectedDateEntry.date)}
+                  <div className="week-picker__grid">
+                    {visibleWeek.days.map((day) => (
+                      <div
+                        key={day.key}
+                        className={`week-picker__day ${!day.inRange || !day.isAvailable ? "week-picker__day--empty" : ""}`}
                       >
-                        {slot.label}
-                      </button>
+                        <div className="week-picker__day-header">
+                          <span className="week-picker__weekday">{day.weekdayLabel}</span>
+                          <span className="week-picker__date">{day.dayNumber}</span>
+                        </div>
+                        <div className="week-picker__slots">
+                          {day.inRange && day.slots.length > 0 ? (
+                            day.slots.map((slot) => {
+                              const selected = (formData.preferredSlots || []).some((s) => s.startTime === slot.startTime);
+                              return (
+                                <button
+                                  key={slot.startTime}
+                                  type="button"
+                                  className={`week-picker__slot ${selected ? "week-picker__slot--selected" : ""}`}
+                                  onClick={() => handleSlotToggle(slot)}
+                                >
+                                  {slot.label}
+                                </button>
+                              );
+                            })
+                          ) : (
+                            <span className="week-picker__no-slots">–</span>
+                          )}
+                        </div>
+                      </div>
                     ))}
                   </div>
-                  {!formData.preferredStartTime ? (
-                    <p className="form-status form-status--muted">
-                      Välj en tid för att fortsätta.
-                    </p>
-                  ) : null}
                 </div>
               ) : null}
 
-              {formData.preferredStartTime ? (
+              {(formData.preferredSlots || []).length > 0 ? (
                 <div className="studio-booking-picker__summary">
                   <div>
                     <strong>Vald tid</strong>
                     <span>
-                      {selectedDateEntry?.label || "Valt datum"} kl.{" "}
-                      {getSelectedSlotLabel(selectedDateEntry, formData.preferredStartTime)}
+                      {(() => {
+                        const s = formData.preferredSlots[0];
+                        const d = new Date(s.startTime);
+                        const dateStr = d.toLocaleDateString("sv-SE", { weekday: "long", day: "numeric", month: "long" });
+                        return `${dateStr} kl. ${s.label}`;
+                      })()}
                     </span>
                   </div>
                 </div>
@@ -836,48 +1049,6 @@ export function StudioLeadFormEnhanced({
             </section>
           ) : null}
 
-          {availability.state === "success" && !availability.data?.eligibleForDirectBooking ? (
-            <section className="studio-booking-picker">
-              <div className="studio-booking-picker__section">
-                <div className="studio-booking-picker__section-header">
-                  <strong>Studion behöver kika på motivet först</strong>
-                  <span>{availability.data?.detectedSizeLabel || "Manuell planering"}</span>
-                </div>
-                <p className="form-status form-status--muted">
-                  {availability.data?.summary ||
-                    "Den här förfrågan behöver först granskas manuellt av studion."}
-                </p>
-                <div className="studio-booking-picker__summary">
-                  {availability.data?.estimatedTotalDurationMinutes ? (
-                    <div>
-                      <strong>Beräknad total tid</strong>
-                      <span>
-                        {formatDurationLabel(availability.data.estimatedTotalDurationMinutes)}
-                      </span>
-                    </div>
-                  ) : null}
-                  {availability.data?.splitSessionCount ? (
-                    <div>
-                      <strong>Förslag</strong>
-                      <span>{`${availability.data.splitSessionCount} sittningar à ${formatDurationLabel(
-                        availability.data.splitSessionDurationMinutes
-                      )}`}</span>
-                    </div>
-                  ) : null}
-                  {availability.data?.suggestedBookingType ? (
-                    <div>
-                      <strong>Nästa steg</strong>
-                      <span>{`${getBookingTypeLabel(availability.data.suggestedBookingType)}${
-                        availability.data.suggestedDurationMinutes
-                          ? ` • ${formatDurationLabel(availability.data.suggestedDurationMinutes)}`
-                          : ""
-                      }`}</span>
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-            </section>
-          ) : null}
 
           {status.state === "error" ? (
             <p className="form-status form-status--error" role="alert">
@@ -953,6 +1124,46 @@ export function StudioLeadFormEnhanced({
             </label>
           </div>
 
+          {studio?.payment?.depositRequired || studio?.payment?.bookingFeeEnabled ? (
+            <div className="form-payment-notice">
+              {studio.payment.depositRequired ? (
+                <p>
+                  <strong>Deposition krävs:</strong> {studio.payment.depositAmountSek} kr betalas
+                  vid bokning och räknas av mot slutpriset.
+                </p>
+              ) : null}
+              {studio.payment.bookingFeeEnabled ? (
+                <p>
+                  <strong>Bokningsavgift:</strong> {studio.payment.bookingFeeAmountSek} kr är en
+                  administrativ avgift som betalas vid bokning och räknas inte av mot slutpriset.
+                </p>
+              ) : null}
+              {studio.payment.stripeConnectReady ? (
+                <p className="form-payment-notice-stripe">
+                  Betalning sker säkert via Stripe direkt till studion.
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+
+          {paymentReady && stripePromise && paymentIntentClientSecret ? (
+            <Elements
+              stripe={stripePromise}
+              options={{
+                clientSecret: paymentIntentClientSecret,
+                appearance: { theme: "night", variables: { colorPrimary: "#e07b3c" } }
+              }}
+            >
+              <PaymentStep
+                amountSek={getPaymentAmount()}
+                paymentIntentId={paymentIntentId}
+                onConfirmed={handlePaymentConfirmed}
+                onCancel={() => { setPaymentReady(false); setPaymentIntentClientSecret(null); setPaymentIntentId(null); setStatus({ state: "idle", message: "" }); }}
+                submitting={status.state === "loading"}
+              />
+            </Elements>
+          ) : null}
+
           <FormLegalLinks />
 
           {!canSubmit ? (
@@ -973,18 +1184,24 @@ export function StudioLeadFormEnhanced({
             </p>
           ) : null}
 
-          <div className="form-step-nav">
-            <button className="btn btn-secondary" type="button" onClick={handleBack}>
-              Tillbaka
-            </button>
-            <button
-              className="btn btn-primary"
-              type="submit"
-              disabled={status.state === "loading" || imageProcessing || !canSubmit}
-            >
-              {status.state === "loading" ? "Skickar..." : "Skicka förfrågan"}
-            </button>
-          </div>
+          {!paymentReady ? (
+            <div className="form-step-nav">
+              <button className="btn btn-secondary" type="button" onClick={handleBack}>
+                Tillbaka
+              </button>
+              <button
+                className="btn btn-primary"
+                type="submit"
+                disabled={status.state === "loading" || imageProcessing || !canSubmit}
+              >
+                {status.state === "loading"
+                  ? needsPayment ? "Förbereder betalning..." : "Skickar..."
+                  : needsPayment
+                    ? `Gå till betalning — ${getPaymentAmount()} kr`
+                    : "Skicka förfrågan"}
+              </button>
+            </div>
+          ) : null}
         </div>
       )}
     </form>

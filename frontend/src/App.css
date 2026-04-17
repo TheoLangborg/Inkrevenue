@@ -600,15 +600,31 @@ h1 {
 }
 
 .booking-form input,
+.booking-form select,
 .booking-form textarea {
   padding: 12px 14px;
   border-radius: 12px;
   border: 1px solid #d8e1f2;
   font-family: inherit;
   font-size: 0.98rem;
+  width: 100%;
+  box-sizing: border-box;
+  background: #fff;
+  color: var(--text);
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.booking-form select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 40px;
+  cursor: pointer;
 }
 
 .booking-form input:focus,
+.booking-form select:focus,
 .booking-form textarea:focus {
   outline: 2px solid rgba(33, 95, 176, 0.35);
   border-color: rgba(33, 95, 176, 0.35);
@@ -619,6 +635,246 @@ h1 {
   margin: 0;
   color: var(--muted);
   font-size: 0.95rem;
+}
+
+.form-payment-notice {
+  padding: 12px 16px;
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-payment-notice p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.form-payment-notice-stripe {
+  font-size: 0.82rem !important;
+  color: var(--muted) !important;
+}
+
+/* ── Stripe PaymentStep ── */
+.form-payment-step {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  background: rgba(10, 26, 48, 0.04);
+  border: 1px solid rgba(10, 26, 48, 0.1);
+  border-radius: 10px;
+}
+.form-payment-step-header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.form-payment-step-header strong {
+  font-size: 1rem;
+  color: var(--text);
+}
+.form-payment-step-header span {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+.form-payment-step-error {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #b91c1c;
+}
+.form-payment-step-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* ── Payment confirmed screen ── */
+.payment-confirmed {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 48px 24px 40px;
+  gap: 16px;
+}
+.payment-confirmed__icon svg {
+  width: 64px;
+  height: 64px;
+  stroke: #22c55e;
+}
+.payment-confirmed__icon circle {
+  stroke: #22c55e;
+  fill: rgba(34, 197, 94, 0.08);
+}
+.payment-confirmed__title {
+  font-family: "Bebas Neue", sans-serif;
+  font-size: 2rem;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  margin: 0;
+}
+.payment-confirmed__amount {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #22c55e;
+  margin: 0;
+  line-height: 1;
+}
+.payment-confirmed__message {
+  font-size: 0.95rem;
+  color: var(--muted);
+  max-width: 360px;
+  line-height: 1.6;
+  margin: 0;
+}
+.payment-confirmed__btn {
+  margin-top: 8px;
+  padding: 10px 24px;
+  border-radius: 8px;
+  border: 1.5px solid var(--glass-border);
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.payment-confirmed__btn:hover {
+  background: var(--silver-1);
+  color: var(--text);
+}
+
+/* ── Week picker calendar ── */
+.week-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.week-picker__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.week-picker__nav {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(18, 48, 88, 0.12);
+  background: #fff;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+.week-picker__nav:hover:not(:disabled) {
+  background: var(--silver-1);
+}
+.week-picker__nav:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+.week-picker__range {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+}
+.week-picker__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+.week-picker__day {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.week-picker__day-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(18, 48, 88, 0.08);
+}
+.week-picker__weekday {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.week-picker__date {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+.week-picker__day--empty .week-picker__date {
+  color: var(--silver-2);
+}
+.week-picker__slots {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.week-picker__slot {
+  width: 100%;
+  padding: 4px 2px;
+  border-radius: 5px;
+  border: 1px solid rgba(18, 48, 88, 0.14);
+  background: #fff;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text);
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+  white-space: nowrap;
+}
+.week-picker__slot:hover {
+  background: var(--lav-50);
+  border-color: var(--ink-400);
+}
+.week-picker__slot--selected {
+  background: var(--ink-600);
+  border-color: var(--ink-600);
+  color: #fff;
+}
+.week-picker__slot--selected:hover {
+  background: var(--ink-400);
+  border-color: var(--ink-400);
+}
+.week-picker__no-slots {
+  font-size: 0.75rem;
+  color: var(--silver-2);
+  text-align: center;
+  padding: 4px 0;
+}
+
+.week-picker__estimate {
+  font-size: 0.85rem;
+  color: var(--silver-2);
+  margin: 0 0 12px 0;
+}
+
+.week-picker__estimate strong {
+  color: var(--ink-100);
+}
+@media (max-width: 480px) {
+  .week-picker__weekday {
+    font-size: 0.62rem;
+  }
+  .week-picker__slot {
+    font-size: 0.68rem;
+    padding: 3px 1px;
+  }
 }
 
 .form-note--compact {
@@ -723,12 +979,14 @@ h1 {
 }
 
 .booking-form label.has-error input,
+.booking-form label.has-error select,
 .booking-form label.has-error textarea {
   border-color: #f87171;
   background: #fff8f7;
 }
 
 .booking-form label.has-error input:focus,
+.booking-form label.has-error select:focus,
 .booking-form label.has-error textarea:focus {
   outline-color: rgba(239, 68, 68, 0.4);
   border-color: #f87171;
@@ -1203,6 +1461,7 @@ h1 {
 .filters-panel input,
 .filters-panel select,
 .form-grid input,
+.form-grid select,
 .studio-lead-form textarea {
   padding: 12px 14px;
   border-radius: 12px;

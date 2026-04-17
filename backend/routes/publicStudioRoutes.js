@@ -143,6 +143,60 @@ publicStudioRouter.post("/:slug/leads", async (req, res) => {
   }
 });
 
+publicStudioRouter.get("/:slug/payment-info", async (req, res) => {
+  const rateLimit = enforcePublicReadRateLimit(req, "studio-public-payment-info");
+
+  if (rateLimit.limited) {
+    return res.status(429).json({ message: rateLimit.message });
+  }
+
+  try {
+    const { response, payload } = await requestCrmPublicApi(
+      `/studios/${encodeURIComponent(req.params.slug)}/payment-info`,
+      { request: req }
+    );
+
+    if (!response.ok) {
+      return res.status(response.status).json({
+        message: getCrmProxyMessage(payload, "Kunde inte hämta betalningsinformation just nu.")
+      });
+    }
+
+    return res.status(response.status).json(payload || { data: null });
+  } catch {
+    return res.status(502).json({
+      message: "Kunde inte ansluta till CRM-backenden för att hämta betalningsinformation."
+    });
+  }
+});
+
+publicStudioRouter.post("/:slug/payment-intent", async (req, res) => {
+  const rateLimit = enforceSubmissionRateLimit(req, "studio-public-payment-intent");
+
+  if (rateLimit.limited) {
+    return res.status(429).json({ message: rateLimit.message });
+  }
+
+  try {
+    const { response, payload } = await requestCrmPublicApi(
+      `/studios/${encodeURIComponent(req.params.slug)}/payment-intent`,
+      { method: "POST", body: req.body || {}, request: req }
+    );
+
+    if (!response.ok) {
+      return res.status(response.status).json({
+        message: getCrmProxyMessage(payload, "Kunde inte starta betalningen just nu.")
+      });
+    }
+
+    return res.status(response.status).json(payload || { data: null });
+  } catch {
+    return res.status(502).json({
+      message: "Kunde inte ansluta till CRM-backenden för att starta betalningen."
+    });
+  }
+});
+
 publicStudioRouter.post("/:slug/lead-drafts", async (req, res) => {
   const rateLimit = enforceDraftSaveRateLimit(req, "studio-public-lead-draft");
 
