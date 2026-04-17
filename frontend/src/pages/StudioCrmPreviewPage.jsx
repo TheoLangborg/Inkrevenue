@@ -47,7 +47,7 @@ export function StudioCrmPreviewPage() {
     }
 
     return () => window.removeEventListener("message", handleMessage);
-  }, [parentOrigin]);
+  }, []);
 
   useEffect(() => {
     if (!previewSlug || studio) {
