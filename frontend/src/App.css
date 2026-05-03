@@ -2889,6 +2889,50 @@ h1 {
   gap: 12px;
 }
 
+.faq-page__list {
+  margin: 0 0 48px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.faq-page__item {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 28px 0;
+}
+
+.faq-page__item:first-child {
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.faq-page__q {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--ink-900, #0d1f3c);
+  margin: 0 0 10px;
+}
+
+.faq-page__a {
+  margin: 0;
+  color: var(--text-muted, #555);
+  line-height: 1.7;
+  font-size: 1rem;
+}
+
+.faq-page__cta {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding-top: 12px;
+}
+
+.faq-page__cta p {
+  margin: 0;
+  color: var(--text-muted, #555);
+}
+
 .faq-item {
   background: #fff;
   border-radius: 16px;

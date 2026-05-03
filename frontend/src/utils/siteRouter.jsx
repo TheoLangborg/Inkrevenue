@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useServerLocation } from "./ServerLocationContext";
 
 function normalizePathname(pathname) {
   const normalized = pathname.replace(/\/+$/, "");
@@ -62,7 +63,8 @@ export function navigateTo(href, { replace = false } = {}) {
 }
 
 export function useSiteLocation() {
-  const [location, setLocation] = useState(() => getLocationSnapshot());
+  const serverLocation = useServerLocation();
+  const [location, setLocation] = useState(() => serverLocation ?? getLocationSnapshot());
 
   useEffect(() => {
     const handleLocationChange = () => {

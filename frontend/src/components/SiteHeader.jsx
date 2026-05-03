@@ -7,6 +7,7 @@ export function SiteHeader({ currentPath }) {
   const strategyHref = currentPath === "/" ? "#bokning" : "/#bokning";
   const isStudiosSection =
     currentPath === "/studios" || currentPath.startsWith("/studio/");
+  const isFaq = currentPath === "/faq";
 
   // Close menu on route change
   useEffect(() => {
@@ -58,6 +59,14 @@ export function SiteHeader({ currentPath }) {
             onClick={() => setMenuOpen(false)}
           >
             Studios
+          </SiteLink>
+          <SiteLink
+            className={`site-nav__link ${isFaq ? "site-nav__link--active" : ""}`}
+            aria-current={isFaq ? "page" : undefined}
+            href="/faq"
+            onClick={() => setMenuOpen(false)}
+          >
+            FAQ
           </SiteLink>
           <SiteLink
             className="btn btn-primary site-header__cta"

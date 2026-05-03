@@ -2,6 +2,7 @@ import { LegalConsentProvider, useLegalConsent } from "./contexts/LegalConsentCo
 import { SiteFooter } from "./components/SiteFooter";
 import { SiteHeader } from "./components/SiteHeader";
 import { createDemoStudioPreview } from "./data/demoStudio";
+import { FaqPage } from "./pages/FaqPage";
 import { HomePage } from "./pages/HomePage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { StudioCrmPreviewPage } from "./pages/StudioCrmPreviewPage";
@@ -23,6 +24,13 @@ function getPageFromPath(pathname) {
     return {
       currentPath: pathname,
       element: <StudiosDirectoryPage />
+    };
+  }
+
+  if (pathname === "/faq") {
+    return {
+      currentPath: pathname,
+      element: <FaqPage />
     };
   }
 

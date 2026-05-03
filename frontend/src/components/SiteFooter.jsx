@@ -19,6 +19,7 @@ export function SiteFooter({ onOpenLegalModal }) {
         <div className="footer__links">
           <SiteLink href="/">Hem</SiteLink>
           <SiteLink href="/studios">Studios</SiteLink>
+          <SiteLink href="/faq">FAQ</SiteLink>
           <SiteLink href="/#bokning">Boka strategisamtal</SiteLink>
           <button className="footer__link-button" type="button" onClick={onOpenLegalModal}>
             Integritet & villkor
