@@ -1,0 +1,1478 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ink Revenue — Fler bokningar för din tatueringsstudio</title>
+  <meta name="description" content="Ink Revenue sköter bokningar och marknadsföring åt tatueringsstudior. Ni fokuserar på konsten — vi fyller kalendern." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700&family=Epilogue:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Tokens (identiska med App.css :root) ── */
+    :root {
+      --ink-900: #0a1a2f;
+      --ink-800: #0b1d36;
+      --ink-700: #0d203b;
+      --ink-600: #123058;
+      --ink-400: #2b5a9a;
+      --ink-100: #e7f0ff;
+      --lav-50:  #f1f6ff;
+      --lav-100: #dde8ff;
+      --snow:    #ffffff;
+      --text:    #11223a;
+      --muted:   #41556f;
+      --shadow:       0 18px 48px rgba(16, 42, 88, 0.18);
+      --shadow-strong:0 26px 70px rgba(10, 26, 48, 0.35);
+      --glass-border: rgba(13, 32, 59, 0.08);
+      --success: #22c55e;
+      --success-bg: rgba(34, 197, 94, 0.08);
+      --success-text: #1c7d4d;
+      --danger:  #c2410c;
+      --accent:  #215fb0;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      font-family: "Epilogue", "Segoe UI", sans-serif;
+      color: var(--text);
+      background: var(--lav-50);
+      line-height: 1.6;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    img, svg { max-width: 100%; display: block; }
+
+    .container {
+      width: min(1120px, 92%);
+      margin: 0 auto;
+    }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 28px;
+      border-radius: 999px;
+      border: none;
+      font-family: inherit;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease, background .2s ease;
+      position: relative;
+      text-decoration: none;
+    }
+    .btn__icon { width: 18px; height: 18px; flex: 0 0 auto; transition: transform .2s ease; }
+    .btn:hover .btn__icon { transform: translateX(3px); }
+    .btn:disabled { opacity: .7; cursor: not-allowed; transform: none; }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #fff 0%, #f3f7ff 100%);
+      color: var(--ink-700);
+      box-shadow: 0 18px 34px rgba(10, 34, 66, .28);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 22px 40px rgba(10, 34, 66, .32); }
+
+    .btn-secondary {
+      background: linear-gradient(135deg, var(--ink-600) 0%, var(--ink-700) 100%);
+      color: var(--snow);
+      border: 1px solid rgba(255, 255, 255, .14);
+      box-shadow: 0 16px 30px rgba(10, 26, 48, .18);
+    }
+    .btn-secondary:hover { transform: translateY(-2px); box-shadow: 0 20px 36px rgba(10, 26, 48, .24); }
+
+    .btn-secondary--hero {
+      overflow: hidden;
+      background: linear-gradient(135deg, rgba(231, 240, 255, .16) 0%, rgba(75, 134, 220, .18) 100%);
+      border: 1px solid rgba(255, 255, 255, .28);
+      box-shadow: 0 20px 40px rgba(7, 18, 34, .24);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      color: #fff;
+    }
+    .btn-secondary--hero::before {
+      content: "";
+      position: absolute; inset: 1px;
+      border-radius: inherit;
+      background: linear-gradient(135deg, rgba(255,255,255,.22) 0%, rgba(255,255,255,.04) 100%);
+      opacity: .8;
+    }
+    .btn-secondary--hero > * { position: relative; z-index: 1; }
+    .btn-secondary--hero:hover { border-color: rgba(255, 255, 255, .38); box-shadow: 0 24px 44px rgba(7, 18, 34, .3); }
+
+    .btn-secondary--light {
+      background: rgba(255, 255, 255, .08);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, .3);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    /* ── Nav ── */
+    .site-header {
+      position: sticky; top: 0; z-index: 20;
+      backdrop-filter: blur(14px);
+      background: rgba(10, 26, 47, .78);
+      border-bottom: 1px solid rgba(255, 255, 255, .08);
+    }
+    .site-header__inner {
+      display: flex; align-items: center;
+      justify-content: space-between; gap: 24px;
+      min-height: 76px;
+    }
+    .site-brand {
+      display: inline-flex; align-items: center;
+      gap: 12px; color: #fff; font-weight: 600;
+    }
+    .site-brand img { width: 40px; height: 40px; object-fit: contain; }
+    .site-nav {
+      display: flex; align-items: center;
+      gap: 18px; flex-wrap: wrap; justify-content: flex-end;
+    }
+    .site-nav__link {
+      position: relative;
+      color: rgba(255, 255, 255, .82);
+      font-weight: 500;
+      padding-bottom: 8px;
+    }
+    .site-nav__link::after {
+      content: "";
+      position: absolute; left: 0; right: 0; bottom: 0;
+      height: 2px; border-radius: 999px;
+      background: currentColor;
+      transform: scaleX(0); transform-origin: center;
+      transition: transform .2s ease;
+    }
+    .site-nav__link:hover { color: #fff; }
+    .site-nav__link:hover::after { transform: scaleX(1); }
+    .site-header__cta { padding-inline: 22px; }
+
+    /* Hamburger */
+    .site-burger {
+      display: none; flex-direction: column;
+      justify-content: center; gap: 5px;
+      width: 40px; height: 40px; padding: 8px;
+      background: none; border: none; cursor: pointer;
+      border-radius: 10px; transition: background .2s; flex-shrink: 0;
+    }
+    .site-burger:hover { background: rgba(255,255,255,.1); }
+    .site-burger span {
+      display: block; height: 2px; border-radius: 2px;
+      background: #fff;
+      transition: transform .25s ease, opacity .25s ease;
+      transform-origin: center;
+    }
+    .site-burger--open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .site-burger--open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+    .site-burger--open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    /* ── Hero ── */
+    .hero {
+      position: relative;
+      padding: 86px 0 150px;
+      background: linear-gradient(180deg, #0d203b 0%, #123058 45%, #6d86b3 100%);
+      color: #fff; text-align: center; overflow: hidden;
+    }
+    .hero::before {
+      content: ""; position: absolute; inset: 0;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(255,255,255,.14), transparent 45%),
+        radial-gradient(circle at 80% 10%, rgba(255,255,255,.1),  transparent 40%),
+        radial-gradient(circle at 50% 80%, rgba(255,255,255,.08), transparent 45%);
+      pointer-events: none;
+    }
+    .hero::after {
+      content: ""; position: absolute;
+      left: 0; right: 0; bottom: -80px; height: 140px;
+      background: linear-gradient(180deg, rgba(255,255,255,0), var(--lav-50) 85%);
+    }
+    .hero__orb {
+      position: absolute; border-radius: 999px;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.7), rgba(255,255,255,.1));
+      filter: blur(.2px); opacity: .7;
+      animation: float 8s ease-in-out infinite;
+    }
+    .hero__orb--left  { width: 120px; height: 120px; left: 10%; bottom: -30px; animation-delay: -2s; }
+    .hero__orb--right { width: 220px; height: 220px; right: 6%; bottom: -60px; }
+    .hero__content { position: relative; z-index: 2; animation: fadeUp .9s ease-out both; }
+
+    .brand-lockup {
+      display: flex; flex-direction: column;
+      align-items: center; gap: 12px; margin-bottom: 18px;
+    }
+    .brand-logo {
+      width: 96px; height: 96px; object-fit: contain;
+      filter: drop-shadow(0 10px 20px rgba(13, 32, 59, .35));
+    }
+    .brand-mark {
+      font-family: "Big Shoulders Display", "Georgia", sans-serif;
+      font-size: clamp(34px, 4vw, 56px);
+      letter-spacing: .06em; margin: 0;
+      color: rgba(235, 232, 242, .92);
+      text-shadow: 0 8px 24px rgba(13, 32, 59, .45);
+    }
+
+    h1 {
+      font-family: "Big Shoulders Display", "Georgia", sans-serif;
+      font-size: clamp(30px, 4vw, 48px);
+      font-weight: 700;
+      margin: 0 auto 24px; max-width: 900px;
+      text-shadow: 0 14px 38px rgba(13, 32, 59, .45);
+    }
+    .lead {
+      max-width: 900px; margin: 0 auto 32px;
+      font-size: 1.05rem; color: rgba(255,255,255,.88);
+    }
+    .cta-row {
+      display: flex; flex-wrap: wrap;
+      justify-content: center; gap: 16px; align-items: center;
+    }
+    .cta-note { font-size: .95rem; color: rgba(255,255,255,.82); margin-top: 10px; }
+
+    /* Audience cards */
+    .audience-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px; margin-top: 36px; text-align: left;
+    }
+    .audience-card {
+      padding: 24px; border-radius: 26px;
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.12);
+      box-shadow: 0 18px 34px rgba(7, 18, 34, .16);
+    }
+    .audience-card--customer {
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.16), rgba(231,240,255,.1)),
+        rgba(255,255,255,.06);
+    }
+    .audience-card--studio {
+      background:
+        linear-gradient(135deg, rgba(75,134,220,.2), rgba(255,255,255,.08)),
+        rgba(255,255,255,.08);
+    }
+    .audience-card__eyebrow {
+      margin: 0 0 10px;
+      text-transform: uppercase;
+      letter-spacing: .18em; font-size: .75rem;
+      color: rgba(255,255,255,.7);
+    }
+    .audience-card h3 {
+      margin: 0 0 12px;
+      font-family: "Big Shoulders Display", "Georgia", sans-serif;
+      font-size: 1.5rem;
+    }
+    .audience-card p { margin: 0 0 18px; color: rgba(255,255,255,.82); }
+
+    /* ── Sections ── */
+    .section { padding: 90px 0; position: relative; }
+    .section--white { background: #fff; }
+    .section--lavender {
+      background: var(--lav-50);
+      position: relative; overflow: hidden;
+      background-image:
+        radial-gradient(circle at 10% 10%, rgba(13,32,59,.06), transparent 45%),
+        radial-gradient(circle at 90% 20%, rgba(13,32,59,.05), transparent 40%),
+        radial-gradient(circle at 50% 90%, rgba(13,32,59,.06), transparent 45%);
+    }
+    .section--blue {
+      background: var(--ink-700);
+      color: #fff; position: relative; overflow: hidden;
+    }
+    .section--blue::after {
+      content: ""; position: absolute; inset: 0;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(255,255,255,.08), transparent 40%),
+        radial-gradient(circle at 80% 30%, rgba(255,255,255,.06), transparent 40%),
+        radial-gradient(circle at 60% 80%, rgba(255,255,255,.05), transparent 45%);
+      pointer-events: none;
+    }
+
+    .section h2 {
+      font-family: "Big Shoulders Display", "Georgia", sans-serif;
+      font-size: clamp(28px, 3vw, 38px);
+      margin-top: 0; margin-bottom: 18px;
+    }
+    .eyebrow {
+      text-transform: uppercase;
+      letter-spacing: .2em; font-size: .8rem;
+      color: var(--ink-400); margin-bottom: 10px;
+    }
+    .section--blue .eyebrow { color: rgba(255,255,255,.7); }
+    .body { color: var(--muted); margin-bottom: 16px; }
+    .section--blue .body, .section--blue p { color: rgba(255,255,255,.85); }
+
+    .section-heading {
+      display: flex; align-items: end;
+      justify-content: space-between; gap: 20px; margin-bottom: 28px;
+    }
+    .section-title {
+      display: flex; align-items: center;
+      justify-content: center; gap: 20px; margin-bottom: 40px;
+    }
+    .section-title h2 { margin: 0; text-transform: uppercase; font-size: 1.4rem; letter-spacing: .08em; }
+    .section-title .line { flex: 1; height: 1px; background: rgba(255,255,255,.45); }
+
+    /* ── Grids ── */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 40px; align-items: center;
+    }
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 24px;
+    }
+    .card-grid--single { grid-template-columns: 1fr; }
+
+    /* ── Cards ── */
+    .card {
+      background: #fff; color: var(--text);
+      border-radius: 22px; padding: 28px;
+      box-shadow: var(--shadow);
+      transition: transform .2s ease, box-shadow .2s ease;
+      animation: fadeUp .7s ease both;
+      border: 1px solid var(--glass-border);
+      position: relative; overflow: hidden;
+    }
+    .card::after {
+      content: ""; position: absolute;
+      inset: -40% 0 auto 0; height: 120px;
+      background: linear-gradient(180deg, rgba(255,255,255,.6), transparent);
+      opacity: .35; pointer-events: none;
+    }
+    .card:nth-child(1) { animation-delay: .05s; }
+    .card:nth-child(2) { animation-delay: .15s; }
+    .card:nth-child(3) { animation-delay: .25s; }
+    .card:hover { transform: translateY(-4px); box-shadow: var(--shadow-strong); }
+    .card__icon {
+      width: 54px; height: 54px; border-radius: 16px;
+      background: var(--lav-100); color: var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 16px;
+      box-shadow: inset 0 0 0 1px rgba(13,32,59,.08);
+    }
+    .card h3 { margin-top: 0; margin-bottom: 12px; }
+    .section--blue .card p { color: var(--muted); }
+
+    /* ── How it works steps ── */
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0; position: relative;
+    }
+    .steps::before {
+      content: ""; position: absolute;
+      top: 28px; left: calc(16.67% + 14px); right: calc(16.67% + 14px);
+      height: 2px;
+      background: linear-gradient(90deg, var(--lav-100), var(--ink-400), var(--lav-100));
+      z-index: 0;
+    }
+    .step {
+      display: flex; flex-direction: column;
+      align-items: center; text-align: center;
+      padding: 0 20px; position: relative; z-index: 1;
+    }
+    .step__number {
+      width: 56px; height: 56px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: "Big Shoulders Display", sans-serif;
+      font-size: 1.6rem; font-weight: 700;
+      color: #fff; margin-bottom: 18px;
+      background: linear-gradient(135deg, var(--ink-400), var(--ink-700));
+      box-shadow: 0 12px 24px rgba(18, 48, 88, .3);
+    }
+    .step h3 { margin: 0 0 10px; font-size: 1.15rem; }
+    .step p { margin: 0; color: var(--muted); font-size: .93rem; }
+
+    /* ── Testimonials ── */
+    .testimonial-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 22px;
+    }
+    .testimonial-card {
+      background: rgba(255,255,255,.95);
+      border-radius: 22px; padding: 28px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--glass-border);
+    }
+    .testimonial-card__quote {
+      font-size: 1.05rem; color: var(--text);
+      font-style: italic; margin: 0 0 18px; line-height: 1.7;
+    }
+    .testimonial-card__quote::before { content: '\201C'; font-size: 2rem; line-height: 0; vertical-align: -.4em; color: var(--ink-400); margin-right: 4px; }
+    .testimonial-card__quote::after  { content: '\201D'; font-size: 2rem; line-height: 0; vertical-align: -.4em; color: var(--ink-400); margin-left: 4px; }
+    .testimonial-card__author { display: flex; align-items: center; gap: 14px; }
+    .testimonial-card__avatar {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: var(--lav-100);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 600; color: var(--ink-600); font-size: 1.1rem; flex: 0 0 auto;
+    }
+    .testimonial-card__name { font-weight: 600; margin: 0 0 2px; }
+    .testimonial-card__studio { color: var(--muted); font-size: .9rem; margin: 0; }
+
+    .placeholder-notice {
+      text-align: center; padding: 14px 16px;
+      background: rgba(43,90,154,.06);
+      border: 1px dashed rgba(43,90,154,.3);
+      border-radius: 12px;
+      color: var(--ink-400); font-size: .86rem; margin-top: 20px;
+    }
+
+    /* ── Studio grid ── */
+    .studio-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 24px;
+    }
+    .studio-card {
+      background: rgba(255,255,255,.95);
+      border: 1px solid var(--glass-border);
+      border-radius: 28px; overflow: hidden;
+      box-shadow: var(--shadow); display: grid;
+      color: inherit; text-decoration: none;
+      transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+    }
+    .studio-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 26px 50px rgba(10, 34, 66, .2);
+      border-color: rgba(53, 92, 152, .22);
+    }
+    .studio-card__media {
+      min-height: 180px;
+      background:
+        linear-gradient(135deg, rgba(18,48,88,.94), rgba(53,92,152,.82)),
+        radial-gradient(circle at top right, rgba(255,255,255,.18), transparent 40%);
+      background-position: center; background-size: cover;
+      position: relative;
+    }
+    .studio-card__media--1 { background: linear-gradient(135deg, #0d2a4a, #1e4070); }
+    .studio-card__media--2 { background: linear-gradient(135deg, #1a0d30, #3d2060); }
+    .studio-card__media--3 { background: linear-gradient(135deg, #0d2214, #1e4030); }
+    .studio-card__body { padding: 22px; display: grid; gap: 14px; }
+    .studio-card__body h3 {
+      margin: 0;
+      font-family: "Big Shoulders Display", "Georgia", sans-serif;
+      font-size: 1.55rem;
+    }
+    .studio-card__body p { margin: 0; color: var(--muted); }
+    .studio-card__meta {
+      display: flex; gap: 12px; flex-wrap: wrap;
+      color: var(--ink-400); font-size: .9rem; font-weight: 600;
+    }
+    .studio-card__cta { justify-self: start; pointer-events: none; }
+    .studio-card:hover .studio-card__cta {
+      transform: translateY(-2px);
+      box-shadow: 0 22px 40px rgba(10, 34, 66, .32);
+    }
+
+    /* ── Badges ── */
+    .badge {
+      display: inline-flex; align-items: center;
+      padding: 8px 12px; border-radius: 999px;
+      background: var(--lav-100); color: var(--ink-700);
+      border: 1px solid rgba(18,48,88,.08);
+      font-size: .88rem; font-weight: 600;
+    }
+    .badge-row { display: flex; flex-wrap: wrap; gap: 10px; }
+    .badge-row--light .badge {
+      background: rgba(255,255,255,.16);
+      color: #fff; border-color: rgba(255,255,255,.16);
+    }
+
+    /* ── FAQ ── */
+    .faq { display: grid; gap: 12px; }
+    .faq-item {
+      background: #fff; border-radius: 16px;
+      border: 1px solid var(--glass-border); overflow: hidden;
+      box-shadow: 0 8px 24px rgba(10,26,48,.07);
+    }
+    .faq-item__q {
+      width: 100%; text-align: left;
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      padding: 20px 24px;
+      background: none; border: none;
+      font-family: inherit; font-size: 1rem; font-weight: 600;
+      color: var(--text); cursor: pointer; transition: background .15s;
+    }
+    .faq-item__q:hover { background: rgba(13,32,59,.03); }
+    .faq-item__icon {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--lav-100); color: var(--ink-600);
+      display: flex; align-items: center; justify-content: center;
+      flex: 0 0 auto; font-size: 1.3rem; line-height: 1;
+      transition: transform .25s ease, background .2s;
+    }
+    .faq-item--open .faq-item__icon { transform: rotate(45deg); background: var(--ink-600); color: #fff; }
+    .faq-item__a {
+      max-height: 0; overflow: hidden;
+      transition: max-height .35s ease, padding .35s ease;
+      color: var(--muted); font-size: .97rem; line-height: 1.7;
+      padding: 0 24px;
+    }
+    .faq-item--open .faq-item__a { max-height: 300px; padding: 0 24px 20px; }
+
+    /* ── Page hero (studio directory) ── */
+    .page-hero {
+      padding: 88px 0 72px;
+      background:
+        radial-gradient(circle at top right, rgba(255,255,255,.18), transparent 35%),
+        linear-gradient(180deg, #123058, #244a84 70%, #6d86b3);
+      color: #fff;
+    }
+    .page-hero .eyebrow { color: rgba(255,255,255,.82); }
+    .page-hero h1 { max-width: 700px; }
+    .lead--dark { max-width: 600px; color: rgba(255,255,255,.88); font-size: 1.05rem; margin: 0; }
+
+    /* ── Filters panel ── */
+    .filters-panel {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 16px;
+      padding: 22px;
+      border-radius: 24px;
+      background: rgba(242, 246, 255, .92);
+      border: 1px solid rgba(18, 48, 88, .08);
+      margin-bottom: 24px;
+    }
+    .filters-panel label {
+      display: grid;
+      gap: 6px;
+      font-weight: 500;
+    }
+    .filters-panel input,
+    .filters-panel select {
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid #d8e1f2;
+      font-family: inherit;
+      font-size: .98rem;
+      background: #fff;
+      color: var(--text);
+    }
+    .filters-panel input:focus-visible,
+    .filters-panel select:focus-visible {
+      outline: 2px solid rgba(33,95,176,.35);
+      border-color: rgba(33,95,176,.35);
+    }
+
+    /* ── Booking form ── */
+    .booking {
+      display: grid;
+      grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr);
+      gap: 40px; align-items: start;
+    }
+    .booking-form {
+      background: rgba(255,255,255,.92);
+      border-radius: 22px; padding: 28px;
+      box-shadow: var(--shadow);
+      display: grid; gap: 14px;
+      animation: fadeUp .8s ease both;
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    .booking-form label {
+      display: grid; gap: 6px;
+      font-weight: 500; color: var(--text);
+    }
+    .booking-form input,
+    .booking-form textarea {
+      padding: 12px 14px; border-radius: 12px;
+      border: 1px solid #d8e1f2;
+      font-family: inherit; font-size: .98rem;
+      width: 100%; box-sizing: border-box;
+      background: #fff; color: var(--text);
+    }
+    .booking-form input:focus-visible,
+    .booking-form textarea:focus-visible {
+      outline: 2px solid rgba(33, 95, 176, .35);
+      border-color: rgba(33, 95, 176, .35);
+      box-shadow: 0 0 0 4px rgba(33, 95, 176, .08);
+    }
+    .booking-form label.has-error input,
+    .booking-form label.has-error textarea { border-color: var(--danger); }
+    .field-error { color: var(--danger); font-size: .85rem; font-weight: 400; }
+    .form-note { margin: 0; color: var(--muted); font-size: .95rem; }
+    .legal-note { margin: 0; color: var(--muted); font-size: .92rem; line-height: 1.6; }
+    .legal-note a { color: var(--ink-400); font-weight: 600; text-decoration: underline; text-underline-offset: .16em; }
+    .form-status { margin: 6px 0 0; font-size: .95rem; }
+    .form-status--success { color: var(--success-text); }
+    .form-status--error   { color: var(--danger); }
+    .hidden-trap { position: absolute; left: -9999px; opacity: 0; pointer-events: none; }
+
+    /* ── Trust bar ── */
+    .trust-bar {
+      display: flex; align-items: center; justify-content: center;
+      gap: 40px; flex-wrap: wrap;
+      padding: 22px 0;
+      border-top: 1px solid rgba(255,255,255,.12);
+      border-bottom: 1px solid rgba(255,255,255,.12);
+      margin: 32px 0;
+    }
+    .trust-item {
+      display: flex; align-items: center; gap: 10px;
+      color: rgba(255,255,255,.88); font-size: .95rem; font-weight: 500;
+    }
+    .trust-item svg { color: var(--lav-100); flex: 0 0 auto; }
+
+    /* ── Footer ── */
+    .footer {
+      background: linear-gradient(180deg, #0d203b, #1d3357);
+      color: #fff; padding: 60px 0 50px;
+      text-align: center; position: relative; overflow: hidden;
+    }
+    .footer::before {
+      content: ""; position: absolute; inset: 0;
+      background:
+        radial-gradient(circle at 15% 30%, rgba(255,255,255,.08), transparent 45%),
+        radial-gradient(circle at 85% 40%, rgba(255,255,255,.07), transparent 40%);
+      pointer-events: none;
+    }
+    .footer__inner { position: relative; z-index: 1; }
+    .brand-lockup--footer { gap: 10px; margin-bottom: 18px; }
+    .brand-logo--footer { width: 72px; height: 72px; }
+    .brand-mark--footer { margin-bottom: 0; }
+    .footer__links {
+      display: flex; justify-content: center; gap: 18px;
+      flex-wrap: wrap; margin-bottom: 16px;
+      color: rgba(255,255,255,.82);
+    }
+    .footer__link { color: rgba(255,255,255,.82); transition: color .2s; }
+    .footer__link:hover { color: #fff; text-decoration: underline; text-decoration-thickness: 2px; }
+    .footer__contact { margin: 0 auto 8px; }
+    .footer__contact p { margin: 0 0 6px; }
+    .footer__contact a { color: inherit; }
+    .footer__contact a:hover { color: inherit; text-decoration: underline; text-decoration-thickness: 2px; }
+    .socials { display: flex; justify-content: center; gap: 16px; margin: 20px 0 10px; }
+    .social {
+      width: 42px; height: 42px; border-radius: 50%;
+      background: #fff; color: #0d203b;
+      display: grid; place-items: center;
+      box-shadow: 0 10px 18px rgba(13, 32, 59, .18);
+      transition: transform .2s ease;
+    }
+    .social:hover { transform: translateY(-2px); }
+    .footer__copy { font-size: .85rem; color: rgba(255,255,255,.7); }
+
+    /* ── Animations ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(-10px); }
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 960px) {
+      .grid-2, .booking { grid-template-columns: 1fr; }
+      .steps { grid-template-columns: 1fr; gap: 32px; }
+      .steps::before { display: none; }
+      .card-grid, .studio-grid, .testimonial-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .audience-grid { grid-template-columns: 1fr; }
+      .filters-panel { grid-template-columns: 1fr; }
+      .section-heading { flex-direction: column; align-items: flex-start; }
+      .site-burger { display: flex; }
+      .site-nav {
+        display: none; position: fixed; inset: 76px 0 0 0;
+        background: rgba(10, 26, 47, .98);
+        backdrop-filter: blur(18px);
+        flex-direction: column; align-items: stretch; gap: 0;
+        padding: 16px 0 32px; z-index: 19; overflow-y: auto;
+      }
+      .site-nav--open { display: flex; }
+      .site-nav__link { padding: 18px 24px; font-size: 1.1rem; border-bottom: 1px solid rgba(255,255,255,.07); }
+      .site-header__cta { margin: 20px 24px 0; text-align: center; padding: 16px 28px; font-size: 1rem; }
+    }
+    @media (max-width: 600px) {
+      .hero { padding: 56px 0 100px; }
+      .section { padding: 64px 0; }
+      h1 { font-size: clamp(26px, 7vw, 36px); }
+      .cta-row { flex-direction: column; align-items: stretch; }
+      .cta-row .btn { width: 100%; justify-content: center; }
+      .trust-bar { gap: 20px; }
+      .card-grid, .studio-grid { grid-template-columns: 1fr; }
+      .studio-card { grid-template-columns: 120px 1fr; border-radius: 18px; }
+      .studio-card__media { min-height: 0; border-radius: 18px 0 0 18px; }
+      .studio-card__body { padding: 14px; gap: 8px; }
+      .studio-card__body h3 { font-size: 1rem; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════ NAV ═══════ -->
+<header class="site-header">
+  <div class="container site-header__inner">
+    <a href="#top" class="site-brand" aria-label="Ink Revenue startsida">
+      <svg width="40" height="40" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ink Revenue">
+        <defs>
+          <linearGradient id="silver-nav" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#858489"/>
+            <stop offset="0.25" stop-color="#e7e4ef"/>
+            <stop offset="0.5" stop-color="#858489"/>
+            <stop offset="0.75" stop-color="#b9b9b9"/>
+            <stop offset="1" stop-color="#858489"/>
+          </linearGradient>
+        </defs>
+        <rect width="512" height="512" fill="#0d203b"/>
+        <g transform="translate(256 256) rotate(45)">
+          <rect x="-150" y="-150" width="300" height="300" fill="none" stroke="#2e6fa3" stroke-width="14"/>
+        </g>
+        <text x="256" y="262" text-anchor="middle" font-family="Space Grotesk, Segoe UI, sans-serif" font-size="96" font-weight="700" fill="url(#silver-nav)">INK</text>
+        <text x="256" y="332" text-anchor="middle" font-family="Space Grotesk, Segoe UI, sans-serif" font-size="56" font-weight="600" fill="url(#silver-nav)">Revenue</text>
+      </svg>
+      Ink Revenue
+    </a>
+
+    <nav class="site-nav" id="site-nav" aria-label="Huvudmeny">
+      <a href="#top" class="site-nav__link">Hem</a>
+      <a href="#for-kunder" class="site-nav__link">Studios</a>
+      <a href="#faq" class="site-nav__link">FAQ</a>
+      <a href="#bokning" class="btn btn-primary site-header__cta">Boka gratis samtal</a>
+    </nav>
+
+    <button class="site-burger" id="burger" aria-label="Öppna meny" aria-expanded="false" aria-controls="site-nav">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<!-- ═══════ HERO ═══════ -->
+<section class="hero" id="top">
+  <div class="hero__orb hero__orb--left"></div>
+  <div class="hero__orb hero__orb--right"></div>
+
+  <div class="container hero__content">
+    <div class="brand-lockup">
+      <svg class="brand-logo" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ink Revenue logotyp">
+        <defs>
+          <linearGradient id="silver-hero" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#858489"/>
+            <stop offset="0.25" stop-color="#e7e4ef"/>
+            <stop offset="0.5" stop-color="#858489"/>
+            <stop offset="0.75" stop-color="#b9b9b9"/>
+            <stop offset="1" stop-color="#858489"/>
+          </linearGradient>
+        </defs>
+        <rect width="512" height="512" fill="#0d203b"/>
+        <g transform="translate(256 256) rotate(45)">
+          <rect x="-150" y="-150" width="300" height="300" fill="none" stroke="#2e6fa3" stroke-width="14"/>
+        </g>
+        <text x="256" y="262" text-anchor="middle" font-family="Space Grotesk, Segoe UI, sans-serif" font-size="96" font-weight="700" fill="url(#silver-hero)">INK</text>
+        <text x="256" y="332" text-anchor="middle" font-family="Space Grotesk, Segoe UI, sans-serif" font-size="56" font-weight="600" fill="url(#silver-hero)">Revenue</text>
+      </svg>
+      <p class="brand-mark">Ink Revenue</p>
+    </div>
+
+    <h1>Fler bokningar. Mindre admin.<br>Vi sköter marknadsföringen åt er.</h1>
+    <p class="lead">
+      Ink Revenue är en <strong>managed service</strong> för tatueringsstudior — vi sköter er digitala närvaro, annonser och kundflöde från start till slut. Ni fokuserar på konsten. Vi fyller kalendern.
+    </p>
+
+    <div class="cta-row">
+      <a class="btn btn-primary" href="#bokning">
+        Boka gratis strategisamtal
+        <svg class="btn__icon" viewBox="0 0 20 20" aria-hidden="true">
+          <path d="M4 10h12M10 5l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
+      <a class="btn btn-secondary--hero" href="#for-kunder">
+        <span>Hitta tatueringsstudio</span>
+        <svg class="btn__icon" viewBox="0 0 20 20" aria-hidden="true">
+          <path d="M4 10h12M10 5l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
+    </div>
+    <p class="cta-note">Gratis samtal — ingen bindning, inga dolda avgifter</p>
+
+    <div class="audience-grid">
+      <article class="audience-card audience-card--studio">
+        <p class="audience-card__eyebrow">För studioägare</p>
+        <h3>Sluta jaga kunder. Låt dem hitta er.</h3>
+        <p>Vi sätter upp er studio-sida, kör annonser och hanterar förfrågningar — så ni kan hålla fokus på tatueringarna.</p>
+        <a class="btn btn-secondary--light" href="#sa-funkar-det">
+          Se hur vi hjälper studios
+          <svg class="btn__icon" viewBox="0 0 20 20" aria-hidden="true">
+            <path d="M4 10h12M10 5l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      </article>
+
+      <article class="audience-card audience-card--customer">
+        <p class="audience-card__eyebrow">För tatueringskunder</p>
+        <h3>Hitta rätt studio för just din stil.</h3>
+        <p>Bläddra studios efter stil, stad och känsla — se galleri och skicka förfrågan direkt. Enklare än hashtag-jakt.</p>
+        <a class="btn btn-primary" href="#for-kunder">Utforska studios</a>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ SÅ HÄR FUNGERAR DET ═══════ -->
+<section class="section section--white" id="sa-funkar-det">
+  <div class="container">
+    <div style="text-align:center; max-width:620px; margin:0 auto 52px;">
+      <p class="eyebrow">För Studioägare</p>
+      <h2>Så här fungerar Ink Revenue</h2>
+      <p class="body" style="font-size:1.05rem;">Tre enkla steg från att ni kontaktar oss till att förfrågningarna börjar komma in.</p>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step__number">1</div>
+        <h3>Boka ett strategisamtal</h3>
+        <p>Vi lär känna er studio, era mål och vilken typ av kunder ni vill nå. Samtalet är gratis och utan förpliktelser.</p>
+      </div>
+      <div class="step">
+        <div class="step__number">2</div>
+        <h3>Vi sätter upp allt åt er</h3>
+        <p>Vi bygger er studio-sida, optimerar er profil och startar rätt marknadsföringskanaler. Ni godkänner — vi kör.</p>
+      </div>
+      <div class="step">
+        <div class="step__number">3</div>
+        <h3>Förfrågningarna börjar komma in</h3>
+        <p>Ni loggar in i er dashboard och ser bokningar, leads och statistik. Vi sköter uppföljningen — ni tatuerar.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ FÖR STUDIOÄGARE ═══════ -->
+<section class="section section--lavender" id="for-studios">
+  <div class="container">
+    <div class="grid-2">
+      <div>
+        <p class="eyebrow">För Studioägare</p>
+        <h2>Ni sköter tatueringarna. Vi sköter resten.</h2>
+        <p class="body" style="font-size:1.05rem;">
+          De flesta studios förlorar potentiella kunder för att de syns dåligt, svarar långsamt eller saknar en tydlig digital närvaro. Vi löser det åt er — utan att ni behöver lära er ett enda marknadsföringsverktyg.
+        </p>
+        <p class="body">
+          Med Ink Revenue får ni en professionell studio-sida, en tydlig väg från sociala medier och annonser till bokade kunder, och en admin som faktiskt följer upp.
+        </p>
+        <div class="badge-row" style="margin-top:18px;">
+          <span class="badge">✓ Ni sköter inga annonser</span>
+          <span class="badge">✓ Ni skriver ingen copy</span>
+          <span class="badge">✓ Vi hanterar inkorgen</span>
+        </div>
+      </div>
+
+      <div class="card-grid card-grid--single" style="gap:16px;">
+        <div class="card">
+          <div class="card__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="28" height="28" aria-hidden="true">
+              <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+            </svg>
+          </div>
+          <h3>Syns där kunderna letar</h3>
+          <p>Vi optimerar er närvaro på Google, sociala medier och Ink Revenue-plattformen — så rätt kunder hittar er naturligt.</p>
+        </div>
+        <div class="card">
+          <div class="card__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="28" height="28" aria-hidden="true">
+              <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
+            </svg>
+          </div>
+          <h3>En studio-sida som säljer er</h3>
+          <p>Er sida lyfter stil, galleri och känsla — så att rätt kunder känner igen sig direkt och väljer just er.</p>
+        </div>
+        <div class="card">
+          <div class="card__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="28" height="28" aria-hidden="true">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+          </div>
+          <h3>Bättre förfrågningar från start</h3>
+          <p>Kunder beskriver idé, placering och budget i förväg — ni slipper massa fram-och-tillbaka och kan svara med ett direkt prisförslag.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Testimonials -->
+    <div style="margin-top:56px;">
+      <p class="eyebrow" style="text-align:center; margin-bottom:24px;">Vad studioägare säger</p>
+      <div class="testimonial-grid">
+        <div class="testimonial-card">
+          <p class="testimonial-card__quote">Sedan vi gick med i Ink Revenue har vi fått dubbelt så många förfrågningar — och de är mycket mer genomtänkta. Kunderna vet vad de vill ha när de hör av sig.</p>
+          <div class="testimonial-card__author">
+            <div class="testimonial-card__avatar">M</div>
+            <div>
+              <p class="testimonial-card__name">Marcus, studioägare</p>
+              <p class="testimonial-card__studio">Göteborg · Traditional & Blackwork</p>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-card">
+          <p class="testimonial-card__quote">Jag hade varken tid eller lust att hålla på med annonser och Instagram. Nu sköter Ink Revenue det och jag fokuserar bara på att tatuera.</p>
+          <div class="testimonial-card__author">
+            <div class="testimonial-card__avatar">S</div>
+            <div>
+              <p class="testimonial-card__name">Sara, soloartist</p>
+              <p class="testimonial-card__studio">Stockholm · Fine Line & Minimalist</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="placeholder-notice">⚠ Dessa recensioner är placeholders — ersätt med verkliga omdömen.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ STUDIOS DIRECTORY ═══════ -->
+<section class="page-hero page-hero--directory" id="for-kunder">
+  <div class="container">
+    <p class="eyebrow">Hitta Rätt Studio</p>
+    <h1 style="color:#fff; text-shadow:none; margin-bottom:12px;">Utforska tatueringsstudios efter stil och stad</h1>
+    <p class="lead lead--dark">
+      Filtrera efter plats, stil och uttryck för att hitta en studio som passar din idé.
+    </p>
+  </div>
+</section>
+
+<section class="section section--white" style="padding-top:48px;">
+  <div class="container">
+    <div class="filters-panel">
+      <label>
+        Sök
+        <input type="text" id="filter-search" placeholder="Studio, stad eller stil" />
+      </label>
+      <label>
+        Stad
+        <select id="filter-city">
+          <option value="">Alla städer</option>
+          <option value="Stockholm">Stockholm</option>
+          <option value="Göteborg">Göteborg</option>
+          <option value="Malmö">Malmö</option>
+          <option value="Uppsala">Uppsala</option>
+        </select>
+      </label>
+      <label>
+        Stil
+        <select id="filter-style">
+          <option value="">Alla stilar</option>
+          <option value="Traditional">Traditional</option>
+          <option value="Neo-traditional">Neo-traditional</option>
+          <option value="Fine Line">Fine Line</option>
+          <option value="Blackwork">Blackwork</option>
+          <option value="Geometric">Geometric</option>
+          <option value="Realism">Realism</option>
+          <option value="Botaniskt">Botaniskt</option>
+          <option value="Japanese">Japanese</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="section-heading section-heading--tight" id="studios-count-row">
+      <h2 id="studios-count">6 studios matchar din filtrering</h2>
+    </div>
+
+    <div class="studio-grid" id="studios-grid">
+      <a href="#" class="studio-card" data-city="Stockholm" data-tags="Traditional,Neo-traditional">
+        <div class="studio-card__media studio-card__media--1"></div>
+        <div class="studio-card__body">
+          <div class="studio-card__meta">
+            <span>Stockholm</span>
+            <span>Traditional</span>
+          </div>
+          <h3>Black Anchor Studio</h3>
+          <p>Specialiserade på traditional och neo-traditional sedan 2015. Välkomnar alla från nybörjare till samlare.</p>
+          <div class="badge-row">
+            <span class="badge">Traditional</span>
+            <span class="badge">Neo-traditional</span>
+          </div>
+          <span class="btn btn-primary studio-card__cta">Se studio</span>
+        </div>
+      </a>
+
+      <a href="#" class="studio-card" data-city="Göteborg" data-tags="Fine Line,Botaniskt">
+        <div class="studio-card__media studio-card__media--2"></div>
+        <div class="studio-card__body">
+          <div class="studio-card__meta">
+            <span>Göteborg</span>
+            <span>Fine Line</span>
+          </div>
+          <h3>Linework Collective</h3>
+          <p>Fine line, botaniska motiv och delicate minimalism. Boka plats i god tid — lång väntelista.</p>
+          <div class="badge-row">
+            <span class="badge">Fine Line</span>
+            <span class="badge">Botaniskt</span>
+          </div>
+          <span class="btn btn-primary studio-card__cta">Se studio</span>
+        </div>
+      </a>
+
+      <a href="#" class="studio-card" data-city="Malmö" data-tags="Blackwork,Geometric">
+        <div class="studio-card__media studio-card__media--3"></div>
+        <div class="studio-card__body">
+          <div class="studio-card__meta">
+            <span>Malmö</span>
+            <span>Blackwork</span>
+          </div>
+          <h3>Dark Matter Ink</h3>
+          <p>Blackwork, geometric och illustrativa tatueringar. Starka linjer och djupa kontraster är vår grej.</p>
+          <div class="badge-row">
+            <span class="badge">Blackwork</span>
+            <span class="badge">Geometric</span>
+          </div>
+          <span class="btn btn-primary studio-card__cta">Se studio</span>
+        </div>
+      </a>
+
+      <a href="#" class="studio-card" data-city="Stockholm" data-tags="Realism,Porträtt">
+        <div class="studio-card__media" style="background: linear-gradient(135deg, #1a1a2e, #2d2d4e);"></div>
+        <div class="studio-card__body">
+          <div class="studio-card__meta">
+            <span>Stockholm</span>
+            <span>Realism</span>
+          </div>
+          <h3>Ink & Shadow Studio</h3>
+          <p>Fotorealistiska tatueringar och porträtt som berättar en historia. Precision är allt vi gör.</p>
+          <div class="badge-row">
+            <span class="badge">Realism</span>
+            <span class="badge">Porträtt</span>
+          </div>
+          <span class="btn btn-primary studio-card__cta">Se studio</span>
+        </div>
+      </a>
+
+      <a href="#" class="studio-card" data-city="Göteborg" data-tags="Japanese,Traditional">
+        <div class="studio-card__media" style="background: linear-gradient(135deg, #1f1200, #3d2800);"></div>
+        <div class="studio-card__body">
+          <div class="studio-card__meta">
+            <span>Göteborg</span>
+            <span>Japanese</span>
+          </div>
+          <h3>Horioshi Tattoo</h3>
+          <p>Traditionell japansk tatueringskonst — karpfiskar, drakar och blommor i klassisk stil.</p>
+          <div class="badge-row">
+            <span class="badge">Japanese</span>
+            <span class="badge">Traditional</span>
+          </div>
+          <span class="btn btn-primary studio-card__cta">Se studio</span>
+        </div>
+      </a>
+
+      <a href="#" class="studio-card" data-city="Uppsala" data-tags="Fine Line,Geometric,Minimalist">
+        <div class="studio-card__media" style="background: linear-gradient(135deg, #0d1f30, #1a3a50);"></div>
+        <div class="studio-card__body">
+          <div class="studio-card__meta">
+            <span>Uppsala</span>
+            <span>Fine Line</span>
+          </div>
+          <h3>Nordic Lines</h3>
+          <p>Minimalistisk fine line och geometriska mönster med skandinavisk precision och känsla.</p>
+          <div class="badge-row">
+            <span class="badge">Fine Line</span>
+            <span class="badge">Geometric</span>
+          </div>
+          <span class="btn btn-primary studio-card__cta">Se studio</span>
+        </div>
+      </a>
+    </div>
+
+    <div class="empty-panel" id="studios-empty" style="display:none;">
+      <h3>Inga studios matchade filtren</h3>
+      <p>Prova att rensa sökningen eller välj en annan stil eller stad.</p>
+    </div>
+
+    <p class="placeholder-notice" style="margin-top:24px;">⚠ Dessa studiokort är placeholders — den riktiga sidan visar verkliga studios från databasen.</p>
+  </div>
+</section>
+
+<!-- ═══════ VARFÖR INK REVENUE FUNGERAR ═══════ -->
+<section class="section section--blue">
+  <div class="container" style="position:relative; z-index:1;">
+    <div class="section-title">
+      <div class="line"></div>
+      <h2>Varför Ink Revenue Fungerar</h2>
+      <div class="line"></div>
+    </div>
+
+    <div class="card-grid">
+      <div class="card">
+        <div class="card__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="28" height="28" aria-hidden="true">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </div>
+        <h3>100% hanterad service</h3>
+        <p>Ni betalar för resultat, inte för att lära er verktyg. Vi är er marknadsföringsavdelning — ni behöver inte lyfta ett finger.</p>
+      </div>
+
+      <div class="card">
+        <div class="card__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="28" height="28" aria-hidden="true">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+          </svg>
+        </div>
+        <h3>Bättre matchning från start</h3>
+        <p>Kunder ser stil, plats och galleri tydligt — de hör av sig för att de redan har valt er, inte för att chansa.</p>
+      </div>
+
+      <div class="card">
+        <div class="card__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="28" height="28" aria-hidden="true">
+            <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+          </svg>
+        </div>
+        <h3>Ingen investering utan resultat</h3>
+        <p>Vi arbetar löpande och ni ser statistik i realtid. Inga dolda kostnader, ingen bindningstid — avsluta när ni vill.</p>
+      </div>
+    </div>
+
+    <div class="trust-bar">
+      <div class="trust-item">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+        Ingen bindningstid
+      </div>
+      <div class="trust-item">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+        Gratis strategisamtal
+      </div>
+      <div class="trust-item">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+        Ni äger alltid er data
+      </div>
+      <div class="trust-item">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+        Uppstart inom 1 vecka
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ FAQ ═══════ -->
+<section class="section section--lavender" id="faq">
+  <div class="container">
+    <div style="text-align:center; max-width:560px; margin:0 auto 44px;">
+      <p class="eyebrow">Vanliga frågor</p>
+      <h2>Svar på det ni undrar</h2>
+    </div>
+
+    <div class="faq" style="max-width:760px; margin:0 auto;" id="faq-list">
+
+      <div class="faq-item">
+        <button class="faq-item__q" aria-expanded="false">
+          Behöver vi sköta något själva?
+          <span class="faq-item__icon" aria-hidden="true">+</span>
+        </button>
+        <div class="faq-item__a">
+          Nej. Ni godkänner material och svarar på frågor från oss — det är allt. Vi sköter annonsering, innehåll, kundkontakt och uppföljning. Ju mer ni delar med er om er stil och era preferenser, desto bättre resultat.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-item__q" aria-expanded="false">
+          Hur snabbt ser vi resultat?
+          <span class="faq-item__icon" aria-hidden="true">+</span>
+        </button>
+        <div class="faq-item__a">
+          De flesta studios ser de första förfrågningarna inom 1–2 veckor efter uppstart. Volym och kvalitet ökar löpande de första 60–90 dagarna allteftersom vi optimerar era kanaler.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-item__q" aria-expanded="false">
+          Vad är skillnaden mot att sköta Instagram eller Google själv?
+          <span class="faq-item__icon" aria-hidden="true">+</span>
+        </button>
+        <div class="faq-item__a">
+          Att sköta marknadsföringen själv tar tid, kräver kunskap och ger ofta ojämna resultat. Vi är specialiserade på tatueringsmarknaden — vi vet vad som fungerar, kör det konsekvent och rapporterar resultaten. Ni betalar för en hel marknadsföringsavdelning till en bråkdel av kostnaden.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-item__q" aria-expanded="false">
+          Hur ser vår studio-sida ut?
+          <span class="faq-item__icon" aria-hidden="true">+</span>
+        </button>
+        <div class="faq-item__a">
+          Varje studio får en skräddarsydd sida med er logotyp, galleri, stil-taggar, om-oss-text och ett anpassat förfrågningsformulär. Kunder kan filtrera på stil, stad och känsla — och skicka en förfrågan med sin idé och budget direkt.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-item__q" aria-expanded="false">
+          Vad händer om vi vill avsluta?
+          <span class="faq-item__icon" aria-hidden="true">+</span>
+        </button>
+        <div class="faq-item__a">
+          Ni kan avsluta månad för månad utan förklaring. Ni äger alltid er data, era bilder och era sociala medier-kanaler. Vi hjälper till med överlämning om ni önskar.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-item__q" aria-expanded="false">
+          Fungerar det för soloartister också?
+          <span class="faq-item__icon" aria-hidden="true">+</span>
+        </button>
+        <div class="faq-item__a">
+          Absolut. Ink Revenue passar lika bra för soloartister som för studios med flera konstnärer. Vi anpassar upplägg och budget efter er situation.
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ BOKNINGSFORMULÄR ═══════ -->
+<section class="section section--lavender" id="bokning">
+  <div class="container booking">
+    <div>
+      <p class="eyebrow">För Studioägare</p>
+      <h2>Redo att få fler bokningar?</h2>
+      <p class="body" style="font-size:1.05rem;">
+        Boka ett gratis strategisamtal — 20 minuter. Vi går igenom era mål, vilka kunder ni vill nå och vilket upplägg som passar er bäst.
+      </p>
+      <p class="body">Samtalet är utan förpliktelser. Ni bestämmer om ni vill gå vidare.</p>
+
+      <div class="badge-row" style="margin-top:24px;">
+        <span class="badge">✓ Gratis samtal</span>
+        <span class="badge">✓ 20 minuter</span>
+        <span class="badge">✓ Svar inom 24h</span>
+      </div>
+    </div>
+
+    <form class="booking-form" id="contact-form" novalidate>
+      <p class="form-note">Berätta kort om nuläge och vad ni vill ha hjälp med, så kan vi göra första samtalet mer relevant.</p>
+
+      <label id="lbl-name">
+        Namn
+        <input type="text" name="name" id="f-name" autocomplete="name" placeholder="Ditt namn" required minlength="2" aria-labelledby="lbl-name" />
+        <span class="field-error" id="err-name" role="alert" aria-live="polite"></span>
+      </label>
+
+      <label id="lbl-studio">
+        Studio
+        <input type="text" name="studio" id="f-studio" placeholder="Studions namn" required minlength="2" aria-labelledby="lbl-studio" />
+        <span class="field-error" id="err-studio" role="alert" aria-live="polite"></span>
+      </label>
+
+      <label id="lbl-email">
+        E-post
+        <input type="email" name="email" id="f-email" autocomplete="email" placeholder="namn@studio.online" required aria-labelledby="lbl-email" />
+        <span class="field-error" id="err-email" role="alert" aria-live="polite"></span>
+      </label>
+
+      <label>
+        Telefonnummer
+        <input type="tel" name="phone" id="f-phone" autocomplete="tel" placeholder="070-000 00 00" />
+      </label>
+
+      <label>
+        Meddelande
+        <textarea name="message" id="f-message" rows="4" placeholder="Berätta kort om era mål och vilken typ av hjälp ni söker"></textarea>
+      </label>
+
+      <div class="hidden-trap" aria-hidden="true">
+        <label>Lämna detta fält tomt<input type="text" name="website" tabindex="-1" autocomplete="off" /></label>
+      </div>
+
+      <p class="legal-note">
+        Genom att skicka formuläret godkänner du vår <a href="#">integritetspolicy</a> och <a href="#">användarvillkor</a>.
+      </p>
+
+      <button type="submit" class="btn btn-primary" id="submit-btn">
+        Skicka bokningsförfrågan
+        <svg class="btn__icon" viewBox="0 0 20 20" aria-hidden="true">
+          <path d="M4 10h12M10 5l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <p class="form-status" id="form-status" role="status" aria-live="polite"></p>
+    </form>
+  </div>
+</section>
+
+<!-- ═══════ FOOTER ═══════ -->
+<footer class="footer">
+  <div class="container footer__inner">
+    <div class="brand-lockup brand-lockup--footer">
+      <svg class="brand-logo brand-logo--footer" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ink Revenue logotyp">
+        <defs>
+          <linearGradient id="silver-footer" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#858489"/>
+            <stop offset="0.25" stop-color="#e7e4ef"/>
+            <stop offset="0.5" stop-color="#858489"/>
+            <stop offset="0.75" stop-color="#b9b9b9"/>
+            <stop offset="1" stop-color="#858489"/>
+          </linearGradient>
+        </defs>
+        <rect width="512" height="512" fill="#0d203b"/>
+        <g transform="translate(256 256) rotate(45)">
+          <rect x="-150" y="-150" width="300" height="300" fill="none" stroke="#2e6fa3" stroke-width="14"/>
+        </g>
+        <text x="256" y="262" text-anchor="middle" font-family="Space Grotesk, Segoe UI, sans-serif" font-size="96" font-weight="700" fill="url(#silver-footer)">INK</text>
+        <text x="256" y="332" text-anchor="middle" font-family="Space Grotesk, Segoe UI, sans-serif" font-size="56" font-weight="600" fill="url(#silver-footer)">Revenue</text>
+      </svg>
+      <p class="brand-mark brand-mark--footer">Ink Revenue</p>
+    </div>
+
+    <nav class="footer__links" aria-label="Sidfot-navigation">
+      <a href="#top" class="footer__link">Hem</a>
+      <a href="#for-kunder" class="footer__link">Studios</a>
+      <a href="#faq" class="footer__link">FAQ</a>
+      <a href="#bokning" class="footer__link">Boka samtal</a>
+      <a href="#" class="footer__link">Integritetspolicy</a>
+    </nav>
+
+    <div class="footer__contact">
+      <p><a href="tel:+46732009483">+46 73 200 94 83</a></p>
+      <p><a href="mailto:info@inkrevenue.online">info@inkrevenue.online</a></p>
+    </div>
+
+    <div class="socials">
+      <a href="#" class="social" aria-label="Ink Revenue på Facebook" rel="noopener">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+        </svg>
+      </a>
+      <a href="#" class="social" aria-label="Ink Revenue på Instagram" rel="noopener">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+          <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+          <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+        </svg>
+      </a>
+    </div>
+
+    <p class="footer__copy">Copyright 2026 · Ink Revenue · Alla rättigheter förbehållna</p>
+  </div>
+</footer>
+
+<script>
+  /* Hamburger */
+  const burger = document.getElementById('burger');
+  const nav    = document.getElementById('site-nav');
+  burger.addEventListener('click', () => {
+    const open = nav.classList.toggle('site-nav--open');
+    burger.classList.toggle('site-burger--open', open);
+    burger.setAttribute('aria-expanded', open);
+  });
+
+  /* FAQ accordion */
+  document.getElementById('faq-list').addEventListener('click', e => {
+    const btn = e.target.closest('.faq-item__q');
+    if (!btn) return;
+    const item = btn.closest('.faq-item');
+    const wasOpen = item.classList.contains('faq-item--open');
+    document.querySelectorAll('.faq-item--open').forEach(el => {
+      el.classList.remove('faq-item--open');
+      el.querySelector('.faq-item__q').setAttribute('aria-expanded', 'false');
+    });
+    if (!wasOpen) {
+      item.classList.add('faq-item--open');
+      btn.setAttribute('aria-expanded', 'true');
+    }
+  });
+
+  /* Studios filter */
+  (function() {
+    const grid      = document.getElementById('studios-grid');
+    const empty     = document.getElementById('studios-empty');
+    const countEl   = document.getElementById('studios-count');
+    const cards     = Array.from(grid.querySelectorAll('.studio-card'));
+
+    function filterStudios() {
+      const search = document.getElementById('filter-search').value.trim().toLowerCase();
+      const city   = document.getElementById('filter-city').value;
+      const style  = document.getElementById('filter-style').value.toLowerCase();
+
+      let visible = 0;
+      cards.forEach(card => {
+        const cardCity  = card.dataset.city || '';
+        const cardTags  = (card.dataset.tags || '').toLowerCase();
+        const cardText  = card.textContent.toLowerCase();
+
+        const matchCity  = !city   || cardCity === city;
+        const matchStyle = !style  || cardTags.includes(style);
+        const matchSearch= !search || cardText.includes(search);
+
+        const show = matchCity && matchStyle && matchSearch;
+        card.style.display = show ? '' : 'none';
+        if (show) visible++;
+      });
+
+      countEl.textContent = visible + ' studios matchar din filtrering';
+      empty.style.display = visible === 0 ? 'block' : 'none';
+      grid.style.display  = visible === 0 ? 'none'  : '';
+    }
+
+    document.getElementById('filter-search').addEventListener('input', filterStudios);
+    document.getElementById('filter-city').addEventListener('change', filterStudios);
+    document.getElementById('filter-style').addEventListener('change', filterStudios);
+  })();
+
+  /* Form validation + simulated submit */
+  const form      = document.getElementById('contact-form');
+  const statusEl  = document.getElementById('form-status');
+  const submitBtn = document.getElementById('submit-btn');
+
+  function setError(inputId, errorId, msg) {
+    const input = document.getElementById(inputId);
+    const err   = document.getElementById(errorId);
+    if (msg) {
+      err.textContent = msg;
+      input.closest('label').classList.add('has-error');
+    } else {
+      err.textContent = '';
+      input.closest('label').classList.remove('has-error');
+    }
+    return !!msg;
+  }
+
+  ['f-name','f-studio','f-email'].forEach(id => {
+    document.getElementById(id).addEventListener('blur', () => validateField(id));
+  });
+
+  function validateField(id) {
+    const val = document.getElementById(id).value.trim();
+    if (id === 'f-name')   return setError('f-name',   'err-name',   val.length < 2 ? 'Fyll i ditt namn.' : '');
+    if (id === 'f-studio') return setError('f-studio', 'err-studio', val.length < 2 ? 'Fyll i studions namn.' : '');
+    if (id === 'f-email')  return setError('f-email',  'err-email',  !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val) ? 'Ange en giltig e-postadress.' : '');
+  }
+
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    if (this.website && this.website.value) return; /* honeypot */
+
+    const hasErr = validateField('f-name') | validateField('f-studio') | validateField('f-email');
+    if (hasErr) {
+      statusEl.textContent = 'Kontrollera fälten markerade i rött och försök igen.';
+      statusEl.className = 'form-status form-status--error';
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Skickar...';
+    statusEl.textContent = 'Skickar bokningsförfrågan...';
+    statusEl.className = 'form-status';
+
+    /* Ersätt setTimeout med fetch() till ert API i prod */
+    setTimeout(() => {
+      statusEl.textContent = 'Tack! Vi har tagit emot din förfrågan och återkommer normalt inom 24 timmar på vardagar.';
+      statusEl.className = 'form-status form-status--success';
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = 'Skicka bokningsförfrågan <svg class="btn__icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12M10 5l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      form.reset();
+    }, 1200);
+  });
+</script>
+
+</body>
+</html>
