@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { buildPageTitle, useJsonLd, usePageMetadata } from "../utils/pageMetadata";
 import { SiteLink } from "../utils/siteRouter";
-import { getPublicStudioBySlug } from "../services/publicSiteApi";
+import { getPublicStudioBySlug, getPublicStudios } from "../services/publicSiteApi";
 import { StudioLeadFormEnhanced } from "../components/StudioLeadFormEnhanced";
+import { PublicStudioCard } from "../components/PublicStudioCard";
 import { getStudioTags } from "../utils/studioTags";
+import { studioRegistry } from "./studios";
 
 function truncateText(value, maxLength = 160) {
   const text = String(value || "")
@@ -25,6 +27,7 @@ export function StudioProfilePage({ slug = "", studioOverride = null, previewMod
   const [studio, setStudio] = useState(studioOverride);
   const [loading, setLoading] = useState(!studioOverride);
   const [error, setError] = useState("");
+  const [allStudios, setAllStudios] = useState([]);
 
   useEffect(() => {
     if (studioOverride) {
@@ -61,6 +64,35 @@ export function StudioProfilePage({ slug = "", studioOverride = null, previewMod
       active = false;
     };
   }, [slug, studioOverride]);
+
+  useEffect(() => {
+    if (previewMode) return;
+    let active = true;
+    getPublicStudios()
+      .then((response) => {
+        if (active) setAllStudios(Array.isArray(response) ? response.filter(Boolean) : []);
+      })
+      .catch(() => {});
+    return () => { active = false; };
+  }, [previewMode]);
+
+  const relatedStudios = useMemo(() => {
+    if (!studio || !allStudios.length) return [];
+    const currentSlug = studio.slug || slug;
+    const currentTags = new Set(getStudioTags(studio).map((t) => t.toLowerCase()));
+    return allStudios
+      .filter((s) => s.slug !== currentSlug)
+      .map((s) => ({
+        studio: s,
+        score:
+          (s.city === studio.city ? 2 : 0) +
+          getStudioTags(s).filter((t) => currentTags.has(t.toLowerCase())).length
+      }))
+      .filter(({ score }) => score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 3)
+      .map(({ studio: s }) => s);
+  }, [allStudios, slug, studio]);
 
   const studioTags = useMemo(() => (studio ? [...new Set(getStudioTags(studio))] : []), [studio]);
   const previewMessage = useMemo(() => {
@@ -453,6 +485,32 @@ export function StudioProfilePage({ slug = "", studioOverride = null, previewMod
                 <a key={imageUrl} href={imageUrl} target="_blank" rel="noreferrer">
                   <img src={imageUrl} alt={`${studio.name} galleri`} />
                 </a>
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
+
+      {relatedStudios.length ? (
+        <section className="section section--white">
+          <div className="container">
+            <div className="section-heading section-heading--tight">
+              <div>
+                <p className="eyebrow">Fler Studios</p>
+                <h2>Liknande studios att utforska</h2>
+              </div>
+              <SiteLink className="btn btn-secondary" href={studio.city ? `/studios?city=${encodeURIComponent(studio.city)}` : "/studios"}>
+                Se alla studios
+              </SiteLink>
+            </div>
+            <div className="studio-grid">
+              {relatedStudios.map((s) => (
+                <PublicStudioCard
+                  key={s.id}
+                  studio={s}
+                  compact
+                  cardTheme={studioRegistry[s.slug]?.cardTheme ?? null}
+                />
               ))}
             </div>
           </div>

@@ -261,6 +261,82 @@ export function StudiosDirectoryPage() {
               <p>Prova att rensa sökningen eller välj en annan stil eller stad.</p>
             </div>
           )}
+
+          {!loading && (filters.city || filters.style) ? (
+            <div className="seo-landing-text">
+              <h2>
+                {filters.style && filters.city
+                  ? `${filters.style}-tatueringar i ${filters.city}`
+                  : filters.style
+                  ? `${filters.style}-tatueringar i Sverige`
+                  : `Tatueringsstudios i ${filters.city}`}
+              </h2>
+              <p>
+                {filters.style && filters.city
+                  ? `Hitta de bästa ${filters.style.toLowerCase()}-tatuerarna i ${filters.city}. Skicka en förfrågan direkt till studion — beskriva din idé, stil och placering för att komma igång.`
+                  : filters.style
+                  ? `Utforska tatueringsstudios specialiserade på ${filters.style.toLowerCase()} i hela Sverige. Varje studio har ett eget uttryck — filtrera vidare efter stad för att hitta rätt.`
+                  : `Bläddra bland tatueringsstudios i ${filters.city}. Jämför stilar, se galleri och skicka din förfrågan direkt till studion som passar dig bäst.`}
+              </p>
+              <div className="seo-landing-links">
+                {filters.city && (
+                  <a href="/studios" onClick={(e) => { e.preventDefault(); setFilters({ search: "", city: "", style: "" }); }}>
+                    Visa alla städer
+                  </a>
+                )}
+                {filters.style && (
+                  <a href="/studios" onClick={(e) => { e.preventDefault(); setFilters({ search: "", city: "", style: "" }); }}>
+                    Visa alla stilar
+                  </a>
+                )}
+                {filters.city && !filters.style && styles.slice(0, 4).map((style) => (
+                  <a
+                    key={style}
+                    href={`/studios?city=${encodeURIComponent(filters.city)}&style=${encodeURIComponent(style)}`}
+                    onClick={(e) => { e.preventDefault(); setFilters((f) => ({ ...f, style })); }}
+                  >
+                    {style} i {filters.city}
+                  </a>
+                ))}
+                {filters.style && !filters.city && cities.slice(0, 4).map((city) => (
+                  <a
+                    key={city}
+                    href={`/studios?style=${encodeURIComponent(filters.style)}&city=${encodeURIComponent(city)}`}
+                    onClick={(e) => { e.preventDefault(); setFilters((f) => ({ ...f, city })); }}
+                  >
+                    {filters.style} i {city}
+                  </a>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {!loading && !filters.city && !filters.style && !filters.search && cities.length > 0 ? (
+            <div className="seo-landing-text">
+              <h2>Utforska tatueringar efter stad och stil</h2>
+              <p>Ink Revenue samlar tatueringsstudios från hela Sverige. Välj stad eller stil för att hitta rätt studio för din idé.</p>
+              <div className="seo-landing-links">
+                {cities.map((city) => (
+                  <a
+                    key={city}
+                    href={`/studios?city=${encodeURIComponent(city)}`}
+                    onClick={(e) => { e.preventDefault(); setFilters((f) => ({ ...f, city })); }}
+                  >
+                    Tatueringsstudio i {city}
+                  </a>
+                ))}
+                {styles.map((style) => (
+                  <a
+                    key={style}
+                    href={`/studios?style=${encodeURIComponent(style)}`}
+                    onClick={(e) => { e.preventDefault(); setFilters((f) => ({ ...f, style })); }}
+                  >
+                    {style}-tatuering
+                  </a>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </div>
       </section>
     </div>

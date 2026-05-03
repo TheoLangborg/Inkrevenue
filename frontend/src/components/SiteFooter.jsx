@@ -1,5 +1,8 @@
 import { SiteLink } from "../utils/siteRouter";
 
+const FOOTER_CITIES = ["Stockholm", "Göteborg", "Malmö", "Uppsala"];
+const FOOTER_STYLES = ["Fineline", "Blackwork", "Traditionell", "Realism", "Dotwork"];
+
 export function SiteFooter({ onOpenLegalModal }) {
   return (
     <footer className="footer">
@@ -21,6 +24,25 @@ export function SiteFooter({ onOpenLegalModal }) {
             Integritet & villkor
           </button>
         </div>
+
+        <nav className="footer__discovery" aria-label="Utforska tatueringar">
+          <div className="footer__discovery-col">
+            <p className="footer__discovery-heading">Städer</p>
+            {FOOTER_CITIES.map((city) => (
+              <SiteLink key={city} href={`/studios?city=${encodeURIComponent(city)}`}>
+                Tatuering i {city}
+              </SiteLink>
+            ))}
+          </div>
+          <div className="footer__discovery-col">
+            <p className="footer__discovery-heading">Stilar</p>
+            {FOOTER_STYLES.map((style) => (
+              <SiteLink key={style} href={`/studios?style=${encodeURIComponent(style)}`}>
+                {style}-tatuering
+              </SiteLink>
+            ))}
+          </div>
+        </nav>
 
         <div className="footer__contact">
           <p>Kontakta oss:</p>

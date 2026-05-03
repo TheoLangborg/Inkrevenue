@@ -2049,6 +2049,82 @@ h1 {
   color: #fff;
 }
 
+.footer__discovery {
+  display: flex;
+  gap: 32px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.footer__discovery-col {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 140px;
+}
+
+.footer__discovery-heading {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0 0 4px;
+}
+
+.footer__discovery-col a {
+  color: rgba(255, 255, 255, 0.75);
+  text-decoration: none;
+  font-size: 0.88rem;
+}
+
+.footer__discovery-col a:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+
+.seo-landing-text {
+  margin-top: 48px;
+  padding-top: 40px;
+  border-top: 1px solid var(--border-subtle, rgba(0, 0, 0, 0.08));
+}
+
+.seo-landing-text h2 {
+  font-size: 1.35rem;
+  margin-bottom: 10px;
+}
+
+.seo-landing-text p {
+  color: var(--text-muted, #555);
+  max-width: 640px;
+  margin-bottom: 18px;
+}
+
+.seo-landing-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.seo-landing-links a {
+  font-size: 0.88rem;
+  padding: 5px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border-subtle, rgba(0, 0, 0, 0.15));
+  color: var(--text-base, #1a1a2e);
+  text-decoration: none;
+  background: var(--surface-subtle, #f7f5f2);
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.seo-landing-links a:hover {
+  background: var(--ink-100, #ede9e4);
+  border-color: var(--ink-300, #b8a99a);
+}
+
 .legal-modal {
   position: fixed;
   right: 24px;
