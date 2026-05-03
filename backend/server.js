@@ -65,6 +65,46 @@ app.get("/api/health", (_req, res) => {
 app.use("/api/public/studios", publicStudioRouter);
 app.use("/api", salesRouter);
 
+app.get("/sitemap.xml", async (_req, res) => {
+  const SITE = "https://inkrevenue.online";
+  const today = new Date().toISOString().slice(0, 10);
+
+  const staticUrls = [
+    { loc: `${SITE}/`, priority: "1.0", changefreq: "weekly" },
+    { loc: `${SITE}/studios`, priority: "0.9", changefreq: "daily" }
+  ];
+
+  let studioUrls = [];
+  try {
+    const { requestCrmPublicApi } = await import("./utils/crmClient.js");
+    const { response, payload } = await requestCrmPublicApi("/studios");
+    const studios = Array.isArray(payload?.data) ? payload.data : [];
+    studioUrls = studios
+      .filter((s) => s?.slug)
+      .map((s) => ({
+        loc: `${SITE}/studio/${encodeURIComponent(s.slug)}`,
+        priority: "0.7",
+        changefreq: "weekly"
+      }));
+  } catch {
+    // non-fatal — serve static URLs only
+  }
+
+  const allUrls = [...staticUrls, ...studioUrls];
+  const urlEntries = allUrls
+    .map(
+      ({ loc, priority, changefreq }) =>
+        `  <url>\n    <loc>${loc}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>${changefreq}</changefreq>\n    <priority>${priority}</priority>\n  </url>`
+    )
+    .join("\n");
+
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urlEntries}\n</urlset>`;
+
+  res.set("Content-Type", "application/xml");
+  res.set("Cache-Control", "public, max-age=3600, s-maxage=3600");
+  res.send(xml);
+});
+
 app.use((req, res) => {
   res.status(404).json({ message: "Endpointen kunde inte hittas." });
 });

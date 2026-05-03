@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 const BRAND_NAME = "Ink Revenue";
 const SITE_URL = "https://inkrevenue.online";
@@ -65,6 +65,34 @@ function upsertLink(rel, href) {
   }
 }
 
+export function useJsonLd(schema) {
+  const scriptRef = useRef(null);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+
+    if (!schema) {
+      scriptRef.current?.remove();
+      scriptRef.current = null;
+      return;
+    }
+
+    if (!scriptRef.current) {
+      const el = document.createElement("script");
+      el.type = "application/ld+json";
+      document.head.appendChild(el);
+      scriptRef.current = el;
+    }
+
+    scriptRef.current.textContent = JSON.stringify(schema);
+
+    return () => {
+      scriptRef.current?.remove();
+      scriptRef.current = null;
+    };
+  }, [schema]);
+}
+
 export function buildPageTitle(title) {
   return title ? `${title} | ${BRAND_NAME}` : BRAND_NAME;
 }
@@ -104,6 +132,8 @@ export function usePageMetadata({
     upsertMeta("name", "twitter:title", resolvedTitle);
     upsertMeta("name", "twitter:description", resolvedDescription);
     upsertMeta("name", "twitter:image", imageUrl);
+    upsertMeta("name", "twitter:image:alt", resolvedTitle);
+    upsertMeta("property", "og:image:alt", resolvedTitle);
     upsertLink("canonical", canonicalUrl);
   }, [description, image, noIndex, path, title, type]);
 }

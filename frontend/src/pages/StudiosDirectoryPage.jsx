@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { PublicStudioCard } from "../components/PublicStudioCard";
 import { getPublicStudios } from "../services/publicSiteApi";
-import { buildPageTitle, usePageMetadata } from "../utils/pageMetadata";
+import { buildPageTitle, useJsonLd, usePageMetadata } from "../utils/pageMetadata";
 import { getStudioTags } from "../utils/studioTags";
 import { studioRegistry } from "./studios";
 
@@ -9,17 +9,51 @@ export function StudiosDirectoryPage() {
   const [studios, setStudios] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [filters, setFilters] = useState({
-    search: "",
-    city: "",
-    style: ""
+
+  const [filters, setFilters] = useState(() => {
+    if (typeof window === "undefined") return { search: "", city: "", style: "" };
+    const params = new URLSearchParams(window.location.search);
+    return {
+      search: params.get("search") || "",
+      city: params.get("city") || "",
+      style: params.get("style") || ""
+    };
   });
 
+  const metaTitle = useMemo(() => {
+    const parts = [];
+    if (filters.style) parts.push(filters.style);
+    if (filters.city) parts.push(`i ${filters.city}`);
+    return parts.length
+      ? buildPageTitle(`Tatueringsstudios ${parts.join(" ")}`)
+      : buildPageTitle("Hitta tatueringsstudios i Sverige");
+  }, [filters.city, filters.style]);
+
+  const metaDescription = useMemo(() => {
+    if (filters.style && filters.city) {
+      return `Hitta tatueringsstudios med ${filters.style} i ${filters.city}. Filtrera, se galleri och skicka din förfrågan direkt via Ink Revenue.`;
+    }
+    if (filters.style) {
+      return `Tatueringsstudios specialiserade på ${filters.style}. Se galleri, läs om studion och skicka din förfrågan direkt.`;
+    }
+    if (filters.city) {
+      return `Tatueringsstudios i ${filters.city}. Filtrera på stil, se galleri och skicka förfrågan direkt via Ink Revenue.`;
+    }
+    return "Utforska tatueringsstudios i Sverige efter stil, stad och uttryck. Filtrera fram en studio som passar din idé och skicka din förfrågan direkt.";
+  }, [filters.city, filters.style]);
+
+  const metaPath = useMemo(() => {
+    const params = new URLSearchParams();
+    if (filters.city) params.set("city", filters.city);
+    if (filters.style) params.set("style", filters.style);
+    const qs = params.toString();
+    return qs ? `/studios?${qs}` : "/studios";
+  }, [filters.city, filters.style]);
+
   usePageMetadata({
-    title: buildPageTitle("Hitta tatueringsstudios"),
-    description:
-      "Utforska tatueringsstudios efter stil, stad och uttryck. Filtrera fram en studio som passar din idé och skicka din förfrågan direkt.",
-    path: "/studios"
+    title: metaTitle,
+    description: metaDescription,
+    path: metaPath
   });
 
   useEffect(() => {
@@ -103,6 +137,36 @@ export function StudiosDirectoryPage() {
     });
   }, [filters, studios]);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams();
+    if (filters.city) params.set("city", filters.city);
+    if (filters.style) params.set("style", filters.style);
+    if (filters.search) params.set("search", filters.search);
+    const qs = params.toString();
+    const newUrl = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
+    window.history.replaceState(null, "", newUrl);
+  }, [filters]);
+
+  const itemListJsonLd = useMemo(() => {
+    if (!filteredStudios.length) return null;
+    return {
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      "name": "Tatueringsstudios på Ink Revenue",
+      "description": metaDescription,
+      "numberOfItems": filteredStudios.length,
+      "itemListElement": filteredStudios.slice(0, 50).map((studio, index) => ({
+        "@type": "ListItem",
+        "position": index + 1,
+        "url": `https://inkrevenue.online/studio/${encodeURIComponent(studio.slug)}`,
+        "name": studio.name
+      }))
+    };
+  }, [filteredStudios, metaDescription]);
+
+  useJsonLd(itemListJsonLd);
+
   function handleFilterChange(event) {
     const { name, value } = event.target;
     setFilters((current) => ({
@@ -116,9 +180,19 @@ export function StudiosDirectoryPage() {
       <section className="page-hero page-hero--directory">
         <div className="container">
           <p className="eyebrow">Hitta Rätt Studio</p>
-          <h1>Utforska tatueringsstudios efter stil och stad</h1>
+          <h1>
+            {filters.style && filters.city
+              ? `${filters.style}-tatueringar i ${filters.city}`
+              : filters.style
+              ? `Tatueringsstudios — ${filters.style}`
+              : filters.city
+              ? `Tatueringsstudios i ${filters.city}`
+              : "Utforska tatueringsstudios i Sverige"}
+          </h1>
           <p className="lead lead--dark">
-            Filtrera efter plats, stil och uttryck för att hitta en studio som passar din idé.
+            {filters.style || filters.city
+              ? "Filtrera vidare efter plats, stil och uttryck — skicka din förfrågan direkt."
+              : "Filtrera efter plats, stil och uttryck för att hitta en studio som passar din idé."}
           </p>
         </div>
       </section>

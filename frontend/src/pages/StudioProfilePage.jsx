@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { buildPageTitle, usePageMetadata } from "../utils/pageMetadata";
+import { buildPageTitle, useJsonLd, usePageMetadata } from "../utils/pageMetadata";
 import { SiteLink } from "../utils/siteRouter";
 import { getPublicStudioBySlug } from "../services/publicSiteApi";
 import { StudioLeadFormEnhanced } from "../components/StudioLeadFormEnhanced";
@@ -150,7 +150,12 @@ export function StudioProfilePage({ slug = "", studioOverride = null, previewMod
   );
   const pageTitle = useMemo(() => {
     if (studio?.name) {
-      return buildPageTitle(`${studio.name}${studio.city ? ` i ${studio.city}` : ""}`);
+      const topStyles = studioTags.slice(0, 2).join(" & ");
+      const suffix = [
+        studio.city ? `i ${studio.city}` : "",
+        topStyles ? `— ${topStyles}` : ""
+      ].filter(Boolean).join(" ");
+      return buildPageTitle(`${studio.name}${suffix ? ` ${suffix}` : ""}`);
     }
 
     if (error) {
@@ -158,20 +163,25 @@ export function StudioProfilePage({ slug = "", studioOverride = null, previewMod
     }
 
     return buildPageTitle("Studiosida");
-  }, [error, studio]);
+  }, [error, studio, studioTags]);
   const pageDescription = useMemo(() => {
     if (!studio) {
       return "Utforska tatueringsstudios och skicka din förfrågan direkt till studion.";
     }
 
-    return truncateText(
+    const baseText =
       studio.publicProfile?.headline ||
-        studio.publicProfile?.cardSummary ||
-        studio.publicProfile?.intro ||
-        studio.description ||
-        "Utforska en tatueringsstudio på Ink Revenue."
-    );
-  }, [studio]);
+      studio.publicProfile?.cardSummary ||
+      studio.publicProfile?.intro ||
+      studio.description;
+
+    if (baseText) return truncateText(baseText);
+
+    const topStyles = studioTags.slice(0, 3).join(", ");
+    const cityPart = studio.city ? ` i ${studio.city}` : "";
+    const stylePart = topStyles ? `. Specialiserade på ${topStyles}` : "";
+    return truncateText(`${studio.name}${cityPart} — tatueringsstudio på Ink Revenue${stylePart}. Skicka din förfrågan direkt.`);
+  }, [studio, studioTags]);
   const pagePath = useMemo(() => {
     const resolvedSlug = studio?.slug || slug;
 
@@ -189,6 +199,55 @@ export function StudioProfilePage({ slug = "", studioOverride = null, previewMod
     path: pagePath,
     noIndex: previewMode
   });
+
+  const studioJsonLd = useMemo(() => {
+    if (!studio || previewMode) return null;
+
+    const resolvedSlug = studio.slug || slug;
+    const studioUrl = `https://inkrevenue.online/studio/${encodeURIComponent(resolvedSlug)}`;
+    const tags = [...new Set(getStudioTags(studio))];
+    const images = Array.isArray(studio.publicProfile?.galleryImageUrls)
+      ? studio.publicProfile.galleryImageUrls.filter(Boolean)
+      : [];
+
+    const schema = {
+      "@context": "https://schema.org",
+      "@type": "TattooShop",
+      "@id": studioUrl,
+      "name": studio.name,
+      "url": studioUrl,
+      "description": studio.publicProfile?.intro || studio.description || undefined,
+      "address": studio.city
+        ? { "@type": "PostalAddress", "addressLocality": studio.city, "addressCountry": "SE" }
+        : undefined,
+      "image": studio.heroImageUrl || studio.logoUrl || undefined,
+      "logo": studio.logoUrl || undefined,
+      "hasMap": studio.city
+        ? `https://www.google.com/maps/search/${encodeURIComponent(`tatueringsstudio ${studio.name} ${studio.city}`)}`
+        : undefined,
+      "knowsAbout": tags.length ? tags : undefined,
+      "potentialAction": {
+        "@type": "ReserveAction",
+        "target": { "@type": "EntryPoint", "urlTemplate": `${studioUrl}#studio-form` },
+        "result": { "@type": "Reservation", "name": "Skicka förfrågan" }
+      }
+    };
+
+    if (images.length) {
+      schema.photo = images.map((url) => ({
+        "@type": "ImageObject",
+        "url": url,
+        "contentUrl": url,
+        "description": `${studio.name} — tatueringsarbete`
+      }));
+    }
+
+    Object.keys(schema).forEach((key) => schema[key] === undefined && delete schema[key]);
+
+    return schema;
+  }, [previewMode, slug, studio]);
+
+  useJsonLd(studioJsonLd);
 
   if (loading) {
     return (
