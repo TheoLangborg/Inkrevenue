@@ -12,6 +12,7 @@ import {
 import { useAbandonedFormDraft } from "../hooks/useAbandonedFormDraft";
 import { getLeadSourceFromUrl, getTrackingPayload } from "../utils/tracking";
 import { prepareLeadImageUpload, MAX_INSPIRATION_IMAGE_MB } from "../utils/prepareLeadImageUpload";
+import { canBookDirectly } from "../utils/leadFormBooking";
 import { useLanguage, useT } from "../i18n/LanguageContext";
 import { CampaignBanner } from "./CampaignBanner";
 import { sv } from "../i18n/sv";
@@ -634,12 +635,18 @@ export function StudioLeadFormEnhanced({
   // villkoret slocknade grinden vid varje omhämtning: knappen gick från "Gå
   // till betalning" till "Skicka förfrågan" och rutan skrev "du betalar inget
   // nu" trots vald tid — och den kunden slapp ifrån depositionen.
-  const requiresTimeSelection = Boolean(
-    canShowCalendar &&
-      hasEnoughDetails &&
-      availability.data?.eligibleForDirectBooking &&
-      weeks.some((w) => w.days.some((d) => d.slots.length > 0))
-  );
+  //
+  // "stale" är undantaget (granskning 4 punkt 2) — se canBookDirectly för hela
+  // motiveringen: luckorna som står kvar efter ett misslyckat omhämtningsförsök
+  // är dimensionerade av det GAMLA estimatet, medan inskicket bär den nya
+  // beskrivningen. Grinden bor i utils för att gå att köra som test.
+  const requiresTimeSelection = canBookDirectly({
+    canShowCalendar,
+    hasEnoughDetails,
+    availabilityState: availability.state,
+    eligibleForDirectBooking: availability.data?.eligibleForDirectBooking,
+    hasSlots: weeks.some((w) => w.days.some((d) => d.slots.length > 0))
+  });
 
   // Punkt 12: ta bara betalt när en tid faktiskt bokas. Backenden skapar bara en
   // bokning när bokningsreglerna landar i ready_to_schedule OCH förfrågan bär ett
@@ -1498,7 +1505,10 @@ export function StudioLeadFormEnhanced({
           {/* Kontrollen misslyckades men vi har ett tidigare svar: kalendern
               nedan står kvar, men urvalet nollas (punkt 9). Beskrivningen
               påverkar estimatet, så en tid som hade rätt längd före ändringen
-              kan ha fel längd efter den — kunden väljer om på ett klick. */}
+              kan ha fel längd efter den — kunden väljer om på ett klick.
+              Granskning 4 punkt 2: luckorna är byggda på det gamla estimatet, så
+              direktbokningen är avstängd här (requiresTimeSelection) och tiden
+              går in som ett önskemål. Texten måste säga det. */}
           {availability.state === "stale" ? (
             <p className="form-status form-status--muted">{availability.message}</p>
           ) : null}

@@ -666,7 +666,7 @@ export const sv = {
     checkingAvailability: "Kontrollerar lediga tider...",
     availabilityError: "Det gick inte att kontrollera lediga tider just nu.",
     availabilityStale:
-      "Vi kunde inte uppdatera tiderna just nu. Tiderna nedan är från den senaste kontrollen — välj din tid igen.",
+      "Vi kunde inte uppdatera tiderna just nu. Tiderna nedan är från den senaste kontrollen, så vi kan inte boka dem direkt — välj en tid igen så skickas den som ett önskemål och studion bekräftar den.",
     prevWeek: "Föregående vecka",
     nextWeek: "Nästa vecka",
     selectedTime: "Vald tid",

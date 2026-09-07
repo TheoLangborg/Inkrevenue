@@ -652,7 +652,7 @@ export const en = {
     checkingAvailability: "Checking available times...",
     availabilityError: "We couldn't check available times right now.",
     availabilityStale:
-      "We couldn't refresh the times right now. The times below are from the most recent check — please pick your time again.",
+      "We couldn't refresh the times right now. The times below are from the most recent check, so we can't book them directly — pick a time again and we'll send it as a request for the studio to confirm.",
     prevWeek: "Previous week",
     nextWeek: "Next week",
     selectedTime: "Selected time",
