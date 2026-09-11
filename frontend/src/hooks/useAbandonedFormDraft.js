@@ -4,6 +4,7 @@ import {
   saveStrategyCallDraft
 } from "../services/publicSiteApi";
 import { getTrackingPayload } from "../utils/tracking";
+import { useLanguage } from "../i18n/LanguageContext";
 
 function readStoredDraftId(storageKey) {
   if (typeof window === "undefined") {
@@ -46,6 +47,10 @@ export function useAbandonedFormDraft({
   );
   const [draftId, setDraftId] = useState(() => readStoredDraftId(storageKey));
   const draftIdRef = useRef(draftId);
+  // Språket skickas här och inte i varje formulärs payload: backend behandlar
+  // det som ett spårningsfält bredvid utm-parametrarna, och båda formulären
+  // hade glömt det. Utkastets påminnelse går på det här språket.
+  const { language } = useLanguage();
 
   useEffect(() => {
     const storedDraftId = readStoredDraftId(storageKey);
@@ -72,6 +77,7 @@ export function useAbandonedFormDraft({
       const savePayload = {
         ...payload,
         draftId: draftIdRef.current || "",
+        language,
         ...getTrackingPayload()
       };
       const request =
@@ -103,7 +109,7 @@ export function useAbandonedFormDraft({
     return () => {
       window.clearTimeout(timeoutId);
     };
-  }, [enabled, payload, storageKey, studioSlug, type]);
+  }, [enabled, language, payload, storageKey, studioSlug, type]);
 
   function clearDraft() {
     draftIdRef.current = "";

@@ -13,6 +13,7 @@ import { useAbandonedFormDraft } from "../hooks/useAbandonedFormDraft";
 import { getLeadSourceFromUrl, getTrackingPayload } from "../utils/tracking";
 import { prepareLeadImageUpload, MAX_INSPIRATION_IMAGE_MB } from "../utils/prepareLeadImageUpload";
 import { canBookDirectly, resolveTimeStepNotice } from "../utils/leadFormBooking";
+import { STUDIO_TIME_ZONE } from "../utils/campaignBanner";
 import { useLanguage, useT } from "../i18n/LanguageContext";
 import { CampaignBanner } from "./CampaignBanner";
 import { sv } from "../i18n/sv";
@@ -515,6 +516,11 @@ export function StudioLeadFormEnhanced({
   const [paymentIntentClientSecret, setPaymentIntentClientSecret] = useState(null);
   const [paymentIntentId, setPaymentIntentId] = useState(null);
   const [paymentReady, setPaymentReady] = useState(false); // true after PaymentIntent created
+  // Beloppet som FAKTISKT ligger på PaymentIntenten, enligt servern. Sidladdningens
+  // siffra är en förutsägelse: ändrar studion sin deposition medan kunden fyller i
+  // formuläret räknar servern om beloppet, och det är servern som bestämmer vad som
+  // dras. Kortsteget och kvittensen ska säga samma sak som kortet debiteras.
+  const [chargedAmountSek, setChargedAmountSek] = useState(null);
   const [paymentSuccess, setPaymentSuccess] = useState(null); // { amountSek, studioName } after confirmed payment
   // Sätts när Stripe-betalningen gått igenom men lead-POST:en misslyckades.
   // Kunden är då redan debiterad, så nästa försök MÅSTE gå med samma
@@ -600,6 +606,12 @@ export function StudioLeadFormEnhanced({
 
   function getPaymentAmount() {
     return prepayment.amountSek || 0;
+  }
+
+  // Finns det en PaymentIntent gäller dess belopp. Före den finns är förutsägelsen
+  // det enda vi har — och det är också den knappen som SKAPAR intenten.
+  function getChargedAmount() {
+    return typeof chargedAmountSek === "number" ? chargedAmountSek : getPaymentAmount();
   }
 
   const hasEnoughDetails = useMemo(() => hasEnoughDetailsForCalendar(formData), [formData]);
@@ -1024,7 +1036,7 @@ export function StudioLeadFormEnhanced({
     });
     if (extraPayload.paymentIntentId) {
       setPaymentSuccess({
-        amountSek: getPaymentAmount(),
+        amountSek: getChargedAmount(),
         studioName:
           studio?.publicProfile?.name || studio?.name || t("leadForm.paidFallbackStudio")
       });
@@ -1043,6 +1055,7 @@ export function StudioLeadFormEnhanced({
     setPaymentReady(false);
     setPaymentIntentClientSecret(null);
     setPaymentIntentId(null);
+    setChargedAmountSek(null);
     setPaidPaymentIntentId(null);
     clearDraft();
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -1108,6 +1121,7 @@ export function StudioLeadFormEnhanced({
         });
         setPaymentIntentClientSecret(pi.clientSecret);
         setPaymentIntentId(pi.paymentIntentId);
+        setChargedAmountSek(typeof pi.amount === "number" ? pi.amount : null);
         setPaymentReady(true);
         setStatus({ state: "idle", message: "" });
       } catch (error) {
@@ -1618,10 +1632,16 @@ export function StudioLeadFormEnhanced({
                       {(() => {
                         const s = formData.preferredSlots[0];
                         const d = new Date(s.startTime);
+                        // Datumet MÅSTE läsas i studions zon. Klockslaget bredvid
+                        // (`s.label`) kommer färdigskrivet från servern och är redan
+                        // svensk tid — formaterades datumet i besökarens zon kunde
+                        // raden bli "söndag 14 september kl. 09:00" om en tid som
+                        // hos studion är måndag den 15:e.
                         const dateStr = d.toLocaleDateString(locale, {
                           weekday: "long",
                           day: "numeric",
-                          month: "long"
+                          month: "long",
+                          timeZone: STUDIO_TIME_ZONE
                         });
                         return t("leadForm.selectedTimeValue", { date: dateStr, time: s.label });
                       })()}
@@ -1765,10 +1785,10 @@ export function StudioLeadFormEnhanced({
               }}
             >
               <PaymentStep
-                amountSek={getPaymentAmount()}
+                amountSek={getChargedAmount()}
                 paymentIntentId={paymentIntentId}
                 onConfirmed={registerPaidLead}
-                onCancel={() => { setPaymentReady(false); setPaymentIntentClientSecret(null); setPaymentIntentId(null); setStatus({ state: "idle", message: "" }); }}
+                onCancel={() => { setPaymentReady(false); setPaymentIntentClientSecret(null); setPaymentIntentId(null); setChargedAmountSek(null); setStatus({ state: "idle", message: "" }); }}
                 submitting={status.state === "loading"}
               />
             </Elements>
