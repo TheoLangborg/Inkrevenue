@@ -653,6 +653,10 @@ export const en = {
     availabilityError: "We couldn't check available times right now.",
     availabilityStale:
       "We couldn't refresh the times right now. The times below are from the most recent check, so we can't book them directly — pick a time again and we'll send it as a request for the studio to confirm.",
+    noSlots:
+      "We have no available times to show right now. Continue anyway — the studio reviews your request and gets back to you with times that work.",
+    timesAreRequests:
+      "The studio reviews your request before a time is confirmed. Pick a time that suits you — it's sent as a request for the studio to confirm.",
     prevWeek: "Previous week",
     nextWeek: "Next week",
     selectedTime: "Selected time",

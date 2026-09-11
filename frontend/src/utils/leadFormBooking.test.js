@@ -1,6 +1,6 @@
 import { strict as assert } from "node:assert";
 import { describe, it } from "node:test";
-import { canBookDirectly } from "./leadFormBooking.js";
+import { canBookDirectly, resolveTimeStepNotice } from "./leadFormBooking.js";
 
 /**
  * Körs med `node --test src/utils/leadFormBooking.test.js` — frontenden har
@@ -39,5 +39,67 @@ describe("canBookDirectly", () => {
     assert.equal(canBookDirectly({ ...ready, eligibleForDirectBooking: false }), false);
     assert.equal(canBookDirectly({ ...ready, canShowCalendar: false }), false);
     assert.equal(canBookDirectly({ ...ready, hasEnoughDetails: false }), false);
+  });
+});
+
+/**
+ * Granskning 4 punkt 3: tidssteget blev HELT tomt när kalendern saknade luckor.
+ * Renderingen krävde att någon vecka hade en lucka — annars stod bara rubriken
+ * och Tillbaka/Nästa kvar, utan en rad text.
+ */
+const settled = {
+  availabilityState: "success",
+  hasSlots: true,
+  eligibleForDirectBooking: true
+};
+
+describe("resolveTimeStepNotice", () => {
+  it("säger ingenting när kalendern är färsk, full och bokningsbar", () => {
+    assert.equal(resolveTimeStepNotice(settled), "none");
+  });
+
+  it("⚠️ förklarar tomma tidssteg i stället för att rendera ingenting", () => {
+    // Studion har inga bokningsbara veckodagar, eller allt i fönstret är taget.
+    assert.equal(resolveTimeStepNotice({ ...settled, hasSlots: false }), "noSlots");
+  });
+
+  it("förklarar även ett tomt steg som aldrig hann hämtas", () => {
+    assert.equal(
+      resolveTimeStepNotice({ ...settled, availabilityState: "idle", hasSlots: false }),
+      "noSlots"
+    );
+  });
+
+  it("⚠️ säger att kalendern är en önskelista när direktbokning inte tillåts", () => {
+    assert.equal(
+      resolveTimeStepNotice({ ...settled, eligibleForDirectBooking: false }),
+      "timesAreRequests"
+    );
+  });
+
+  it("låter stale-texten stå ensam — den säger redan samma sak", () => {
+    assert.equal(
+      resolveTimeStepNotice({ ...settled, availabilityState: "stale", eligibleForDirectBooking: false }),
+      "stale"
+    );
+  });
+
+  it("tar noSlots före stale när den kvarstående kalendern är tom", () => {
+    // stale-texten lovar "tiderna nedan" — utan luckor finns inga.
+    assert.equal(
+      resolveTimeStepNotice({ ...settled, availabilityState: "stale", hasSlots: false }),
+      "noSlots"
+    );
+  });
+
+  it("tiger under hämtningen och när felmeddelandet redan står där", () => {
+    assert.equal(
+      resolveTimeStepNotice({ ...settled, availabilityState: "loading", hasSlots: false }),
+      "none"
+    );
+    assert.equal(
+      resolveTimeStepNotice({ ...settled, availabilityState: "error", hasSlots: false }),
+      "none"
+    );
   });
 });

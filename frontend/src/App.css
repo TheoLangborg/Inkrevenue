@@ -4538,6 +4538,45 @@ html.has-reveal .steps[data-reveal]:not([data-revealed])::before {
   font-size: 1rem;
 }
 
+/* Villkoren (punkt 14). Ska gå att läsa utan att kliva över ja-knappen, men
+   aldrig konkurrera med tiden — vänsterställd text i en lugn ruta, eftersom
+   centrerad brödtext blir oläslig så fort den går över en rad. */
+.slot-offer__terms {
+  margin: 0 0 1.25rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--glass-border);
+  border-radius: 0.85rem;
+  background: var(--lav-50);
+  text-align: left;
+}
+
+.slot-offer__term-list {
+  margin: 0;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.slot-offer__term dt {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.slot-offer__term dd {
+  margin: 0.15rem 0 0;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: var(--ink-700);
+}
+
+.slot-offer__terms-note {
+  margin: 0.75rem 0 0;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
 .slot-offer__button {
   width: 100%;
   padding: 1rem 1.25rem;

@@ -667,6 +667,16 @@ export const sv = {
     availabilityError: "Det gick inte att kontrollera lediga tider just nu.",
     availabilityStale:
       "Vi kunde inte uppdatera tiderna just nu. Tiderna nedan är från den senaste kontrollen, så vi kan inte boka dem direkt — välj en tid igen så skickas den som ett önskemål och studion bekräftar den.",
+    // Granskning 4 punkt 3: svaret kom fram, men det fanns inga luckor att rita
+    // (inga bokningsbara veckodagar, eller allt upptaget i fönstret). Utan den
+    // här meningen stod kunden inför ett tomt steg med bara Tillbaka/Nästa.
+    noSlots:
+      "Vi har inga lediga tider att visa just nu. Gå vidare ändå — studion går igenom din förfrågan och återkommer med tider som passar.",
+    // Luckor visas, men förfrågan får inte bokas direkt (eligibleForDirectBooking
+    // falskt). Kalendern är då en önskelista, och det stod ingenstans — kunden
+    // trodde att hon bokade.
+    timesAreRequests:
+      "Studion granskar förfrågan innan en tid bekräftas. Välj gärna en tid som passar — den skickas som ett önskemål och studion bekräftar den.",
     prevWeek: "Föregående vecka",
     nextWeek: "Nästa vecka",
     selectedTime: "Vald tid",

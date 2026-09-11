@@ -12,7 +12,7 @@ import {
 import { useAbandonedFormDraft } from "../hooks/useAbandonedFormDraft";
 import { getLeadSourceFromUrl, getTrackingPayload } from "../utils/tracking";
 import { prepareLeadImageUpload, MAX_INSPIRATION_IMAGE_MB } from "../utils/prepareLeadImageUpload";
-import { canBookDirectly } from "../utils/leadFormBooking";
+import { canBookDirectly, resolveTimeStepNotice } from "../utils/leadFormBooking";
 import { useLanguage, useT } from "../i18n/LanguageContext";
 import { CampaignBanner } from "./CampaignBanner";
 import { sv } from "../i18n/sv";
@@ -369,6 +369,15 @@ function PaymentStep({ amountSek, paymentIntentId, onConfirmed, onCancel, submit
     setPaying(true);
     setPayError("");
 
+    // Inget `return_url`, och det är avsiktligt: PaymentIntenten skapas med en
+    // låst metodlista (BOOKING_PAYMENT_METHOD_TYPES i tattoo-crm:s
+    // stripeConnectService.js) som bara innehåller kort, och kortets 3D Secure
+    // körs i en modal — aldrig som en omdirigering. Öppnas listan för Klarna,
+    // Swish eller något annat omdirigerande betalsätt kastar Stripe.js
+    // "You must provide a return_url" rakt in i setPayError här nedanför, och
+    // kunden kan inte betala alls. Då krävs `confirmParams: { return_url }`
+    // OCH en returväg som läser `payment_intent` ur query-strängen och kör
+    // registerPaidLead — bara det ena räcker inte.
     const { error, paymentIntent } = await stripe.confirmPayment({
       elements,
       redirect: "if_required"
@@ -631,6 +640,10 @@ export function StudioLeadFormEnhanced({
     () => weeks[visibleWeekIndex] || null,
     [weeks, visibleWeekIndex]
   );
+  const hasAvailableSlots = useMemo(
+    () => weeks.some((w) => w.days.some((d) => d.slots.length > 0)),
+    [weeks]
+  );
   // Läs eligibility ur svaret, inte ur availability.state. Med "success" i
   // villkoret slocknade grinden vid varje omhämtning: knappen gick från "Gå
   // till betalning" till "Skicka förfrågan" och rutan skrev "du betalar inget
@@ -645,7 +658,15 @@ export function StudioLeadFormEnhanced({
     hasEnoughDetails,
     availabilityState: availability.state,
     eligibleForDirectBooking: availability.data?.eligibleForDirectBooking,
-    hasSlots: weeks.some((w) => w.days.some((d) => d.slots.length > 0))
+    hasSlots: hasAvailableSlots
+  });
+  // Granskning 4 punkt 3: vilken förklaring tidssteget ska visa. Utan den här
+  // blev steget helt tomt så fort kalendern saknade luckor. Logiken ligger i
+  // utils för att gå att köra som test.
+  const timeStepNotice = resolveTimeStepNotice({
+    availabilityState: availability.state,
+    hasSlots: hasAvailableSlots,
+    eligibleForDirectBooking: availability.data?.eligibleForDirectBooking
   });
 
   // Punkt 12: ta bara betalt när en tid faktiskt bokas. Backenden skapar bara en
@@ -1509,12 +1530,25 @@ export function StudioLeadFormEnhanced({
               Granskning 4 punkt 2: luckorna är byggda på det gamla estimatet, så
               direktbokningen är avstängd här (requiresTimeSelection) och tiden
               går in som ett önskemål. Texten måste säga det. */}
-          {availability.state === "stale" ? (
+          {timeStepNotice === "stale" ? (
             <p className="form-status form-status--muted">{availability.message}</p>
+          ) : null}
+          {/* Granskning 4 punkt 3: utan de här två grenarna renderades
+              ingenting alls när kalendern var tom — rubriken och
+              Tillbaka/Nästa stod kvar och kunden såg ett tomt steg mitt i
+              formuläret. Båda tomma lägena är vanliga: en studio utan
+              bokningsbara veckodagar, och ett fönster där allt redan är
+              bokat. (Studior helt utan artister når inte hit längre — då är
+              bookingFlow.enabled falskt och steget finns inte.) */}
+          {timeStepNotice === "noSlots" ? (
+            <p className="form-status form-status--muted">{t("leadForm.noSlots")}</p>
+          ) : null}
+          {timeStepNotice === "timesAreRequests" ? (
+            <p className="form-status form-status--muted">{t("leadForm.timesAreRequests")}</p>
           ) : null}
 
           {(availability.state === "success" || availability.state === "stale") &&
-          weeks.some((w) => w.days.some((d) => d.slots.length > 0)) ? (
+          hasAvailableSlots ? (
             <section className="studio-booking-picker">
               {visibleWeek ? (
                 <div className="week-picker">

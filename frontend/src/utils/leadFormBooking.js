@@ -35,3 +35,35 @@ export function canBookDirectly({
       hasSlots
   );
 }
+
+/**
+ * Vilken förklaring tidssteget ska visa. Bor här av samma skäl som
+ * canBookDirectly: ren logik, körbar med `node --test`.
+ *
+ * Granskning 4 punkt 3: steget hade ingen gren för "inga tider". Kom svaret
+ * fram utan en enda lucka — studion har inga bokningsbara veckodagar, eller
+ * allt i fönstret är upptaget — renderades ingenting alls: rubriken och
+ * Tillbaka/Nästa stod kvar och kunden såg ett tomt steg mitt i formuläret.
+ *
+ * Andra halvan av samma punkt: när luckor VISAS men studion inte tillåter
+ * direktbokning (eligibleForDirectBooking falskt) är kalendern en önskelista,
+ * och det stod ingenstans — kunden trodde att hon bokade.
+ *
+ * @returns {"none"|"noSlots"|"stale"|"timesAreRequests"}
+ */
+export function resolveTimeStepNotice({
+  availabilityState,
+  hasSlots,
+  eligibleForDirectBooking
+}) {
+  // "loading" har sin egen rad ("Kontrollerar lediga tider…") och behåller
+  // förra svaret i data; "error" har sitt felmeddelande. Ingen av dem ska
+  // dessutom påstå något om luckorna.
+  if (availabilityState === "loading" || availabilityState === "error") return "none";
+  // Gäller även "stale": står kalendern kvar men är tom säger stale-texten
+  // ("tiderna nedan…") något som inte stämmer.
+  if (!hasSlots) return "noSlots";
+  // stale-texten säger redan att tiderna går in som ett önskemål.
+  if (availabilityState === "stale") return "stale";
+  return eligibleForDirectBooking ? "none" : "timesAreRequests";
+}

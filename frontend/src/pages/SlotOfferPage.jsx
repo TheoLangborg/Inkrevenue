@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { buildPageTitle, usePageMetadata } from "../utils/pageMetadata";
+import { buildSlotOfferTermsView } from "../utils/slotOfferTerms";
 import {
   getSlotOffer,
   acceptSlotOffer,
@@ -36,13 +37,46 @@ function formatDuration(minutes) {
   return `${hours} timmar`;
 }
 
+/**
+ * Villkoren, i klartext, ovanför knappen (punkt 14).
+ *
+ * Texterna byggs i `slotOfferTerms.js` — den är ren och testad, det här är bara
+ * uppställningen.
+ */
+function OfferTerms({ terms, showConsent = true }) {
+  const rows = buildSlotOfferTermsView(terms);
+
+  if (!rows.length) return null;
+
+  return (
+    <div className="slot-offer__terms">
+      <dl className="slot-offer__term-list">
+        {rows.map((row) => (
+          <div className="slot-offer__term" key={row.key}>
+            <dt>{row.label}</dt>
+            <dd>{row.text}</dd>
+          </div>
+        ))}
+      </dl>
+
+      {showConsent ? (
+        <p className="slot-offer__terms-note">
+          Genom att tacka ja godkänner du studions villkor ovan.
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 // Varför erbjudandet inte går att ta, i klartext.
 const UNAVAILABLE_REASONS = {
   already_filled: "Någon annan hann tacka ja före dig.",
   slot_closed: "Tiden är inte längre tillgänglig.",
   offer_expired: "Erbjudandet har gått ut.",
   offer_revoked: "Det här erbjudandet gäller inte längre.",
-  slot_in_past: "Tiden har redan passerat."
+  slot_in_past: "Tiden har redan passerat.",
+  // Studion kräver ett minsta varsel — tiden finns kvar, men inte via länken.
+  too_soon: "Tiden börjar för snart för att bokas här. Ring studion om du ändå vill ta den."
 };
 
 export function SlotOfferPage({ token }) {
@@ -129,6 +163,9 @@ export function SlotOfferPage({ token }) {
           <p className="slot-offer__note">
             Studion har fått din bokning. Du får en bekräftelse inom kort.
           </p>
+          {/* Upprepas på kvittot: villkoren är först nu bindande, och det här är
+              enda skärmen kunden har kvar när SMS-länken är förbrukad. */}
+          <OfferTerms terms={result.terms} showConsent={false} />
         </div>
       </main>
     );
@@ -166,6 +203,7 @@ export function SlotOfferPage({ token }) {
 
         {offer.acceptable ? (
           <>
+            <OfferTerms terms={offer.terms} />
             <button
               type="button"
               className="slot-offer__button"
