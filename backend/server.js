@@ -52,15 +52,17 @@ app.use(
         return;
       }
 
-      callback(new Error("Origin saknar CORS-behörighet."));
+      callback(Object.assign(new Error("Origin saknar CORS-behörighet."), { statusCode: 403 }));
     },
     methods: ["GET", "POST"]
   })
 );
 app.use(express.json({ limit: "6mb" }));
 
+// Bara status: CRM-backendens adress är intern och ska inte kunna läsas publikt
+// (säkerhetsgranskningen av kundflödet, småsakerna).
 app.get("/api/health", (_req, res) => {
-  res.json({ status: "ok", crmApiBaseUrl: CRM_API_BASE_URL });
+  res.json({ status: "ok" });
 });
 
 app.use("/api/public/studios", publicStudioRouter);
@@ -126,7 +128,12 @@ app.use((error, req, res, _next) => {
     message
   });
 
-  res.status(isJsonSyntaxError ? 400 : statusCode).json({ message });
+  // Ett oväntat fel (5xx) kan bära interna detaljer i sitt meddelande. Loggen
+  // får det, klienten inte — samma regel som CRM:ets errorHandler.
+  const exposeMessage = isJsonSyntaxError || statusCode < 500 || error?.expose === true;
+  res
+    .status(isJsonSyntaxError ? 400 : statusCode)
+    .json({ message: exposeMessage ? message : "Internt serverfel." });
 });
 
 app.listen(PORT, () => {
