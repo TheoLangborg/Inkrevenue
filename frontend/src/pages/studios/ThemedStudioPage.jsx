@@ -402,8 +402,8 @@ export function ThemedStudioPage({ slug, theme: themePartial = {} }) {
         {/* ── BOKNINGSFORMULÄR ── */}
         <section id="ts-booking" style={{ background: t.bg, padding: "5.5rem 1.5rem" }}>
           <div style={{ maxWidth: 780, margin: "0 auto" }}>
-            {/* CTA-rubrik med tydlig kontrast */}
-            <div style={{
+            {/* CTA-rubrik med tydlig kontrast. Biolänk-besökare scrollas hit, se useBookingFormAutoScroll. */}
+            <div data-booking-anchor style={{
               background: t.bgDark, borderRadius: 16, padding: "2.5rem 2.5rem 0",
               marginBottom: "-1rem",
             }}>

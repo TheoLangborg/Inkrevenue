@@ -16,6 +16,7 @@ import { ThemedStudioPage } from "./pages/studios/ThemedStudioPage";
 import { useSiteLocation } from "./utils/siteRouter";
 import { useScrollReveal } from "./utils/useScrollReveal";
 import { useStudioVisitTracking } from "./utils/useStudioVisitTracking";
+import { useBookingFormAutoScroll } from "./utils/useBookingFormAutoScroll";
 import { LanguageProvider } from "./i18n/LanguageContext";
 import { splitLanguageFromPath } from "./i18n/config";
 import { LanguageHint } from "./components/LanguageHint";
@@ -133,6 +134,7 @@ function getPageFromPath(pathname) {
 function AppContent({ page }) {
   useScrollReveal();
   useStudioVisitTracking(page.studioSlug);
+  useBookingFormAutoScroll(page.studioSlug);
 
   return (
     <div>
