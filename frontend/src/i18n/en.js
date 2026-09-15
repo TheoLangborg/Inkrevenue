@@ -430,6 +430,22 @@ export const en = {
     cityKind: "{{city}} · Tattoo studio"
   },
 
+  artists: {
+    eyebrow: "The artists",
+    title: "Choose who tattoos you",
+    intro: "Browse each artist's own work and book directly with the one who fits your idea.",
+    workCount: "{{count}} pieces in the portfolio",
+    workCountOne: "1 piece in the portfolio",
+    noWorks: "Portfolio coming soon",
+    seePortfolio: "See portfolio",
+    seePortfolioOf: "See the full portfolio of {{name}}",
+    bookWith: "Book with {{name}}",
+    selectedBookWith: "Selected – go to booking",
+    selected: "Selected",
+    portfolioAria: "Portfolio – {{name}}",
+    imageAlt: "Tattoo by {{name}}, image {{index}}"
+  },
+
   gallery: {
     openImage: "Open image {{index}} of {{total}}",
     imageAlt: "{{studio}} – tattoo {{index}}",
@@ -623,6 +639,9 @@ export const en = {
       "The style you were after isn't among the studio's selectable styles, so we've switched to a consultation. Describe what you want and the studio will come back with a suggestion.",
     fallbackBack: "Back to the styles",
 
+    artistLabel: "Tattoo artist",
+    artistAnyOption: "No preference",
+    artistAnyHint: "Studio decides",
     styleLabel: "Style",
     stylePlaceholder: "Choose a style...",
     placementLabel: "Placement",

@@ -436,6 +436,22 @@ export const sv = {
     cityKind: "{{city}} · Tatueringsstudio"
   },
 
+  artists: {
+    eyebrow: "Tatuerarna",
+    title: "Välj vem som tatuerar dig",
+    intro: "Titta igenom varje tatuerares egna verk och boka direkt hos den som passar din idé.",
+    workCount: "{{count}} verk i portföljen",
+    workCountOne: "1 verk i portföljen",
+    noWorks: "Portföljen kommer snart",
+    seePortfolio: "Se portfölj",
+    seePortfolioOf: "Se hela portföljen för {{name}}",
+    bookWith: "Boka hos {{name}}",
+    selectedBookWith: "Vald – gå till bokningen",
+    selected: "Vald",
+    portfolioAria: "Portfölj – {{name}}",
+    imageAlt: "Tatuering av {{name}}, bild {{index}}"
+  },
+
   gallery: {
     openImage: "Öppna bild {{index}} av {{total}}",
     imageAlt: "{{studio}} – tatuering {{index}}",
@@ -636,6 +652,9 @@ export const sv = {
       "Stilen du sökte finns inte bland studions valbara stilar, så vi har växlat till en konsultation. Beskriv vad du vill ha så återkommer studion med ett förslag.",
     fallbackBack: "Tillbaka till stilarna",
 
+    artistLabel: "Tatuerare",
+    artistAnyOption: "Ingen preferens",
+    artistAnyHint: "Studion väljer",
     styleLabel: "Stil",
     stylePlaceholder: "Välj stil...",
     placementLabel: "Placering",

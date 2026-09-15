@@ -3,6 +3,8 @@ import { buildPageTitle, usePageMetadata } from "../../utils/pageMetadata";
 import { getPublicStudioBySlug } from "../../services/publicSiteApi";
 import { StudioLeadFormEnhanced } from "../../components/StudioLeadFormEnhanced";
 import { RollingGallery } from "../../components/RollingGallery";
+import { ArtistShowcase } from "../../components/ArtistShowcase";
+import { buildShowcaseArtists, shouldShowArtistShowcase } from "../../utils/artistShowcase";
 import { getStudioTags } from "../../utils/studioTags";
 import { useLanguage } from "../../i18n/LanguageContext";
 
@@ -82,6 +84,11 @@ export function ThemedStudioPage({ slug, theme: themePartial = {} }) {
     [profile.galleryImageUrls]
   );
   const tags = useMemo(() => (studio ? [...new Set(getStudioTags(studio))] : []), [studio]);
+  // Samma par som i StudioProfilePage: "Boka hos …" → formuläret, och
+  // formulärets val tillbaka hit för att markera kortet.
+  const [artistRequest, setArtistRequest] = useState(null);
+  const [selectedArtistId, setSelectedArtistId] = useState("");
+  const showcaseArtists = useMemo(() => buildShowcaseArtists(studio?.artistOptions), [studio]);
 
   const pageTitle = useMemo(
     () =>
@@ -399,6 +406,46 @@ export function ThemedStudioPage({ slug, theme: themePartial = {} }) {
           </section>
         )}
 
+        {/* ── TATUERARNA — direkt ovanför formuläret ── */}
+        {shouldShowArtistShowcase(showcaseArtists) && (
+          <section style={{ background: t.bg, padding: "5rem 1.5rem 1rem" }}>
+            <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+              <h2 style={headingStyle({
+                fontSize: "clamp(2rem, 5vw, 3.5rem)", color: t.text,
+                marginBottom: "0.75rem", textAlign: "center",
+              })}>
+                {translate("artists.title")}
+              </h2>
+              <p style={{
+                fontSize: "1rem", color: t.textMuted, lineHeight: 1.7,
+                textAlign: "center", maxWidth: 560, margin: "0 auto 2.5rem",
+              }}>
+                {translate("artists.intro")}
+              </p>
+              {/* Studions tema in i kortens CSS-variabler (.artist-showcase i App.css). */}
+              <ArtistShowcase
+                artists={showcaseArtists}
+                selectedArtistId={selectedArtistId}
+                onChooseArtist={(id) => setArtistRequest({ id, nonce: Date.now() })}
+                centered
+                style={{
+                  "--as-surface": t.bg,
+                  "--as-text": t.text,
+                  "--as-muted": t.textMuted,
+                  "--as-border": `color-mix(in srgb, ${t.text} 14%, transparent)`,
+                  "--as-accent": t.accent,
+                  "--as-accent-text": t.accentText,
+                  "--as-placeholder": t.bgAlt,
+                  "--as-heading-font": t.fontHeading,
+                  "--as-heading-transform": t.headingTransform,
+                  "--as-button-radius":
+                    typeof t.borderRadius === "number" ? `${t.borderRadius}px` : t.borderRadius,
+                }}
+              />
+            </div>
+          </section>
+        )}
+
         {/* ── BOKNINGSFORMULÄR ── */}
         <section id="ts-booking" style={{ background: t.bg, padding: "5.5rem 1.5rem" }}>
           <div style={{ maxWidth: 780, margin: "0 auto" }}>
@@ -422,7 +469,13 @@ export function ThemedStudioPage({ slug, theme: themePartial = {} }) {
               "--accent": t.accent,
               "--lav-100": `color-mix(in srgb, ${t.accent} 12%, #fff)`,
             }}>
-              <StudioLeadFormEnhanced studio={studio} titleText="" introText="" />
+              <StudioLeadFormEnhanced
+                studio={studio}
+                titleText=""
+                introText=""
+                artistRequest={artistRequest}
+                onPreferredArtistChange={setSelectedArtistId}
+              />
             </div>
           </div>
         </section>

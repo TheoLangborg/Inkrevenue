@@ -2873,6 +2873,357 @@ h1 {
   }
 }
 
+/* ── Tatuerarna: profilbild, egna verk och "Boka hos …" (ArtistShowcase) ──
+   Temastudior (ThemedStudioPage) sätter --as-* inline från sitt tema; utan dem
+   gäller marknadssajtens blå palett. Overlayerna är galleriets .rg-*-klasser. */
+.artist-showcase {
+  --as-surface: var(--snow);
+  --as-text: var(--text);
+  --as-muted: var(--muted);
+  --as-border: var(--glass-border);
+  --as-accent: var(--accent);
+  --as-accent-text: #fff;
+  --as-placeholder: var(--lav-100);
+  --as-heading-font: "Big Shoulders Display", "Georgia", sans-serif;
+  --as-heading-transform: none;
+  --as-button-radius: 999px;
+  color: var(--as-text);
+}
+
+.artist-showcase__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr));
+  gap: 22px;
+}
+
+/* Temasidans rubrik är centrerad. Med auto-fill blev tre kort vänsterställda
+   med en tom kolumn till höger; auto-fit + tak på bredden samlar dem i mitten.
+   255 px ryms fyra i bredd i temasidans 1100 px-spalt. */
+.artist-showcase--centered .artist-showcase__grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 255px));
+  justify-content: center;
+}
+
+.artist-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--as-border);
+  border-radius: 20px;
+  background: var(--as-surface);
+  box-shadow: 0 10px 30px rgba(16, 42, 88, 0.08);
+  transition: border-color 0.25s var(--ease-out-quint), box-shadow 0.25s var(--ease-out-quint);
+}
+
+.artist-card--selected {
+  border-color: var(--as-accent);
+  box-shadow: 0 0 0 2px var(--as-accent), 0 14px 36px rgba(16, 42, 88, 0.14);
+}
+
+.artist-card__media {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  max-width: 100%;
+  background: var(--as-placeholder);
+  display: grid;
+  place-items: center;
+}
+
+.artist-card__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.artist-card__initials {
+  font-family: var(--as-heading-font);
+  font-size: clamp(2.6rem, 6vw, 3.6rem);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--as-accent);
+  opacity: 0.55;
+}
+
+.artist-card__badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: var(--as-accent);
+  color: var(--as-accent-text);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+/* Flex-kolumn så att knapparna hamnar längst ner i alla kort på raden, även när
+   ett kort saknar miniatyrer eller "Se portfölj". */
+.artist-card__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 16px 18px;
+}
+
+.artist-card__name {
+  margin: 0;
+  font-family: var(--as-heading-font);
+  text-transform: var(--as-heading-transform);
+  font-size: 1.45rem;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.artist-card__meta {
+  margin: -4px 0 0;
+  color: var(--as-muted);
+  font-size: 0.88rem;
+}
+
+.artist-card__thumbs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.artist-card__thumb {
+  position: relative;
+  aspect-ratio: 1;
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--as-placeholder);
+  cursor: pointer;
+}
+
+.artist-card__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.35s var(--ease-out-quint);
+}
+
+.artist-card__thumb:hover img {
+  transform: scale(1.06);
+}
+
+.artist-card__thumb:focus-visible,
+.artist-card__button:focus-visible,
+.artist-showcase__overlay-cta:focus-visible {
+  outline: 3px solid var(--as-accent);
+  outline-offset: 2px;
+}
+
+.artist-card__more {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(6, 14, 28, 0.58);
+  color: #fff;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.artist-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 4px;
+}
+
+.artist-card__button {
+  flex: 1 1 auto;
+  min-height: 44px;
+  padding: 10px 16px;
+  border-radius: var(--as-button-radius);
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.artist-card__button--ghost {
+  border: 1px solid var(--as-border);
+  background: transparent;
+  color: var(--as-text);
+}
+
+.artist-card__button--ghost:hover {
+  border-color: var(--as-accent);
+}
+
+.artist-card__button--primary {
+  border: 1px solid var(--as-accent);
+  background: var(--as-accent);
+  color: var(--as-accent-text);
+}
+
+.artist-card__button--primary:hover {
+  filter: brightness(1.08);
+}
+
+.artist-showcase__overlay-cta {
+  margin-top: 22px;
+  min-height: 46px;
+  padding: 12px 26px;
+  border: 0;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink-900);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@media (max-width: 560px) {
+  .artist-showcase__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .artist-card {
+    border-radius: 16px;
+  }
+
+  .artist-card__body {
+    padding: 12px;
+    gap: 8px;
+  }
+
+  .artist-card__name {
+    font-size: 1.15rem;
+  }
+
+  .artist-card__button {
+    flex-basis: 100%;
+    padding: 9px 10px;
+    font-size: 0.85rem;
+  }
+}
+
+/* ── Formulärets tatuerarval: bildkort i stället för rullista ── */
+.artist-picker {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.artist-picker__legend {
+  margin-bottom: 8px;
+  padding: 0;
+  font-weight: 600;
+}
+
+.artist-picker__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 108px), 1fr));
+  gap: 8px;
+}
+
+.artist-picker__option {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 6px;
+  min-width: 0;
+  padding: 12px 8px 10px;
+  border: 2px solid color-mix(in srgb, var(--text) 12%, transparent);
+  border-radius: 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.artist-picker__option:hover {
+  border-color: var(--accent);
+}
+
+.artist-picker__option.is-selected {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 9%, transparent);
+}
+
+.artist-picker__option:has(input:focus-visible) {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.artist-picker__avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--accent) 14%, #fff);
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: 0.03em;
+}
+
+.artist-picker__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Studions logga på "Ingen preferens". En fyrkantig logga fyller hela cirkeln
+   som en profilbild. En bred eller hög visas hel (contain) på formulärets egen
+   bakgrund, den studion valt loggan för, så att en vit logga inte försvinner
+   mot en ljus platta. Formatet avgörs av getLogoFit när bilden laddat. */
+.artist-picker__avatar--logo {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text) 14%, transparent);
+}
+
+.artist-picker__avatar--logo-contain {
+  padding: 7px;
+}
+
+.artist-picker__avatar--logo-contain img {
+  object-fit: contain;
+}
+
+.artist-picker__name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.artist-picker__hint {
+  margin-top: -3px;
+  font-size: 0.76rem;
+  color: var(--muted);
+  line-height: 1.2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .artist-card,
+  .artist-card__thumb img,
+  .artist-card__button {
+    transition: none;
+  }
+
+  .artist-card__thumb:hover img {
+    transform: none;
+  }
+}
+
 .studio-hero {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px;

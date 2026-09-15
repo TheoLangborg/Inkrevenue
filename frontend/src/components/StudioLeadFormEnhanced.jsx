@@ -13,6 +13,12 @@ import { useAbandonedFormDraft } from "../hooks/useAbandonedFormDraft";
 import { getLeadSourceFromUrl, getTrackingPayload } from "../utils/tracking";
 import { prepareLeadImageUpload, MAX_INSPIRATION_IMAGE_MB } from "../utils/prepareLeadImageUpload";
 import { canBookDirectly, resolveTimeStepNotice } from "../utils/leadFormBooking";
+import {
+  buildShowcaseArtists,
+  cleanImageUrl,
+  getArtistInitials,
+  getLogoFit
+} from "../utils/artistShowcase";
 import { STUDIO_TIME_ZONE } from "../utils/campaignBanner";
 import { useLanguage, useT } from "../i18n/LanguageContext";
 import { CampaignBanner } from "./CampaignBanner";
@@ -121,6 +127,8 @@ const baseForm = {
   email: "",
   phone: "",
   bookingType: "tattoo_session",
+  // "" = ingen preferens, studion fördelar som vanligt.
+  preferredArtistId: "",
   tattooStyle: "",
   placement: "",
   size: "",
@@ -300,6 +308,9 @@ const DESCRIPTION_PREVIEW_DEBOUNCE_MS = 800;
 
 const PREVIEW_PAYLOAD_FIELDS = [
   "bookingType",
+  // Den valda tatueraren avgör vilka luckor som ritas (bara hens tider), så ett
+  // byte måste hämta om kalendern.
+  "preferredArtistId",
   "tattooStyle",
   "placement",
   "size",
@@ -443,7 +454,12 @@ export function StudioLeadFormEnhanced({
   // Sätts BARA av /studio-preview/<slug> på marknadssajten, som finns just för
   // att testa formuläret mot en riktig studio i CRM. Alla andra
   // förhandsvisningar ska vara läsbara, inte skarpa.
-  allowPreviewSubmit = false
+  allowPreviewSubmit = false,
+  // "Boka hos …" i sektionen med tatuerarna (ArtistShowcase). `nonce` gör att
+  // samma artist kan väljas igen efter att kunden bytt i formuläret.
+  artistRequest = null,
+  // Formuläret äger valet; sidan får veta det för att markera kortet som valt.
+  onPreferredArtistChange = null
 }) {
   const { t, tList, locale, language } = useLanguage();
   const [formData, setFormData] = useState(() => buildInitialForm());
@@ -499,6 +515,21 @@ export function StudioLeadFormEnhanced({
         : [],
     [placementOptions, t]
   );
+
+  // Tom lista = studion har inte slagit på valet (eller saknar artister som tar
+  // bokningar) — då renderas inget fält alls. Värdet som skickas är artistens id.
+  const artistChoices = useMemo(() => buildShowcaseArtists(studio?.artistOptions), [studio]);
+  // "Ingen preferens" = studion väljer, så kortet bär studions logga. Saknas den
+  // blir det ikonen.
+  const studioLogoUrl = cleanImageUrl(studio?.logoUrl);
+  const [studioLogoFit, setStudioLogoFit] = useState("fill");
+  // Läses både på onLoad och via ref: en bild som redan fanns i cachen kan ha
+  // laddat innan React kopplade på onLoad.
+  const measureStudioLogo = useCallback((img) => {
+    if (img?.complete && img.naturalWidth) {
+      setStudioLogoFit(getLogoFit(img.naturalWidth, img.naturalHeight));
+    }
+  }, []);
 
   function handlePlacementChange(event) {
     const { value } = event.target;
@@ -621,6 +652,7 @@ export function StudioLeadFormEnhanced({
       email: formData.email,
       phone: formData.phone,
       bookingType: formData.bookingType,
+      preferredArtistId: formData.preferredArtistId,
       ...getLeadDetailFields(formData),
       budget: formData.budget,
       description: formData.description,
@@ -729,6 +761,7 @@ export function StudioLeadFormEnhanced({
 
     const payload = {
       bookingType: formData.bookingType,
+      preferredArtistId: formData.preferredArtistId,
       ...getLeadDetailFields(formData),
       budget: formData.budget,
       description: formData.description
@@ -881,6 +914,7 @@ export function StudioLeadFormEnhanced({
     // Typbytet ändrar både vilka detaljer som skickas och hur lång tiden blir,
     // så förhandsvisningen måste hämtas om.
     formData.bookingType,
+    formData.preferredArtistId,
     formData.tattooStyle,
     formData.placement,
     formData.size,
@@ -889,6 +923,33 @@ export function StudioLeadFormEnhanced({
     t
   ]);
 
+
+  // "Boka hos …" i sektionen med tatuerarna. Körs bara när en ny begäran kommer
+  // (nonce), inte när artistlistan eller betalläget ändras.
+  useEffect(() => {
+    if (!artistRequest) return;
+
+    const isKnownChoice =
+      artistRequest.id === "" || artistChoices.some((artist) => artist.id === artistRequest.id);
+    // Har betalningen startat hör den valda tiden ihop med kortet. En annan
+    // artist har andra luckor, och en tid som inte finns hos henne faller efter
+    // att pengarna dragits — då står valet kvar och kunden hamnar där hon var.
+    const paymentStarted = Boolean(paidPaymentIntentId || paymentReady);
+
+    if (isKnownChoice && !paymentStarted) {
+      setFormData((current) => ({ ...current, preferredArtistId: artistRequest.id }));
+      // Väljaren bor i första steget. Står kunden längre fram syns bytet inte,
+      // och tiderna i tidssteget hämtas om för den nya artisten ändå.
+      setCurrentStep(0);
+    }
+
+    formTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [artistRequest?.nonce]);
+
+  useEffect(() => {
+    onPreferredArtistChange?.(formData.preferredArtistId);
+  }, [formData.preferredArtistId, onPreferredArtistChange]);
 
   function handleChange(event) {
     const { name, type, value, checked } = event.target;
@@ -1332,6 +1393,73 @@ export function StudioLeadFormEnhanced({
               </button>
             </p>
           )}
+
+          {/* Gäller både tatuering och konsultation, därför utanför typgrenen.
+              Frivilligt: "Ingen preferens" är ett riktigt val, inte en placeholder.
+              Radioknappar i bildkort — kunden väljer ett ansikte, inte ett namn. */}
+          {artistChoices.length ? (
+            <fieldset className="artist-picker">
+              <legend className="artist-picker__legend">{t("leadForm.artistLabel")}</legend>
+              <div className="artist-picker__grid">
+                {[{ id: "", name: t("leadForm.artistAnyOption"), photoUrl: "" }, ...artistChoices].map(
+                  (choice) => {
+                    const isSelected = formData.preferredArtistId === choice.id;
+                    const isAny = choice.id === "";
+
+                    return (
+                      <label
+                        key={choice.id || "any"}
+                        className={`artist-picker__option${isSelected ? " is-selected" : ""}`}
+                      >
+                        <input
+                          type="radio"
+                          className="visually-hidden"
+                          name="preferredArtistId"
+                          value={choice.id}
+                          checked={isSelected}
+                          onChange={handleChange}
+                        />
+                        <span
+                          className={`artist-picker__avatar${
+                            isAny && studioLogoUrl
+                              ? ` artist-picker__avatar--logo artist-picker__avatar--logo-${studioLogoFit}`
+                              : ""
+                          }`}
+                          aria-hidden="true"
+                        >
+                          {isAny && studioLogoUrl ? (
+                            <img
+                              key={studioLogoUrl}
+                              ref={measureStudioLogo}
+                              src={studioLogoUrl}
+                              alt=""
+                              loading="lazy"
+                              onLoad={(event) => measureStudioLogo(event.currentTarget)}
+                            />
+                          ) : choice.photoUrl ? (
+                            <img src={choice.photoUrl} alt="" loading="lazy" />
+                          ) : isAny ? (
+                            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                              <circle cx="9" cy="8" r="3.2" />
+                              <path d="M3.5 19c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5" />
+                              <circle cx="16.5" cy="9" r="2.6" />
+                              <path d="M15.5 14.1c2.6-.3 4.6 1.3 5 4.4" />
+                            </svg>
+                          ) : (
+                            getArtistInitials(choice.name)
+                          )}
+                        </span>
+                        <span className="artist-picker__name">{choice.name}</span>
+                        {isAny ? (
+                          <span className="artist-picker__hint">{t("leadForm.artistAnyHint")}</span>
+                        ) : null}
+                      </label>
+                    );
+                  }
+                )}
+              </div>
+            </fieldset>
+          ) : null}
 
           {formData.bookingType === "tattoo_session" && (
           <div className="form-grid">

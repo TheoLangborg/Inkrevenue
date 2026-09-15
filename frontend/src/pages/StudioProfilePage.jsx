@@ -5,6 +5,8 @@ import { getPublicStudioBySlug, getPublicStudios } from "../services/publicSiteA
 import { StudioLeadFormEnhanced } from "../components/StudioLeadFormEnhanced";
 import { PublicStudioCard } from "../components/PublicStudioCard";
 import { RollingGallery } from "../components/RollingGallery";
+import { ArtistShowcase } from "../components/ArtistShowcase";
+import { buildShowcaseArtists, shouldShowArtistShowcase } from "../utils/artistShowcase";
 import { getStudioTags } from "../utils/studioTags";
 import { studioRegistry } from "./studios";
 import { useLanguage } from "../i18n/LanguageContext";
@@ -65,6 +67,11 @@ export function StudioProfilePage({
   const [loading, setLoading] = useState(!studioOverride);
   const [error, setError] = useState("");
   const [allStudios, setAllStudios] = useState([]);
+  // "Boka hos …" i tatuerarsektionen → formuläret, och formulärets val tillbaka
+  // hit så att rätt kort är markerat. Samma par i ThemedStudioPage.
+  const [artistRequest, setArtistRequest] = useState(null);
+  const [selectedArtistId, setSelectedArtistId] = useState("");
+  const showcaseArtists = useMemo(() => buildShowcaseArtists(studio?.artistOptions), [studio]);
 
   useEffect(() => {
     if (studioOverride) {
@@ -496,6 +503,26 @@ export function StudioProfilePage({
         </div>
       </section>
 
+      {/* Ovanför formuläret: kunden ser tatuerarnas verk först och väljer sedan. */}
+      {shouldShowArtistShowcase(showcaseArtists) ? (
+        <section className="section section--lavender">
+          <div className="container">
+            <div className="section-heading section-heading--tight">
+              <div>
+                <p className="eyebrow">{t("artists.eyebrow")}</p>
+                <h2>{t("artists.title")}</h2>
+                <p className="body">{t("artists.intro")}</p>
+              </div>
+            </div>
+            <ArtistShowcase
+              artists={showcaseArtists}
+              selectedArtistId={selectedArtistId}
+              onChooseArtist={(id) => setArtistRequest({ id, nonce: Date.now() })}
+            />
+          </div>
+        </section>
+      ) : null}
+
       <section className="section section--white">
         <div className="container studio-layout">
           <div className="studio-layout__main">
@@ -570,6 +597,8 @@ export function StudioProfilePage({
               successPreviewText={successPreviewText}
               previewMode={previewMode}
               allowPreviewSubmit={allowPreviewSubmit}
+              artistRequest={artistRequest}
+              onPreferredArtistChange={setSelectedArtistId}
             />
           </div>
         </div>
