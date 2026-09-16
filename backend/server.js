@@ -17,6 +17,16 @@ if (process.env.NODE_ENV === "production") {
     warnings.push("CRM_API_BASE_URL pekar på localhost — ange korrekt produktions-URL");
   }
 
+  // Utan den skickas aldrig X-Client-Ip, och CRM:et får räkna fram besökarens
+  // adress ur X-Forwarded-For. Olika värden i de två tjänsterna är värre än
+  // inget värde alls, och fångas i CRM:ets utils/clientAddress.js.
+  if (!process.env.INTERNAL_PROXY_SECRET?.trim()) {
+    warnings.push(
+      "INTERNAL_PROXY_SECRET saknas — besökarens IP skickas inte signerat till CRM:et, " +
+        "så rate limitern där kan nycklas på fel adress"
+    );
+  }
+
   for (const warning of warnings) {
     console.warn(`[inkrevenue] VARNING: ${warning}`);
   }
