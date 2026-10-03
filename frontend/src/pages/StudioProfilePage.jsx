@@ -374,17 +374,22 @@ export function StudioProfilePage({
   return (
     <div>
       <section className={`page-hero page-hero--studio page-hero--studio-${heroHeight}`}>
-        {/* Fokuspunkten styr två saker: background-position (som bara biter på den
+        {/* Fokuspunkten styr två saker: object-position (som bara biter på den
             axel där bilden faktiskt sticker ut) och transform-origin för zoomen i
-            CSS:en (som biter på den flush-axel där background-position är verkningslös).
-            Tillsammans ger de rörelse på båda axlarna oavsett bildens proportioner. */}
+            CSS:en (som biter på den flush-axel där object-position är verkningslös).
+            Tillsammans ger de rörelse på båda axlarna oavsett bildens proportioner.
+            Ett <img> och inte en CSS-bakgrund: bilden är sidans största element
+            (LCP) och ska hämtas först, med hög prioritet
+            (docs/bildprestanda.md, steg 3). */}
         {studio.heroImageUrl ? (
           <>
-            <div
+            <img
               className="page-hero__media"
+              src={studio.heroImageUrl}
+              alt=""
+              fetchpriority="high"
               style={{
-                backgroundImage: `url(${studio.heroImageUrl})`,
-                backgroundPosition: `${heroFocusX}% ${heroFocusY}%`,
+                objectPosition: `${heroFocusX}% ${heroFocusY}%`,
                 transformOrigin: `${heroFocusX}% ${heroFocusY}%`
               }}
             />

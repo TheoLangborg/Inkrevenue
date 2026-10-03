@@ -91,11 +91,20 @@ export function ExampleCustomPage({ slug }) {
             minHeight: "70vh",
             display: "flex",
             alignItems: "flex-end",
-            backgroundImage: studio.heroImageUrl ? `url(${studio.heroImageUrl})` : "none",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
+            overflow: "hidden",
           }}
         >
+          {/* Omslaget som <img>, inte CSS-bakgrund: det är sidans största element
+              (LCP) och ska hämtas först (docs/bildprestanda.md, steg 3). */}
+          {studio.heroImageUrl && (
+            <img
+              src={studio.heroImageUrl}
+              alt=""
+              fetchpriority="high"
+              style={{ position: "absolute", inset: 0, width: "100%", maxWidth: "none", height: "100%", objectFit: "cover" }}
+            />
+          )}
+
           {/* mörkt overlay */}
           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 60%)" }} />
 

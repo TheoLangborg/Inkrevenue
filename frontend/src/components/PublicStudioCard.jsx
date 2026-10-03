@@ -12,14 +12,14 @@ export function PublicStudioCard({ studio, compact = false, cardTheme = null, re
     studio.description ||
     t("studioCard.fallbackSummary");
 
+  // Kortets foto är ett lat <img>, inte en CSS-bakgrund: en bakgrund hämtades
+  // direkt för varje kort i katalogen, även långt under skärmkanten
+  // (docs/bildprestanda.md, steg 4). Toningen ligger som ett eget lager ovanpå.
   const mediaImageUrl = studio.heroImageUrl || studio.publicProfile?.galleryImageUrls?.[0] || null;
-  const mediaStyle = mediaImageUrl
-    ? {
-        backgroundImage: cardTheme?.gradient
-          ? `${cardTheme.gradient}, url(${mediaImageUrl})`
-          : `linear-gradient(rgba(10, 26, 47, 0.2), rgba(10, 26, 47, 0.6)), url(${mediaImageUrl})`
-      }
-    : undefined;
+  const shadeStyle = {
+    backgroundImage:
+      cardTheme?.gradient || "linear-gradient(rgba(10, 26, 47, 0.2), rgba(10, 26, 47, 0.6))"
+  };
 
   return (
     <SiteLink
@@ -29,12 +29,26 @@ export function PublicStudioCard({ studio, compact = false, cardTheme = null, re
       data-reveal="scale"
       data-reveal-delay={revealDelay || undefined}
     >
-      <div className="studio-card__media" style={mediaStyle}>
+      <div className="studio-card__media">
+        {mediaImageUrl ? (
+          <>
+            <img
+              className="studio-card__photo"
+              src={mediaImageUrl}
+              alt=""
+              loading="lazy"
+              decoding="async"
+            />
+            <span className="studio-card__shade" style={shadeStyle} aria-hidden="true" />
+          </>
+        ) : null}
         {studio.logoUrl && studio.publicProfile?.logoPlacement !== "hidden" ? (
           <img
             className="studio-card__logo"
             src={studio.logoUrl}
             alt={t("studioCard.logoAlt", { name: studio.name })}
+            loading="lazy"
+            decoding="async"
           />
         ) : null}
       </div>

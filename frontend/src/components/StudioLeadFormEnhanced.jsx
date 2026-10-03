@@ -1434,10 +1434,11 @@ export function StudioLeadFormEnhanced({
                               src={studioLogoUrl}
                               alt=""
                               loading="lazy"
+                              decoding="async"
                               onLoad={(event) => measureStudioLogo(event.currentTarget)}
                             />
                           ) : choice.photoUrl ? (
-                            <img src={choice.photoUrl} alt="" loading="lazy" />
+                            <img src={choice.photoUrl} alt="" loading="lazy" decoding="async" />
                           ) : isAny ? (
                             <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                               <circle cx="9" cy="8" r="3.2" />

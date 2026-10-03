@@ -1843,6 +1843,23 @@ h1 {
   transform: scale(1.045);
 }
 
+/* Kortets foto och toningen ovanpå. Fotot är ett lat <img> (en CSS-bakgrund
+   hämtades direkt för varje kort). Loggan ligger efter dem i DOM:en och därför
+   överst. max-width: none — den globala img-regeln kapar annars bredden. */
+.studio-card__photo,
+.studio-card__shade {
+  position: absolute;
+  inset: 0;
+}
+
+.studio-card__photo {
+  display: block;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  object-fit: cover;
+}
+
 .studio-card__logo {
   transition: transform 0.6s var(--ease-out-quart);
 }
@@ -1968,19 +1985,24 @@ h1 {
   background-size: cover;
 }
 
-/* background-size:cover gör exakt en axel flush, och på den axeln kan
-   background-position inte panorera någonting alls — spelrummet finns inte.
+/* object-fit:cover gör exakt en axel flush, och på den axeln kan
+   object-position inte panorera någonting alls — spelrummet finns inte.
    Att göra lagret större hjälper inte, för cover fyller bara om det.
    Lösningen är att i stället flytta det synliga utsnittet: lagret zoomas 16 %
    med transform-origin i fokuspunkten, så den valda kanten står stilla och
    resten växer bort från den. Det ger rörelse på BÅDA axlarna oavsett
-   bildens proportioner, och på slack-axeln drar background-position åt samma
-   håll så effekterna förstärker varandra. */
+   bildens proportioner, och på slack-axeln drar object-position åt samma
+   håll så effekterna förstärker varandra.
+   Lagret är ett <img> (heron är sidans LCP). max-width: none — den globala
+   img-regeln kapar annars bredden. */
 .page-hero__media {
   position: absolute;
   inset: 0;
-  background-size: cover;
-  background-repeat: no-repeat;
+  display: block;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  object-fit: cover;
   transform: scale(1.16);
   z-index: 0;
 }

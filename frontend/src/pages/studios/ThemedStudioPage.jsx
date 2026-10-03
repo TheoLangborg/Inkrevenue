@@ -126,7 +126,11 @@ export function ThemedStudioPage({ slug, theme: themePartial = {} }) {
   const aboutText = profile.intro || studio.description || "";
   const hasHeroImage = Boolean(studio.heroImageUrl);
 
-  // Hero: fullscreen with photo if available, dark graphic fallback
+  // Hero: fullscreen with photo if available, dark graphic fallback.
+  // Fotot är ett <img> i heron (nedan), inte en CSS-bakgrund: det är sidans
+  // största element (LCP) och ska hämtas först, med hög prioritet
+  // (docs/bildprestanda.md, steg 3). Den mörka färgen syns medan det laddar,
+  // så att den vita texten går att läsa direkt.
   const heroStyle = {
     position: "relative",
     width: "100%",
@@ -135,11 +139,8 @@ export function ThemedStudioPage({ slug, theme: themePartial = {} }) {
     flexDirection: "column",
     alignItems: "center",
     justifyContent: "flex-end",
-    backgroundImage: hasHeroImage
-      ? `url(${studio.heroImageUrl})`
-      : `linear-gradient(160deg, ${t.bgDark} 0%, #2a2a2a 100%)`,
-    backgroundSize: "cover",
-    backgroundPosition: "center",
+    backgroundColor: t.bgDark,
+    backgroundImage: hasHeroImage ? "none" : `linear-gradient(160deg, ${t.bgDark} 0%, #2a2a2a 100%)`,
     overflow: "hidden",
   };
 
@@ -195,6 +196,24 @@ export function ThemedStudioPage({ slug, theme: themePartial = {} }) {
 
         {/* ── HERO ── */}
         <section style={heroStyle}>
+          {hasHeroImage && (
+            <img
+              src={studio.heroImageUrl}
+              alt=""
+              fetchpriority="high"
+              style={{
+                position: "absolute",
+                inset: 0,
+                display: "block",
+                width: "100%",
+                maxWidth: "none",
+                height: "100%",
+                objectFit: "cover",
+                objectPosition: "center",
+              }}
+            />
+          )}
+
           {/* Gradient overlay — always present for text legibility */}
           <div style={{ position: "absolute", inset: 0, background: t.heroOverlay }} />
 
@@ -318,6 +337,8 @@ export function ThemedStudioPage({ slug, theme: themePartial = {} }) {
               <img
                 src={galleryImages[0]}
                 alt={translate("themedStudio.studioAlt", { name: studio.name })}
+                loading="lazy"
+                decoding="async"
                 style={{ width: "100%", minHeight: 500, objectFit: "cover", display: "block" }}
               />
             )}

@@ -236,6 +236,7 @@ export function RollingGallery({ images = [], studioName = "" }) {
         src={url}
         alt={t("gallery.imageAlt", { studio: studioName, index: i + 1 })}
         loading="lazy"
+        decoding="async"
         draggable="false"
       />
     </button>
@@ -304,6 +305,7 @@ export function RollingGallery({ images = [], studioName = "" }) {
                     src={url}
                     alt={t("gallery.imageAlt", { studio: studioName, index: i + 1 })}
                     loading="lazy"
+                    decoding="async"
                   />
                 </button>
               ))}

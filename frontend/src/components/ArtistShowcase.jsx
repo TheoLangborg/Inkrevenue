@@ -124,7 +124,7 @@ export function ArtistShowcase({
             >
               <div className="artist-card__media">
                 {item.photoUrl ? (
-                  <img src={item.photoUrl} alt={item.name} loading="lazy" />
+                  <img src={item.photoUrl} alt={item.name} loading="lazy" decoding="async" />
                 ) : (
                   <span className="artist-card__initials" aria-hidden="true">
                     {getArtistInitials(item.name)}
@@ -170,7 +170,7 @@ export function ArtistShowcase({
                                 })
                           }
                         >
-                          <img src={url} alt="" loading="lazy" />
+                          <img src={url} alt="" loading="lazy" decoding="async" />
                           {showsRemainder ? (
                             <span className="artist-card__more" aria-hidden="true">
                               +{hiddenWorks + 1}
@@ -250,6 +250,7 @@ export function ArtistShowcase({
                     src={url}
                     alt={t("artists.imageAlt", { name: artist.name, index: imageIndex + 1 })}
                     loading="lazy"
+                    decoding="async"
                   />
                 </button>
               ))}
