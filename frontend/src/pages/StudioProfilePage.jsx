@@ -6,6 +6,7 @@ import { StudioLeadFormEnhanced } from "../components/StudioLeadFormEnhanced";
 import { PublicStudioCard } from "../components/PublicStudioCard";
 import { RollingGallery } from "../components/RollingGallery";
 import { ArtistShowcase } from "../components/ArtistShowcase";
+import { StudioImage } from "../components/StudioImage";
 import { buildShowcaseArtists, shouldShowArtistShowcase } from "../utils/artistShowcase";
 import { getStudioTags } from "../utils/studioTags";
 import { studioRegistry } from "./studios";
@@ -383,9 +384,11 @@ export function StudioProfilePage({
             (docs/bildprestanda.md, steg 3). */}
         {studio.heroImageUrl ? (
           <>
-            <img
+            <StudioImage
               className="page-hero__media"
               src={studio.heroImageUrl}
+              widths={[1024, 2048]}
+              sizes="100vw"
               alt=""
               fetchpriority="high"
               style={{
@@ -414,7 +417,12 @@ export function StudioProfilePage({
             {headingImageUrl ? (
               <>
                 <span className="studio-hero__heading-image" aria-hidden="true">
-                  <img src={headingImageUrl} alt="" />
+                  <StudioImage
+                    src={headingImageUrl}
+                    widths={[1024, 2048]}
+                    sizes="(max-width: 768px) 100vw, 720px"
+                    alt=""
+                  />
                 </span>
                 <h1 className="visually-hidden">{studio.name}</h1>
               </>
@@ -425,7 +433,13 @@ export function StudioProfilePage({
                   style={{ maxWidth: `${logoWidthPercent}%` }}
                   aria-hidden="true"
                 >
-                  <img className="studio-hero__logo" src={studio.logoUrl} alt="" />
+                  <StudioImage
+                    className="studio-hero__logo"
+                    src={studio.logoUrl}
+                    widths={[480, 1024]}
+                    sizes="(max-width: 768px) 92vw, 560px"
+                    alt=""
+                  />
                 </span>
                 <h1 className="visually-hidden">{studio.name}</h1>
               </>
@@ -462,9 +476,11 @@ export function StudioProfilePage({
                 className={`studio-hero__plate studio-hero__plate--panel studio-hero__plate--${logoBackdrop} studio-hero__plate--${logoFit}`}
                 style={{ maxWidth: `${logoWidthPercent}%` }}
               >
-                <img
+                <StudioImage
                   className="studio-hero__logo"
                   src={studio.logoUrl}
+                  widths={[480, 1024]}
+                  sizes="(max-width: 768px) 92vw, 400px"
                   alt={t("studio.logoAlt", { name: studio.name })}
                 />
               </span>

@@ -1,6 +1,7 @@
 import { SiteLink } from "../utils/siteRouter";
 import { getStudioTags } from "../utils/studioTags";
 import { useT } from "../i18n/LanguageContext";
+import { StudioImage } from "./StudioImage";
 
 export function PublicStudioCard({ studio, compact = false, cardTheme = null, revealDelay }) {
   const t = useT();
@@ -32,9 +33,11 @@ export function PublicStudioCard({ studio, compact = false, cardTheme = null, re
       <div className="studio-card__media">
         {mediaImageUrl ? (
           <>
-            <img
+            <StudioImage
               className="studio-card__photo"
               src={mediaImageUrl}
+              widths={[480, 1024]}
+              sizes="(max-width: 700px) 100vw, 420px"
               alt=""
               loading="lazy"
               decoding="async"
@@ -43,9 +46,10 @@ export function PublicStudioCard({ studio, compact = false, cardTheme = null, re
           </>
         ) : null}
         {studio.logoUrl && studio.publicProfile?.logoPlacement !== "hidden" ? (
-          <img
+          <StudioImage
             className="studio-card__logo"
             src={studio.logoUrl}
+            variant={480}
             alt={t("studioCard.logoAlt", { name: studio.name })}
             loading="lazy"
             decoding="async"

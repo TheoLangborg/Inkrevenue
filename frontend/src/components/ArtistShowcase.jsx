@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useT } from "../i18n/LanguageContext";
 import { getArtistFirstName, getArtistInitials } from "../utils/artistShowcase";
+import { StudioImage } from "./StudioImage";
 
 // Så många verk som får plats som miniatyrer på kortet. Resten nås via portföljen.
 const CARD_THUMBNAILS = 3;
@@ -124,7 +125,14 @@ export function ArtistShowcase({
             >
               <div className="artist-card__media">
                 {item.photoUrl ? (
-                  <img src={item.photoUrl} alt={item.name} loading="lazy" decoding="async" />
+                  <StudioImage
+                    src={item.photoUrl}
+                    widths={[480, 1024]}
+                    sizes="(max-width: 600px) 100vw, 400px"
+                    alt={item.name}
+                    loading="lazy"
+                    decoding="async"
+                  />
                 ) : (
                   <span className="artist-card__initials" aria-hidden="true">
                     {getArtistInitials(item.name)}
@@ -170,7 +178,13 @@ export function ArtistShowcase({
                                 })
                           }
                         >
-                          <img src={url} alt="" loading="lazy" decoding="async" />
+                          <StudioImage
+                            src={url}
+                            variant={480}
+                            alt=""
+                            loading="lazy"
+                            decoding="async"
+                          />
                           {showsRemainder ? (
                             <span className="artist-card__more" aria-hidden="true">
                               +{hiddenWorks + 1}
@@ -246,8 +260,10 @@ export function ArtistShowcase({
                   }
                   aria-label={t("gallery.openImage", { index: imageIndex + 1, total: imageCount })}
                 >
-                  <img
+                  <StudioImage
                     src={url}
+                    widths={[480, 1024]}
+                    sizes="240px"
                     alt={t("artists.imageAlt", { name: artist.name, index: imageIndex + 1 })}
                     loading="lazy"
                     decoding="async"
@@ -296,8 +312,10 @@ export function ArtistShowcase({
             </button>
           ) : null}
           <figure className="rg-lb-figure">
-            <img
+            <StudioImage
               src={images[lightboxIndex]}
+              widths={[1024, 2048]}
+              sizes="90vw"
               alt={t("artists.imageAlt", { name: artist.name, index: lightboxIndex + 1 })}
             />
             <figcaption className="rg-lb-counter">
