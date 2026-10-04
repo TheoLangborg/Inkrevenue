@@ -496,7 +496,6 @@ export const en = {
     studioMap: "Get directions",
     studioRoomAlt: "The tattoo room at {{studio}}",
     studioLoungeAlt: "The waiting area at {{studio}}",
-    slotPortrait: "Portrait coming",
     stripLabel: "Contact"
   },
 

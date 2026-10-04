@@ -15,7 +15,9 @@ import { GhostInkPage } from "./GhostInkPage";
 // To add a new customer:
 //   1. Add an entry below with their slug
 //   2. Set theme colors/fonts to match their website
-//   3. Set cardTheme.gradient to match their brand color for the catalog card
+//   3. Set cardTheme.gradient to match their brand color for the catalog card.
+//      Keep it light (about 4 % at the top, 36 % at the bottom): the photo must
+//      stay visible (user, 2026-10-04; the old 55–92 % made photos near-black).
 
 export const studioRegistry = {
   // Kontot är dolt i CRM:et tills vidare — GhostInkPage visar då samma fel som
@@ -23,8 +25,8 @@ export const studioRegistry = {
   "ghost-ink": {
     page: GhostInkPage,
     cardTheme: {
-      // Near-black over the photo, sand badge — the beige/black brand
-      gradient: "linear-gradient(135deg, rgba(17,17,17,0.9) 0%, rgba(17,17,17,0.55) 100%)",
+      // Light near-black tint over the photo, sand badge — the beige/black brand
+      gradient: "linear-gradient(180deg, rgba(17,17,17,0.04) 0%, rgba(17,17,17,0.36) 100%)",
       badgeBg: "#C8B8A3",
       badgeText: "#111111",
       ctaBg: "#111111",
@@ -52,8 +54,8 @@ export const studioRegistry = {
       borderRadius: 999,
     },
     cardTheme: {
-      // Black/white gradient to match their monochrome brand
-      gradient: "linear-gradient(135deg, rgba(0,0,0,0.92) 0%, rgba(30,30,30,0.75) 100%)",
+      // Light black tint to match their monochrome brand
+      gradient: "linear-gradient(180deg, rgba(0,0,0,0.04) 0%, rgba(0,0,0,0.36) 100%)",
       badgeBg: "#111111",
       badgeText: "#ffffff",
       ctaBg: "#111111",

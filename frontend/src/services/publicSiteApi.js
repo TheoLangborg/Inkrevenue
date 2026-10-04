@@ -1,3 +1,5 @@
+import { pinStudiosFirst } from "../utils/studioOrder";
+
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
 
 function normalizeArrayPayload(payload) {
@@ -76,7 +78,7 @@ async function request(path, options = {}) {
 }
 
 export function getPublicStudios() {
-  return request("/api/public/studios").then(normalizeArrayPayload);
+  return request("/api/public/studios").then(normalizeArrayPayload).then(pinStudiosFirst);
 }
 
 /**

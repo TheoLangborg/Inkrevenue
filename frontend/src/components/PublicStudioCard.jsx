@@ -1,5 +1,6 @@
 import { SiteLink } from "../utils/siteRouter";
 import { getStudioTags } from "../utils/studioTags";
+import { getArtistInitials } from "../utils/artistShowcase";
 import { useT } from "../i18n/LanguageContext";
 import { StudioImage } from "./StudioImage";
 
@@ -17,10 +18,29 @@ export function PublicStudioCard({ studio, compact = false, cardTheme = null, re
   // direkt för varje kort i katalogen, även långt under skärmkanten
   // (docs/bildprestanda.md, steg 4). Toningen ligger som ett eget lager ovanpå.
   const mediaImageUrl = studio.heroImageUrl || studio.publicProfile?.galleryImageUrls?.[0] || null;
+  // Svag toning, lite mörkare nertill bakom loggan. Bilden ska synas: den
+  // tidigare (20–60 %, temana upp till 92 %) gjorde fotona nästan svarta
+  // (användaren 2026-10-04).
   const shadeStyle = {
     backgroundImage:
-      cardTheme?.gradient || "linear-gradient(rgba(10, 26, 47, 0.2), rgba(10, 26, 47, 0.6))"
+      cardTheme?.gradient ||
+      "linear-gradient(180deg, rgba(10, 26, 47, 0.04) 0%, rgba(10, 26, 47, 0.32) 100%)"
   };
+  // Utan logga får kortet samma vita bricka med studions initialer, så att alla
+  // kort ser likadana ut (användaren 2026-10-04). Har studion valt att dölja
+  // loggan visas ingen bricka alls.
+  const logoHidden = studio.publicProfile?.logoPlacement === "hidden";
+  const city = studio.city || t("studioCard.country");
+  // Andra raden är verksamhetsområdet. Står där samma sak som staden (eller
+  // inget) visas staden en gång i stället för "Finspång Finspång". Utan stad
+  // står "Sverige · Tatueringsstudio" som förut.
+  const serviceArea = String(studio.publicProfile?.serviceArea || "").trim();
+  const area =
+    serviceArea && serviceArea !== studio.city
+      ? serviceArea
+      : studio.city
+        ? ""
+        : t("studioCard.kind");
 
   return (
     <SiteLink
@@ -45,7 +65,7 @@ export function PublicStudioCard({ studio, compact = false, cardTheme = null, re
             <span className="studio-card__shade" style={shadeStyle} aria-hidden="true" />
           </>
         ) : null}
-        {studio.logoUrl && studio.publicProfile?.logoPlacement !== "hidden" ? (
+        {logoHidden ? null : studio.logoUrl ? (
           <StudioImage
             className="studio-card__logo"
             src={studio.logoUrl}
@@ -54,13 +74,17 @@ export function PublicStudioCard({ studio, compact = false, cardTheme = null, re
             loading="lazy"
             decoding="async"
           />
-        ) : null}
+        ) : (
+          <span className="studio-card__logo studio-card__logo--initials" aria-hidden="true">
+            {getArtistInitials(studio.name)}
+          </span>
+        )}
       </div>
 
       <div className="studio-card__body">
         <div className="studio-card__meta">
-          <span>{studio.city || t("studioCard.country")}</span>
-          <span>{studio.publicProfile?.serviceArea || studio.city || t("studioCard.kind")}</span>
+          <span>{city}</span>
+          {area ? <span>{area}</span> : null}
         </div>
 
         <h3>{studio.name}</h3>

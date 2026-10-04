@@ -504,7 +504,6 @@ export const sv = {
     studioMap: "Hitta hit",
     studioRoomAlt: "Arbetsrummet på {{studio}}",
     studioLoungeAlt: "Väntrummet på {{studio}}",
-    slotPortrait: "Porträtt kommer",
     stripLabel: "Kontakt"
   },
 

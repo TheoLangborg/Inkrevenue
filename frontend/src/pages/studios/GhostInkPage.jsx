@@ -5,7 +5,6 @@ import { getPublicStudioBySlug } from "../../services/publicSiteApi";
 import { StudioLeadFormEnhanced } from "../../components/StudioLeadFormEnhanced";
 import { RollingGallery } from "../../components/RollingGallery";
 import { StudioImage } from "../../components/StudioImage";
-import { buildShowcaseArtists } from "../../utils/artistShowcase";
 import { useLanguage } from "../../i18n/LanguageContext";
 import heroWide1280 from "../../assets/ghost-ink/studio-hero-wide-1280.webp";
 import heroWide1920 from "../../assets/ghost-ink/studio-hero-wide-1920.webp";
@@ -44,8 +43,9 @@ import loungeTall960 from "../../assets/ghost-ink/studio-lounge-tall-960.webp";
  * InkRevenue-katalogen".
  *
  * Det vi redan vet (namn, kontakt, Instagram, adress, bokningsvillkor,
- * studions bilder) står här; resten kommer från CRM:et: porträtt, galleri och
- * presentation. Tills bilderna finns står platshållare på deras platser.
+ * studions bilder) står här; resten kommer från CRM:et: galleri och
+ * presentation. Tills galleriet har bilder står platshållare i verken.
+ * Sidan har ingen profilbild (användaren 2026-10-04).
  *
  * CRM:ets fält går först där det finns ett: Instagram, intro ("Om Hampus"),
  * rubrikraden i heron (headline), formulärets rubrik och ingress, omslagsbilden
@@ -313,10 +313,6 @@ export function GhostInkPage({ slug }) {
     () => (Array.isArray(profile.galleryImageUrls) ? profile.galleryImageUrls.filter(Boolean) : []),
     [profile.galleryImageUrls]
   );
-  const portraitUrl = useMemo(
-    () => buildShowcaseArtists(studio?.artistOptions).find((artist) => artist.photoUrl)?.photoUrl || "",
-    [studio]
-  );
   const consultationPrepayment = getConsultationPrepayment(studio);
   const names = { artist: ARTIST.name, studio: studioName, street: STUDIO.street, city };
   // Raden under namnet och bokningens rubrik och ingress går att ändra i CRM:et
@@ -352,7 +348,7 @@ export function GhostInkPage({ slug }) {
         : t(loadError ? "studio.metaErrorTitle" : "studio.metaFallbackTitle")
     ),
     description: studio ? t("ghostInk.metaDescription", names) : t("studio.metaDescriptionFallback"),
-    image: portraitUrl || heroImageUrl || studio?.logoUrl || "/ink-revenue-logo.svg",
+    image: heroImageUrl || studio?.logoUrl || "/ink-revenue-logo.svg",
     path: `/studio/${slug}`,
     noIndex: !studio
   });
@@ -500,23 +496,9 @@ export function GhostInkPage({ slug }) {
         </div>
       </section>
 
-      {/* ── OM HAMPUS ── Två kolumner som Royalkaves "Om studion": porträttet
-          till vänster, texten till höger. */}
-      <section className="gi-about" aria-labelledby="gi-about-title">
-        <div className="gi-about__media">
-          {portraitUrl ? (
-            <StudioImage
-              src={portraitUrl}
-              widths={[480, 1024]}
-              sizes="(max-width: 900px) 100vw, 50vw"
-              alt={ARTIST.name}
-            />
-          ) : (
-            <div className="gi-frame gi-frame--sand" aria-hidden="true">
-              <span className="gi-frame__label">{t("ghostInk.slotPortrait")}</span>
-            </div>
-          )}
-        </div>
+      {/* ── OM HAMPUS ── Bara text, ingen profilbild (användaren 2026-10-04).
+          Platsen för ett porträtt är borttagen, även när CRM:et har ett. */}
+      <section className="gi-about gi-about--text" aria-labelledby="gi-about-title">
         <div className="gi-about__body" data-reveal>
           <h2 id="gi-about-title" className="gi-heading">
             {t("ghostInk.aboutTitle", firstNameVars)}

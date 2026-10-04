@@ -1812,6 +1812,10 @@ h1 {
   gap: 24px;
 }
 
+/* Alla kort ser likadana ut oavsett text och logga (användaren 2026-10-04):
+   bilden har fast höjd, texten tar resten av höjden och knappen står längst
+   ner. Förut delades den extra höjden mellan bild och text, så ett kort med
+   lång text fick en lägre bild än grannarna. */
 .studio-card {
   background: rgba(255, 255, 255, 0.95);
   border: 1px solid var(--glass-border);
@@ -1819,6 +1823,7 @@ h1 {
   overflow: hidden;
   box-shadow: var(--shadow);
   display: grid;
+  grid-template-rows: auto 1fr;
   color: inherit;
   text-decoration: none;
   transition:
@@ -1843,7 +1848,7 @@ h1 {
 }
 
 .studio-card__media {
-  min-height: 180px;
+  height: 240px;
   background:
     linear-gradient(135deg, rgba(18, 48, 88, 0.94), rgba(53, 92, 152, 0.82)),
     radial-gradient(circle at top right, rgba(255, 255, 255, 0.18), transparent 40%);
@@ -1900,9 +1905,23 @@ h1 {
   box-shadow: 0 12px 24px rgba(10, 26, 47, 0.22);
 }
 
+/* Studion saknar logga: samma bricka med initialerna. */
+.studio-card__logo--initials {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  font-family: "Big Shoulders Display", "Georgia", sans-serif;
+  font-size: 1.9rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: var(--ink-900);
+}
+
 .studio-card__body {
   padding: 22px;
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 14px;
 }
 
@@ -1915,6 +1934,11 @@ h1 {
 .studio-card__body p {
   margin: 0;
   color: var(--muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .studio-card__meta {
@@ -1927,7 +1951,8 @@ h1 {
 }
 
 .studio-card__cta {
-  justify-self: start;
+  align-self: flex-start;
+  margin-top: auto;
   pointer-events: none;
 }
 
@@ -3931,10 +3956,12 @@ h1 {
 
   .studio-card {
     grid-template-columns: 120px 1fr;
+    grid-template-rows: none;
     border-radius: 18px;
   }
 
   .studio-card__media {
+    height: auto;
     min-height: 0;
     border-radius: 18px 0 0 18px;
   }
@@ -3947,6 +3974,11 @@ h1 {
     bottom: 10px;
     border-radius: 10px;
     padding: 6px;
+  }
+
+  .studio-card__logo--initials {
+    width: 44px;
+    font-size: 1.15rem;
   }
 
   .studio-card__body {
@@ -6244,7 +6276,8 @@ html.has-reveal .steps[data-reveal]:not([data-revealed])::before {
   height: 18px;
 }
 
-/* Om Hampus: två kolumner som Royalkaves "Om studion", porträttet till vänster. */
+/* Två kolumner som Royalkaves "Om studion": bild och text. Används av Studion.
+   Om Hampus är bara text (.gi-about--text), utan profilbild. */
 .gi-about {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -6314,6 +6347,23 @@ html.has-reveal .steps[data-reveal]:not([data-revealed])::before {
   margin: 0;
 }
 
+/* Om Hampus: en centrerad textkolumn (användaren 2026-10-04: ingen profilbild). */
+.gi-about--text {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.gi-about--text .gi-about__body {
+  justify-items: center;
+  padding-block: var(--gi-section-space);
+  text-align: center;
+}
+
+@media (min-width: 900px) {
+  .gi-about--text {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 /* Studion: samma kolumner som Om Hampus, men fotona till höger på dator. */
 @media (min-width: 900px) {
   .gi-about--flip .gi-about__media {
@@ -6367,11 +6417,6 @@ html.has-reveal .steps[data-reveal]:not([data-revealed])::before {
     linear-gradient(var(--gi-mark), var(--gi-mark)) left bottom / 1px 18px no-repeat,
     linear-gradient(var(--gi-mark), var(--gi-mark)) right bottom / 18px 1px no-repeat,
     linear-gradient(var(--gi-mark), var(--gi-mark)) right bottom / 1px 18px no-repeat;
-}
-
-/* Porträttets platshållare står på ljus botten och behöver en egen ton. */
-.gi-frame--sand {
-  background-color: var(--gi-sand);
 }
 
 .gi-frame__index {
