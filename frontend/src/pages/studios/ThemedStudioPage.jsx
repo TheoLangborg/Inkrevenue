@@ -4,6 +4,7 @@ import { getPublicStudioBySlug } from "../../services/publicSiteApi";
 import { StudioLeadFormEnhanced } from "../../components/StudioLeadFormEnhanced";
 import { RollingGallery } from "../../components/RollingGallery";
 import { ArtistShowcase } from "../../components/ArtistShowcase";
+import { StudioImage } from "../../components/StudioImage";
 import { buildShowcaseArtists, shouldShowArtistShowcase } from "../../utils/artistShowcase";
 import { getStudioTags } from "../../utils/studioTags";
 import { useLanguage } from "../../i18n/LanguageContext";
@@ -197,8 +198,10 @@ export function ThemedStudioPage({ slug, theme: themePartial = {} }) {
         {/* ── HERO ── */}
         <section style={heroStyle}>
           {hasHeroImage && (
-            <img
+            <StudioImage
               src={studio.heroImageUrl}
+              widths={[1024, 2048]}
+              sizes="100vw"
               alt=""
               fetchpriority="high"
               style={{
@@ -232,8 +235,10 @@ export function ThemedStudioPage({ slug, theme: themePartial = {} }) {
             {/* Symbolen visas bara när det inte finns en rubrikbild — en wordmark
                 innehåller oftast samma märke, och då blir det dubbelt. */}
             {studio.logoUrl && !headingImageUrl && (
-              <img
+              <StudioImage
                 src={studio.logoUrl}
+                widths={[480, 1024]}
+                sizes="400px"
                 alt={studio.name}
                 style={{ height: 80, objectFit: "contain", marginBottom: "1.5rem", filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.5))" }}
               />
@@ -242,8 +247,10 @@ export function ThemedStudioPage({ slug, theme: themePartial = {} }) {
               <>
                 {/* Rubrikbilden ersätter studionamnet visuellt. h1:an finns kvar dold
                     för sökmotorer och skärmläsare, därför är bilden dekorativ. */}
-                <img
+                <StudioImage
                   src={headingImageUrl}
+                  widths={[1024, 2048]}
+                  sizes="(max-width: 768px) 100vw, 720px"
                   alt=""
                   aria-hidden="true"
                   style={{
@@ -334,8 +341,10 @@ export function ThemedStudioPage({ slug, theme: themePartial = {} }) {
         {aboutText && (
           <section style={{ display: "grid", gridTemplateColumns: galleryImages[0] ? "1fr 1fr" : "1fr" }}>
             {galleryImages[0] && (
-              <img
+              <StudioImage
                 src={galleryImages[0]}
+                widths={[1024, 2048]}
+                sizes="(max-width: 900px) 100vw, 50vw"
                 alt={translate("themedStudio.studioAlt", { name: studio.name })}
                 loading="lazy"
                 decoding="async"
@@ -411,18 +420,20 @@ export function ThemedStudioPage({ slug, theme: themePartial = {} }) {
 
         {/* ── GALLERI ── */}
         {galleryImages.length > 1 && (
-          <section style={{ background: t.bgAlt, padding: "5rem 1.5rem" }}>
+          <section style={{ background: t.bgAlt, padding: "5rem 0" }}>
             <h2 style={headingStyle({
               fontSize: "clamp(2rem, 5vw, 3.5rem)", color: t.text,
-              marginBottom: "2.5rem", textAlign: "center",
+              marginBottom: "2.5rem", textAlign: "center", paddingInline: "1.5rem",
             })}>
               {translate("themedStudio.gallery")}
             </h2>
             {/* Rullande band med ALLA bilder. Rutnätet visade slice(1) eftersom
                 bild 0 används som stor bild längre upp — fem bilder i CRM:et blev
-                därför fyra här, vilket såg ut som att en bild försvunnit. */}
-            <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-              <RollingGallery images={galleryImages} studioName={studio.name} />
+                därför fyra här, vilket såg ut som att en bild försvunnit.
+                Bandet går kant i kant med större kort (size="large", användaren
+                2026-10-04), så sektionen har ingen sidmarginal. */}
+            <div style={{ "--rg-edge": "1.5rem" }}>
+              <RollingGallery images={galleryImages} studioName={studio.name} size="large" />
             </div>
           </section>
         )}

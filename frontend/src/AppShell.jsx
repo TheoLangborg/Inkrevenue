@@ -114,14 +114,19 @@ function getPageFromPath(pathname) {
   if (studioMatch) {
     const slug = decodeURIComponent(studioMatch[1]);
     const entry = studioRegistry[slug];
+    // En studio med egen sidkomponent (t.ex. GhostInkPage) går före temat.
+    const CustomStudioPage = entry?.page;
     return {
       currentPath: pathname,
       // Slugen ligger på sidan så att besöksmätningen kan ske på ett ställe —
-      // båda studiosidorna nedan går genom den här rutten.
+      // alla studiosidor nedan går genom den här rutten.
       studioSlug: slug,
-      element: entry
-        ? <ThemedStudioPage slug={slug} theme={entry.theme} />
-        : <StudioProfilePage slug={slug} />
+      // Alla tre ligger i InkRevenues ram: sidhuvud och sidfot ritas nedan.
+      element: CustomStudioPage
+        ? <CustomStudioPage slug={slug} />
+        : entry
+          ? <ThemedStudioPage slug={slug} theme={entry.theme} />
+          : <StudioProfilePage slug={slug} />
     };
   }
 

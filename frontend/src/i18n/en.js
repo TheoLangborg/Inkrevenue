@@ -37,6 +37,7 @@ export const en = {
     studios: "Studios",
     faq: "FAQ",
     cta: "Book a free strategy call",
+    ctaShort: "Book a call",
     openMenu: "Open menu",
     closeMenu: "Close menu"
   },
@@ -430,6 +431,75 @@ export const en = {
     cityKind: "{{city}} · Tattoo studio"
   },
 
+  // Ghost Ink's own studio page, pages/studios/GhostInkPage.jsx.
+  ghostInk: {
+    metaTitle: "{{artist}} – tattoo artist at {{studio}}, {{city}}",
+    metaDescription:
+      "Book a tattoo or a consultation with {{artist}} at {{studio}} in {{city}}. Send your enquiry with a reference image. You must be 18 or older.",
+    // The line under the name in the hero. The studio is a line, not the heading.
+    heroPlace: "Tattoos at {{studio}} in {{city}}",
+    ctaBook: "Book a time",
+    instagram: "Instagram",
+    // Shown under "About Hampus" until his own text is in the CRM. Sharpen with
+    // his own words on his style. Where he tattoos is already in the hero.
+    aboutFallback: "He has a style of his own, and your idea is the starting point. Book him directly here.",
+    workTitle: "Selected work",
+    slotWork: "Image coming",
+    slotWorkHidden: "Portfolio images will be published soon.",
+    workMore: "More work on Instagram",
+    aboutTitle: "About {{artist}}",
+    bookingTitle: "Book a time",
+    // Same promise as the form's thank-you message (leadForm.success) and faqAfterA.
+    bookingLead:
+      "Describe your idea in the form. You'll normally hear back within 24 hours, by email or phone.",
+    rulesLabel: "Before you book",
+    ruleAgeTitle: "You need to be 18",
+    ruleAgeText: "The age limit applies to every tattoo, whatever the size.",
+    ruleImageTitle: "Bring a reference image",
+    ruleImageText:
+      "An image of the design, style or placement says more than a long description and makes it easier to respond to your idea right away.",
+    // Added when a consultation can be booked without an image.
+    ruleImageNoImage: "No image? Choose a consultation.",
+    ruleDepositTitle: "{{amount}} SEK deposit for consultations",
+    ruleDepositText:
+      "Applies to consultations, mainly ahead of larger tattoos. The deposit is deducted from the price at your tattoo appointment.",
+    ruleFeeTitle: "{{amount}} SEK booking fee for consultations",
+    ruleFeeText:
+      "The fee is paid when you book the consultation and keeps the time reserved for you.",
+    // Answers that hold whatever Hampus decides. Aftercare, cancellation and a
+    // price in SEK are added once he has answered (tattoo-crm/docs/ghost-ink-studiosida.md).
+    faqTitle: "Common questions",
+    faqPriceQ: "How much does a tattoo cost?",
+    faqPriceA:
+      "The price depends on size, placement and how detailed the design is. Add your budget in the form, so he knows what you have in mind.",
+    faqUnsureQ: "I'm not sure exactly what I want. Can I still book?",
+    faqUnsureA:
+      "Yes. Choose a consultation in the form and describe your idea, and you'll go through it together.",
+    faqWriteQ: "What should I write in my enquiry?",
+    faqWriteA:
+      "Pick the style, placement and size from the lists and describe the design in your own words. Attach an image that shows what you have in mind. The more you share, the easier it is to respond to your idea.",
+    faqAfterQ: "What happens after I send my enquiry?",
+    // The confirmation email only goes out when the customer gave an email
+    // address (sendLeadAutoReply in tattoo-crm). Same 24 hours as bookingLead.
+    // "We" is InkRevenue, which replies first (user's decision 2026-09-18). The
+    // name is not written on the page.
+    faqAfterA:
+      "If you gave an email address, you'll get a confirmation right away with a summary of your enquiry. We'll then get back to you, normally within 24 hours, by email or phone.",
+    faqPrepareQ: "How do I prepare for my tattoo?",
+    faqPrepareA:
+      "Eat properly beforehand and get a good night's sleep. Avoid alcohol for 24 hours before. The skin where the tattoo will go should be intact and not sunburnt.",
+    faqWhereQ: "Where is the studio?",
+    faqWhereA: "{{studio}} is at {{street}} in {{city}}.",
+    // The Studio section, with photos of the tattoo room and the waiting area.
+    studioTitle: "The studio",
+    studioText: "He tattoos at {{studio}}, {{street}}, {{city}}.",
+    studioMap: "Get directions",
+    studioRoomAlt: "The tattoo room at {{studio}}",
+    studioLoungeAlt: "The waiting area at {{studio}}",
+    slotPortrait: "Portrait coming",
+    stripLabel: "Contact"
+  },
+
   artists: {
     eyebrow: "The artists",
     title: "Choose who tattoos you",
@@ -635,6 +705,8 @@ export const en = {
     honeypot: "Leave this field empty",
     typeTattoo: "Tattoo booking",
     typeConsultation: "Consultation",
+    typeHint:
+      "Know what you want? Choose tattoo booking. Want to talk the idea through, or is the piece large? Choose consultation.",
     fallbackNote:
       "The style you were after isn't among the studio's selectable styles, so we've switched to a consultation. Describe what you want and the studio will come back with a suggestion.",
     fallbackBack: "Back to the styles",
@@ -663,6 +735,11 @@ export const en = {
     imageLabel: "Reference image",
     imageHint:
       "Optional. Upload an image if you want to show style, motif or a reference more clearly. JPG, PNG or WEBP, max {{max}} MB.",
+    // The studio requires the image (requireInspirationImage).
+    imageLabelRequired: "Reference image",
+    imageHintRequired:
+      "Required. Show the design, style or placement. JPG, PNG or WEBP, max {{max}} MB.",
+    imageRequired: "Add a reference image to continue.",
     imageProcessing: "Processing the image...",
     imagePreviewAlt: "Preview of the reference image",
     imageRemove: "Remove image",

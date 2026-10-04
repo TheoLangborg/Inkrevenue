@@ -3,6 +3,7 @@ import { loadStripe } from "@stripe/stripe-js/pure";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { FormLegalLinks } from "./FormLegalLinks";
 import { CustomSelect } from "./CustomSelect";
+import { StudioImage } from "./StudioImage";
 import { useLegalConsent } from "../contexts/LegalConsentContext";
 import {
   createPublicStudioLead,
@@ -459,7 +460,13 @@ export function StudioLeadFormEnhanced({
   // samma artist kan väljas igen efter att kunden bytt i formuläret.
   artistRequest = null,
   // Formuläret äger valet; sidan får veta det för att markera kortet som valt.
-  onPreferredArtistChange = null
+  onPreferredArtistChange = null,
+  // Kunden kommer inte förbi första steget utan en bild. true gäller båda
+  // bokningstyperna; en lista gäller bara de typerna, t.ex. ["tattoo_session"]
+  // när en konsultation ska gå att boka utan bild. Spärren sitter bara här:
+  // kan servern inte spara bilden finns "Skicka utan bild" kvar med flit,
+  // annars sitter en kund som redan betalat depositionen fast.
+  requireInspirationImage = false
 }) {
   const { t, tList, locale, language } = useLanguage();
   const [formData, setFormData] = useState(() => buildInitialForm());
@@ -474,6 +481,10 @@ export function StudioLeadFormEnhanced({
   // steg 1, där bilden väljs, är oåtkomligt efter en betalning (Tillbaka-knappen
   // är dold). Utan den här knappen fanns ingen väg vidare alls.
   const [imageUploadRejected, setImageUploadRejected] = useState(false);
+  // Kunden har försökt gå vidare utan bild när bilden krävs. En egen flagga i
+  // stället för imageError: meddelandet ska försvinna när kunden byter till en
+  // typ där bilden är valfri, medan ett fel från bearbetningen ska stå kvar.
+  const [imageMissingShown, setImageMissingShown] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [touched, setTouched] = useState(new Set());
   // Sätts när kunden valde "Annat" i stil-dropdownen och vi därför bytte till
@@ -646,6 +657,16 @@ export function StudioLeadFormEnhanced({
   }
 
   const hasEnoughDetails = useMemo(() => hasEnoughDetailsForCalendar(formData), [formData]);
+  // Krävs bilden för den bokningstyp kunden har valt just nu?
+  const imageRequired =
+    requireInspirationImage === true ||
+    (Array.isArray(requireInspirationImage) &&
+      requireInspirationImage.includes(formData.bookingType));
+  // Under bearbetningen är bilden på väg — "Bearbetar bilden..." står redan
+  // ovanför knappen. Ett fel från bearbetningen säger mer än "bifoga en bild",
+  // så det går före.
+  const showImageMissing =
+    imageRequired && imageMissingShown && !inspirationImage && !imageProcessing && !imageError;
   const draftPayload = useMemo(
     () => ({
       name: formData.name,
@@ -1044,7 +1065,10 @@ export function StudioLeadFormEnhanced({
         : STEP_TATTOO_FIELDS;
       const newTouched = new Set([...touched, ...fieldsToValidate]);
       setTouched(newTouched);
-      if (fieldsToValidate.some((f) => computeFieldError(f, formData, t))) return;
+      const hasFieldError = fieldsToValidate.some((f) => computeFieldError(f, formData, t));
+      const imageMissing = imageRequired && !inspirationImage;
+      if (imageMissing) setImageMissingShown(true);
+      if (hasFieldError || imageMissing) return;
     }
     if (stepId === "time") {
       // Under första hämtningen finns inga tider att välja. Utan spärren
@@ -1361,18 +1385,21 @@ export function StudioLeadFormEnhanced({
             <button
               type="button"
               className={`booking-type-btn ${formData.bookingType === "tattoo_session" ? "booking-type-btn--active" : ""}`}
-              onClick={() => { setStyleFellBackToConsultation(false); setFormData((c) => ({ ...c, bookingType: "tattoo_session" })); setTouched(new Set()); }}
+              onClick={() => { setStyleFellBackToConsultation(false); setFormData((c) => ({ ...c, bookingType: "tattoo_session" })); setTouched(new Set()); setImageMissingShown(false); }}
             >
               {t("leadForm.typeTattoo")}
             </button>
             <button
               type="button"
               className={`booking-type-btn ${formData.bookingType === "consultation" ? "booking-type-btn--active" : ""}`}
-              onClick={() => { setStyleFellBackToConsultation(false); setFormData((c) => ({ ...c, bookingType: "consultation" })); setTouched(new Set()); }}
+              onClick={() => { setStyleFellBackToConsultation(false); setFormData((c) => ({ ...c, bookingType: "consultation" })); setTouched(new Set()); setImageMissingShown(false); }}
             >
               {t("leadForm.typeConsultation")}
             </button>
           </div>
+
+          {/* Kunden vet sällan vilken av de två hen ska välja. */}
+          <p className="booking-type-hint">{t("leadForm.typeHint")}</p>
 
           {formData.bookingType === "consultation" && styleFellBackToConsultation && (
             <p className="booking-type-note" role="status">
@@ -1438,7 +1465,13 @@ export function StudioLeadFormEnhanced({
                               onLoad={(event) => measureStudioLogo(event.currentTarget)}
                             />
                           ) : choice.photoUrl ? (
-                            <img src={choice.photoUrl} alt="" loading="lazy" decoding="async" />
+                            <StudioImage
+                              src={choice.photoUrl}
+                              variant={480}
+                              alt=""
+                              loading="lazy"
+                              decoding="async"
+                            />
                           ) : isAny ? (
                             <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                               <circle cx="9" cy="8" r="3.2" />
@@ -1616,26 +1649,38 @@ export function StudioLeadFormEnhanced({
           </label>
 
           <div className="studio-lead-form__upload">
-            <label htmlFor="lead-image">
-              {t("leadForm.imageLabel")}
+            <label
+              htmlFor="lead-image"
+              className={imageRequired && (imageError || showImageMissing) ? "has-error" : undefined}
+            >
+              {imageRequired ? (
+                <>{t("leadForm.imageLabelRequired")} <span className="field-required">*</span></>
+              ) : (
+                t("leadForm.imageLabel")
+              )}
               <input
                 ref={fileInputRef}
                 id="lead-image"
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
                 onChange={handleImageChange}
-                aria-invalid={!!imageError}
+                aria-invalid={Boolean(imageError) || showImageMissing}
+                aria-required={imageRequired || undefined}
                 aria-describedby="lead-image-hint"
               />
             </label>
             <p id="lead-image-hint" className="form-note form-note--compact">
-              {t("leadForm.imageHint", { max: MAX_INSPIRATION_IMAGE_MB })}
+              {t(imageRequired ? "leadForm.imageHintRequired" : "leadForm.imageHint", {
+                max: MAX_INSPIRATION_IMAGE_MB
+              })}
             </p>
             {imageProcessing ? (
               <p className="form-status form-status--muted">{t("leadForm.imageProcessing")}</p>
             ) : null}
             {imageError ? (
               <p className="form-status form-status--error" role="alert">{imageError}</p>
+            ) : showImageMissing ? (
+              <p className="form-status form-status--error" role="alert">{t("leadForm.imageRequired")}</p>
             ) : null}
             {inspirationImage ? (
               <div className="upload-preview">

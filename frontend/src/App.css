@@ -1347,6 +1347,13 @@ h1 {
 }
 
 /* Förklaring när "Annat" i stil-listan växlade formuläret till konsultation. */
+.booking-type-hint {
+  margin: -4px 0 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
 .booking-type-note {
   margin: 0;
   padding: 12px 14px;
@@ -1550,6 +1557,9 @@ h1 {
   gap: 12px;
   color: #fff;
   font-weight: 600;
+  /* Loggan krymper aldrig. Utan det här tog en för bred meny hela platsen,
+     och loggan blev 0 px bred på mobil. */
+  flex-shrink: 0;
 }
 
 .site-brand img {
@@ -1608,6 +1618,11 @@ h1 {
 
 .site-header__cta {
   padding-inline: 22px;
+}
+
+/* Den korta texten används bara på smal mobil, se 480 px-blocket. */
+.site-header__cta-short {
+  display: none;
 }
 
 /* ── Hamburger button ── */
@@ -2655,7 +2670,7 @@ h1 {
   height: 300px;
   padding: 0;
   border: 0;
-  border-radius: 24px;
+  border-radius: 6px;
   overflow: hidden;
   background: var(--lav-100);
   box-shadow: var(--shadow);
@@ -2860,10 +2875,61 @@ h1 {
   background: rgba(255, 255, 255, 0.2);
 }
 
+/* Stort band (RollingGallery size="large") som går kant i kant: större kort
+   och bara en kort tonning vid fönsterkanten (användaren 2026-10-04: för smalt
+   och för suddigt i ändarna). Ghost Ink och Royalkave. Måtten gäller bara
+   korten i bandet: portföljens rutnät ritas också inuti .rg. Höjderna ska
+   stämma med CARD_SIZES_LARGE i RollingGallery.jsx. */
+.rg--large .rg-track > .rg-card {
+  width: 300px;
+  height: 380px;
+}
+
+/* Plats för kortens skugga (--shadow, 0 18px 48px) inuti overflow: hidden.
+   Med vanliga 8/14 px klipptes den av i en rak linje över hela bredden. De
+   negativa marginalerna håller avståndet till rubriken och knappraden. */
+.rg--large .rg-viewport {
+  padding-block: 24px 64px;
+  margin-block: -16px -50px;
+}
+
+.rg--large .rg-viewport--marquee {
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    transparent,
+    #000 min(32px, 2.5vw),
+    #000 calc(100% - min(32px, 2.5vw)),
+    transparent
+  );
+  mask-image: linear-gradient(
+    90deg,
+    transparent,
+    #000 min(32px, 2.5vw),
+    #000 calc(100% - min(32px, 2.5vw)),
+    transparent
+  );
+}
+
+/* Den rullbara raden (minskad rörelse) och knappraden under bandet håller
+   avstånd till fönsterkanten. */
+.rg--large .rg-viewport--scroll,
+.rg--large .rg-cta-row {
+  padding-inline: var(--rg-edge, 16px);
+}
+
+.rg--large .rg-viewport--scroll {
+  scroll-padding-inline: var(--rg-edge, 16px);
+}
+
 @media (max-width: 900px) {
   .rg-card {
     width: 200px;
     height: 260px;
+  }
+
+  .rg--large .rg-track > .rg-card {
+    width: 240px;
+    height: 300px;
   }
 }
 
@@ -2871,11 +2937,16 @@ h1 {
   .rg-card {
     width: 150px;
     height: 200px;
-    border-radius: 18px;
+    border-radius: 6px;
   }
 
   .rg-track {
     gap: 12px;
+  }
+
+  .rg--large .rg-track > .rg-card {
+    width: 190px;
+    height: 240px;
   }
 
   .rg-lb-nav {
@@ -3840,6 +3911,18 @@ h1 {
 }
 
 @media (max-width: 480px) {
+  /* Sidhuvudet på smal mobil. Hela menyn är 399 px bred, så på 390 px klipptes
+     knappen och loggan försvann. Loggan är länken hem, och knappen får sin
+     korta text. */
+  .site-nav__link--home,
+  .site-header__cta-full {
+    display: none;
+  }
+
+  .site-header__cta-short {
+    display: inline;
+  }
+
   /* Studio grid: 1 kolumn, horisontella kort */
   .studio-grid {
     grid-template-columns: 1fr;
@@ -5886,5 +5969,1127 @@ html.has-reveal .steps[data-reveal]:not([data-revealed])::before {
   to {
     opacity: 1;
     transform: none;
+  }
+}
+
+/* ── Ghost Ink (studiosida, pages/studios/GhostInkPage.jsx) ──────────────────
+   Allt är scopat under .gi. Sidan ligger i InkRevenues ram och följer
+   Royalkaves mall (ThemedStudioPage) i Ghost Inks färger och typsnitt.
+   Formuläret är det gemensamma StudioLeadFormEnhanced: temat sätts genom att
+   sajtens variabler skrivs om inom .gi, plus reglerna längre ner för de
+   ställen där blått är hårdkodat.
+   Studions palett: #111111, #F2EEE7, #C8B8A3, #F7F5F1. */
+.gi {
+  --gi-ink: #111111;
+  --gi-bone: #f7f5f1;
+  --gi-sand: #f2eee7;
+  --gi-taupe: #c8b8a3;
+  /* Text på ljust: 6,5:1 mot --gi-bone. --gi-taupe klarar bara text på --gi-ink (9,7:1). */
+  --gi-ink-muted: #5e574e;
+  /* Dekor på ljust (konturer) — aldrig text. */
+  --gi-taupe-deep: #a39580;
+  --gi-field: #fcfbf8;
+  --gi-field-border: #d9d0c3;
+  --gi-field-border-hover: #b3a590;
+  --gi-ink-hover: #2b2824;
+  --gi-line: rgba(17, 17, 17, 0.12);
+  --gi-line-strong: rgba(17, 17, 17, 0.26);
+  --gi-line-dark: rgba(200, 184, 163, 0.22);
+  --gi-font-display: "Krona One", "Familjen Grotesk", "Arial Black", sans-serif;
+  --gi-font-body: "Familjen Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --gi-gutter: clamp(16px, 5vw, 48px);
+  --gi-section-space: clamp(64px, 9vw, 112px);
+  /* Papperskorn: brus som ritas en gång och upprepas sömlöst. */
+  --gi-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .07 0 0 0 0 .07 0 0 0 0 .06 0 0 0 .5 -.24'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23g)'/%3E%3C/svg%3E");
+
+  /* Sajtens variabler, omskrivna för formuläret och galleriet på den här sidan. */
+  --text: var(--gi-ink);
+  --muted: var(--gi-ink-muted);
+  --accent: var(--gi-ink);
+  --border: var(--gi-line-strong);
+  --lav-50: var(--gi-bone);
+  --lav-100: var(--gi-sand);
+  --ink-100: var(--gi-sand);
+  --ink-400: var(--gi-ink);
+  --ink-600: var(--gi-ink);
+  --ink-700: var(--gi-ink);
+  --ink-900: var(--gi-ink);
+  --snow: var(--gi-field);
+  --silver-1: var(--gi-sand);
+  --silver-2: var(--gi-taupe);
+  --glass-border: var(--gi-line);
+  --shadow: none;
+  --danger: #a23b1e;
+  --danger-text: #a23b1e;
+  --success: #3f6b4b;
+  --success-bg: rgba(63, 107, 75, 0.1);
+  --success-text: #2f5a3b;
+
+  background: var(--gi-bone);
+  color: var(--gi-ink);
+  font-family: var(--gi-font-body);
+  line-height: 1.6;
+}
+
+.gi-container {
+  width: min(1200px, 100% - 2 * var(--gi-gutter));
+  margin-inline: auto;
+}
+
+.gi-heading {
+  margin: 0;
+  font-family: var(--gi-font-display);
+  font-weight: 400;
+  font-size: clamp(1.625rem, 4.4vw, 2.75rem);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: var(--gi-ink);
+  text-wrap: balance;
+}
+
+.gi-heading--light {
+  color: var(--gi-bone);
+}
+
+.gi a:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 4px;
+}
+
+.gi-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  padding: 0 24px 0 26px;
+  border-radius: 2px;
+  background: var(--gi-ink);
+  color: var(--gi-bone);
+  font-size: 1rem;
+  font-weight: 600;
+  transition:
+    background-color 0.25s var(--ease-out-quart),
+    transform 0.2s var(--ease-out-quart);
+}
+
+.gi-button svg {
+  width: 18px;
+  height: 18px;
+  transition: transform 0.35s var(--ease-out-quint);
+}
+
+.gi-button:hover {
+  background: var(--gi-ink-hover);
+}
+
+.gi-button:hover svg {
+  transform: translateY(3px);
+}
+
+.gi-button:active {
+  transform: scale(0.98);
+}
+
+/* Ljus knapp på mörk botten: heron och den mobila listen. */
+.gi-button--light {
+  background: var(--gi-bone);
+  color: var(--gi-ink);
+}
+
+.gi-button--light:hover {
+  background: var(--gi-sand);
+}
+
+.gi-textlink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-weight: 600;
+  color: var(--gi-ink);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-decoration-color: var(--gi-line-strong);
+  text-underline-offset: 0.35em;
+  transition: text-decoration-color 0.2s var(--ease-out-quart);
+}
+
+.gi-textlink:hover {
+  text-decoration-color: currentColor;
+}
+
+/* Hero. Som Royalkaves: mörk, centrerad, namnet och en bokningsknapp. Lugnare:
+   lägre än en hel skärm, och namnet i rubrikstorlek i stället för ett ordmärke. */
+.gi-hero {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  place-items: center;
+  min-height: clamp(420px, 66vh, 620px);
+  padding: clamp(64px, 10vw, 104px) var(--gi-gutter);
+  overflow: hidden;
+  background-color: var(--gi-ink);
+  color: var(--gi-bone);
+  text-align: center;
+}
+
+/* Studions omslagsbild bakom texten, som i Royalkaves hero. max-width: none —
+   den globala img-regeln kapar annars bredden. */
+.gi-hero__bg {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Studions eget foto ligger i en <picture>. Den måste ur gridden, annars blir
+   den en egen rad och knuffar texten ur mitten. */
+.gi-hero__picture {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+}
+
+/* Mörkare nedåt, så att namnet och knappen går att läsa mot fotot. */
+.gi-hero--photo::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(
+    to top,
+    rgba(17, 17, 17, 0.9) 0%,
+    rgba(17, 17, 17, 0.6) 55%,
+    rgba(17, 17, 17, 0.4) 100%
+  );
+}
+
+/* Röken i stället för foto. Större än rutan så att driften aldrig visar en kant. */
+.gi-smoke {
+  position: absolute;
+  top: -8%;
+  left: -8%;
+  z-index: -1;
+  width: 116%;
+  max-width: none;
+  height: 116%;
+}
+
+.gi-hero__inner {
+  display: grid;
+  justify-items: center;
+  max-width: 760px;
+}
+
+/* Den globala h1-regeln ger blå skugga, maxbredd och marginal — nollställs här. */
+.gi-hero__name {
+  max-width: none;
+  margin: 0;
+  font-family: var(--gi-font-display);
+  font-weight: 400;
+  font-size: clamp(2.125rem, 5.6vw, 4rem);
+  line-height: 1.08;
+  letter-spacing: -0.01em;
+  text-shadow: none;
+  color: var(--gi-bone);
+  text-wrap: balance;
+}
+
+/* Studion är en rad, inte rubriken — den ska kunna bytas. */
+.gi-hero__place {
+  margin: 18px 0 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gi-taupe);
+}
+
+.gi-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 12px 28px;
+  margin-top: clamp(28px, 4vw, 40px);
+}
+
+.gi-hero__social {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--gi-taupe);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-decoration-color: var(--gi-line-dark);
+  text-underline-offset: 0.3em;
+  transition:
+    color 0.2s var(--ease-out-quart),
+    text-decoration-color 0.2s var(--ease-out-quart);
+}
+
+.gi-hero__social:hover {
+  color: var(--gi-bone);
+  text-decoration-color: currentColor;
+}
+
+.gi-hero__social svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Om Hampus: två kolumner som Royalkaves "Om studion", porträttet till vänster. */
+.gi-about {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  background-color: var(--gi-bone);
+}
+
+@media (min-width: 900px) {
+  .gi-about {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.gi-about__media {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background-color: var(--gi-sand);
+}
+
+@media (min-width: 900px) {
+  .gi-about__media {
+    aspect-ratio: auto;
+    min-height: 480px;
+  }
+}
+
+.gi-about__media img,
+.gi-about__media .gi-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+}
+
+.gi-about__media img {
+  object-fit: cover;
+}
+
+.gi-about__body {
+  display: grid;
+  align-content: center;
+  gap: 16px;
+  padding: clamp(48px, 7vw, 96px) var(--gi-gutter);
+}
+
+@media (min-width: 900px) {
+  .gi-about__body {
+    padding-inline: clamp(40px, 6vw, 96px);
+  }
+}
+
+.gi-about__body .gi-heading {
+  margin-bottom: 4px;
+}
+
+.gi-about__text {
+  max-width: 46ch;
+  margin: 0;
+  font-size: clamp(1.0625rem, 1.4vw, 1.1875rem);
+  line-height: 1.75;
+  color: var(--gi-ink-muted);
+  text-wrap: pretty;
+}
+
+.gi-about__link {
+  margin: 0;
+}
+
+/* Studion: samma kolumner som Om Hampus, men fotona till höger på dator. */
+@media (min-width: 900px) {
+  .gi-about--flip .gi-about__media {
+    order: 2;
+  }
+}
+
+/* Två stående foton (3:4) bredvid varandra. Raden får inte växa efter bildernas
+   egen höjd, därför minmax(0, 1fr) och fotona absolut i varsin ruta. */
+.gi-about__media--pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: minmax(0, 1fr);
+  gap: 4px;
+  aspect-ratio: 3 / 2;
+  background-color: var(--gi-bone);
+}
+
+@media (min-width: 900px) {
+  .gi-about__media--pair {
+    aspect-ratio: auto;
+  }
+}
+
+.gi-about__photo {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Platshållare. Skärmärkena i hörnen visar att platsen väntar på en bild. */
+.gi-frame {
+  --gi-mark: rgba(17, 17, 17, 0.4);
+  position: relative;
+  overflow: hidden;
+  container-type: inline-size;
+  background-color: var(--gi-bone);
+  background-image: var(--gi-grain);
+}
+
+.gi-frame::after {
+  content: "";
+  position: absolute;
+  inset: 14px;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--gi-mark), var(--gi-mark)) left top / 18px 1px no-repeat,
+    linear-gradient(var(--gi-mark), var(--gi-mark)) left top / 1px 18px no-repeat,
+    linear-gradient(var(--gi-mark), var(--gi-mark)) right top / 18px 1px no-repeat,
+    linear-gradient(var(--gi-mark), var(--gi-mark)) right top / 1px 18px no-repeat,
+    linear-gradient(var(--gi-mark), var(--gi-mark)) left bottom / 18px 1px no-repeat,
+    linear-gradient(var(--gi-mark), var(--gi-mark)) left bottom / 1px 18px no-repeat,
+    linear-gradient(var(--gi-mark), var(--gi-mark)) right bottom / 18px 1px no-repeat,
+    linear-gradient(var(--gi-mark), var(--gi-mark)) right bottom / 1px 18px no-repeat;
+}
+
+/* Porträttets platshållare står på ljus botten och behöver en egen ton. */
+.gi-frame--sand {
+  background-color: var(--gi-sand);
+}
+
+.gi-frame__index {
+  position: absolute;
+  top: 30px;
+  top: clamp(26px, 9cqi, 30px);
+  left: 32px;
+  left: clamp(26px, 9cqi, 32px);
+  font-family: var(--gi-font-display);
+  font-size: 2.5rem;
+  font-size: clamp(2rem, 20cqi, 5rem);
+  line-height: 1;
+  color: transparent;
+  -webkit-text-stroke: 1px var(--gi-taupe-deep);
+}
+
+.gi-frame__label {
+  position: absolute;
+  right: 32px;
+  right: clamp(18px, 9cqi, 32px);
+  bottom: 28px;
+  bottom: clamp(24px, 8cqi, 28px);
+  left: 32px;
+  left: clamp(26px, 9cqi, 32px);
+  display: flex;
+  white-space: nowrap;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gi-ink-muted);
+}
+
+.gi-frame__label::before {
+  content: "";
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+}
+
+@supports not (-webkit-text-stroke: 1px black) {
+  .gi-frame__index {
+    color: var(--gi-field-border);
+  }
+}
+
+/* Verk */
+.gi-work {
+  padding-block: var(--gi-section-space);
+  background-color: var(--gi-sand);
+}
+
+.gi-work .gi-heading {
+  margin-bottom: clamp(28px, 4vw, 48px);
+  text-align: center;
+}
+
+.gi-work__mosaic {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: 60vw repeat(2, 44vw);
+  grid-template-areas:
+    "s1 s1"
+    "s2 s3"
+    "s4 s5";
+  gap: clamp(10px, 1.6vw, 20px);
+}
+
+@media (min-width: 600px) {
+  .gi-work__mosaic {
+    grid-template-rows: repeat(3, clamp(170px, 26vw, 240px));
+    grid-template-areas:
+      "s1 s2"
+      "s1 s3"
+      "s4 s5";
+  }
+}
+
+@media (min-width: 900px) {
+  .gi-work__mosaic {
+    grid-template-columns: minmax(0, 1.3fr) repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(2, clamp(210px, 21vw, 290px));
+    grid-template-areas:
+      "s1 s2 s3"
+      "s1 s4 s5";
+  }
+}
+
+.gi-work__slot--1 { grid-area: s1; }
+.gi-work__slot--2 { grid-area: s2; }
+.gi-work__slot--3 { grid-area: s3; }
+.gi-work__slot--4 { grid-area: s4; }
+.gi-work__slot--5 { grid-area: s5; }
+
+.gi-work__more {
+  margin: clamp(20px, 3vw, 32px) 0 0;
+  text-align: center;
+}
+
+.gi-gallery .rg-card,
+.gi-gallery .rg-portfolio-link {
+  border-radius: 2px;
+  box-shadow: none;
+}
+
+.gi-gallery .rg-card {
+  background: var(--gi-bone);
+}
+
+/* Bandet går kant i kant (utanför .gi-container), se .rg--large. */
+.gi-gallery {
+  --rg-edge: var(--gi-gutter);
+}
+
+/* Innan du bokar: mörk och numrerad, som Royalkaves "Hur det går till". */
+.gi-steps {
+  padding-block: var(--gi-section-space);
+  background-color: var(--gi-ink);
+  color: var(--gi-bone);
+}
+
+.gi-steps .gi-heading {
+  margin-bottom: clamp(32px, 5vw, 56px);
+  text-align: center;
+}
+
+.gi-steps__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: clamp(28px, 4vw, 48px);
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+}
+
+/* Siffran är dekor (aria-hidden): listan är redan numrerad för skärmläsare. */
+.gi-step__index {
+  display: block;
+  margin-bottom: 14px;
+  font-family: var(--gi-font-display);
+  font-size: clamp(2.25rem, 4vw, 3rem);
+  line-height: 1;
+  color: rgba(200, 184, 163, 0.3);
+}
+
+.gi-step__title {
+  margin: 0 0 8px;
+  font-family: var(--gi-font-body);
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--gi-bone);
+}
+
+.gi-step__text {
+  max-width: 46ch;
+  margin: 0;
+  line-height: 1.7;
+  color: var(--gi-taupe);
+}
+
+/* Bokning: mörkt huvud ovanpå formuläret, som hos Royalkave. */
+.gi-booking {
+  padding-block: var(--gi-section-space);
+  background-color: var(--gi-sand);
+}
+
+.gi-booking__inner {
+  width: min(780px, 100% - 2 * var(--gi-gutter));
+  margin-inline: auto;
+}
+
+.gi-booking__head {
+  padding: clamp(28px, 4vw, 40px) clamp(20px, 4vw, 44px) clamp(24px, 3vw, 32px);
+  border-radius: 2px 2px 0 0;
+  background: var(--gi-ink);
+}
+
+.gi-booking__lead {
+  max-width: 52ch;
+  margin: 12px 0 0;
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  color: var(--gi-taupe);
+}
+
+.gi-form {
+  min-width: 0;
+}
+
+/* Formuläret (StudioLeadFormEnhanced) i studions tema */
+.gi-form .booking-form {
+  gap: 18px;
+  padding: clamp(20px, 4vw, 44px);
+  border: 0;
+  border-radius: 0 0 2px 2px;
+  background: var(--gi-bone);
+  box-shadow: none;
+  backdrop-filter: none;
+  color: var(--gi-ink);
+}
+
+.gi-form .booking-form h2 {
+  margin: 0;
+  font-family: var(--gi-font-display);
+  font-weight: 400;
+  font-size: clamp(1.2rem, 2.2vw, 1.55rem);
+  line-height: 1.25;
+  color: var(--gi-ink);
+}
+
+/* Etikett och asterisk på samma rad. Formulärets etiketter är grid, så texten
+   och asterisken blir två rader — på alla studiosidor. Rättat bara här.
+   align-content: flex-start håller fälten i jämnhöjd i tvåkolumnsraderna. */
+.gi-form .booking-form label:not(.consent-row):not(.artist-picker__option) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  align-content: flex-start;
+  gap: 6px 4px;
+}
+
+.gi-form .booking-form label:not(.consent-row):not(.artist-picker__option) > :not(.field-required) {
+  flex: 1 0 100%;
+}
+
+.gi-form .booking-form label > .field-inline-action {
+  flex: 0 0 auto;
+}
+
+.gi-form .booking-form input,
+.gi-form .booking-form select,
+.gi-form .booking-form textarea,
+.gi-form .form-grid select.select-native,
+.gi-form .dd__trigger {
+  border-color: var(--gi-field-border);
+  border-radius: 2px;
+  background-color: var(--gi-field);
+  color: var(--gi-ink);
+}
+
+.gi-form .booking-form input:hover,
+.gi-form .booking-form select:hover,
+.gi-form .booking-form textarea:hover,
+.gi-form .dd__trigger:hover {
+  border-color: var(--gi-field-border-hover);
+  background-color: var(--gi-field);
+}
+
+.gi-form .dd__trigger[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+
+.gi-form .booking-form input:focus-visible,
+.gi-form .booking-form select:focus-visible,
+.gi-form .booking-form textarea:focus-visible,
+.gi-form .dd__trigger:focus-visible,
+.gi-form .dd.is-open .dd__trigger {
+  outline: 2px solid var(--gi-ink);
+  outline-offset: 1px;
+  border-color: var(--gi-ink);
+  box-shadow: none;
+}
+
+.gi-form .studio-lead-form__upload input[type="file"] {
+  border-color: var(--gi-taupe-deep);
+  background-color: var(--gi-sand);
+  color: var(--gi-ink-muted);
+  cursor: pointer;
+}
+
+.gi-form .studio-lead-form__upload input[type="file"]::file-selector-button {
+  margin-right: 14px;
+  padding: 8px 16px;
+  border: 0;
+  border-radius: 2px;
+  background: var(--gi-ink);
+  color: var(--gi-bone);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s var(--ease-out-quart);
+}
+
+.gi-form .studio-lead-form__upload input[type="file"]:hover::file-selector-button {
+  background: var(--gi-ink-hover);
+}
+
+.gi-form .dd__panel {
+  border-color: var(--gi-field-border);
+  border-radius: 2px;
+  background: var(--gi-field);
+  box-shadow: 0 20px 44px -22px rgba(17, 17, 17, 0.5);
+}
+
+.gi-form .dd__option {
+  border-radius: 0;
+}
+
+.gi-form .dd__option.is-active {
+  background: var(--gi-sand);
+}
+
+.gi-form .dd__option--other {
+  border-top-color: var(--gi-line);
+}
+
+.gi-form .dd__chevron {
+  color: var(--gi-ink-muted);
+}
+
+.gi-form .form-progress-bar {
+  height: 3px;
+  border-radius: 0;
+  background: var(--gi-sand);
+}
+
+.gi-form .form-progress-fill {
+  border-radius: 0;
+}
+
+.gi-form .booking-type-btn {
+  min-height: 48px;
+  border: 1px solid var(--gi-line-strong);
+  border-radius: 2px;
+  font-family: inherit;
+}
+
+.gi-form .booking-type-btn:hover {
+  border-color: var(--gi-ink);
+}
+
+.gi-form .booking-type-btn--active {
+  color: var(--gi-bone);
+}
+
+.gi-form .btn {
+  border-radius: 2px;
+  font-family: inherit;
+}
+
+.gi-form .btn-primary {
+  background: var(--gi-ink);
+  color: var(--gi-bone);
+  box-shadow: none;
+}
+
+.gi-form .btn-primary:hover {
+  background: var(--gi-ink-hover);
+  box-shadow: none;
+}
+
+.gi-form .btn-primary::before {
+  background: linear-gradient(105deg, transparent 30%, rgba(247, 245, 241, 0.14) 50%, transparent 70%);
+}
+
+.gi-form .btn-secondary {
+  border: 1px solid var(--gi-line-strong);
+  background: transparent;
+  color: var(--gi-ink);
+  box-shadow: none;
+}
+
+.gi-form .btn-secondary:hover {
+  border-color: var(--gi-ink);
+  box-shadow: none;
+}
+
+.gi-form .btn:focus-visible,
+.gi-form .booking-type-btn:focus-visible,
+.gi-form .week-picker__slot:focus-visible,
+.gi-form .legal-note__button:focus-visible {
+  outline: 2px solid var(--gi-ink);
+  outline-offset: 3px;
+}
+
+.gi-form .form-payment-notice,
+.gi-form .form-payment-step,
+.gi-form .form-payment-retry,
+.gi-form .upload-preview,
+.gi-form .studio-booking-picker {
+  border: 1px solid var(--gi-line);
+  border-radius: 2px;
+  background: var(--gi-sand);
+}
+
+.gi-form .upload-preview img {
+  border-color: var(--gi-line);
+  border-radius: 2px;
+}
+
+.gi-form .studio-booking-picker__summary {
+  border-color: var(--gi-line);
+  border-radius: 2px;
+  background: var(--gi-field);
+}
+
+.gi-form .week-picker__nav {
+  border-color: var(--gi-line-strong);
+  background: var(--gi-field);
+}
+
+.gi-form .week-picker__nav:hover:not(:disabled) {
+  background: var(--gi-bone);
+}
+
+.gi-form .week-picker__day-header {
+  border-bottom-color: var(--gi-line);
+}
+
+.gi-form .week-picker__slot {
+  border-color: var(--gi-line-strong);
+  border-radius: 2px;
+  background: var(--gi-field);
+}
+
+.gi-form .week-picker__slot:hover {
+  border-color: var(--gi-ink);
+  background: var(--gi-bone);
+}
+
+.gi-form .week-picker__slot--selected,
+.gi-form .week-picker__slot--selected:hover {
+  border-color: var(--gi-ink);
+  background: var(--gi-ink);
+  color: var(--gi-bone);
+}
+
+.gi-form .legal-note__button,
+.gi-form .legal-note__button:hover {
+  color: var(--gi-ink);
+}
+
+.gi-form .campaign-banner-item {
+  border-radius: 2px;
+}
+
+.gi-form .payment-confirmed__title {
+  font-family: var(--gi-font-display);
+  font-size: 1.5rem;
+  letter-spacing: 0;
+}
+
+/* Vanliga frågor. Centrerad i samma bredd som formuläret. */
+.gi-faq {
+  padding-block: var(--gi-section-space);
+  background-color: var(--gi-bone);
+}
+
+.gi-faq__inner {
+  width: min(780px, 100% - 2 * var(--gi-gutter));
+  margin-inline: auto;
+}
+
+.gi-faq .gi-heading {
+  margin-bottom: clamp(28px, 4vw, 44px);
+  text-align: center;
+}
+
+.gi-faq__list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gi-faq__item {
+  border-top: 1px solid var(--gi-line-strong);
+}
+
+.gi-faq__item:last-child {
+  border-bottom: 1px solid var(--gi-line-strong);
+}
+
+/* Hela frågan är klickytan. Webbläsarens pil byts mot ett plus som vrids till
+   ett kryss när svaret är öppet, som på InkRevenues startsida. */
+.gi-faq__q {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-block: 20px;
+  font-family: var(--gi-font-body);
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--gi-ink);
+  list-style: none;
+  cursor: pointer;
+}
+
+.gi-faq__q::-webkit-details-marker {
+  display: none;
+}
+
+.gi-faq__q:focus-visible {
+  outline: 2px solid var(--gi-ink);
+  outline-offset: 4px;
+}
+
+.gi-faq__icon {
+  position: relative;
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--gi-line-strong);
+  border-radius: 50%;
+  color: var(--gi-ink);
+  transition:
+    transform 0.25s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.gi-faq__icon::before,
+.gi-faq__icon::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 12px;
+  height: 2px;
+  background: currentColor;
+  transform: translate(-50%, -50%);
+}
+
+.gi-faq__icon::after {
+  transform: translate(-50%, -50%) rotate(90deg);
+}
+
+.gi-faq__q:hover .gi-faq__icon {
+  border-color: var(--gi-ink);
+}
+
+.gi-faq__details[open] .gi-faq__icon {
+  transform: rotate(45deg);
+  border-color: var(--gi-ink);
+  background: var(--gi-ink);
+  color: var(--gi-bone);
+}
+
+.gi-faq__a {
+  max-width: 60ch;
+  margin: 0;
+  padding-bottom: 22px;
+  line-height: 1.7;
+  color: var(--gi-ink-muted);
+}
+
+/* Sista remsan, som Royalkaves: namn och studio till vänster, kontakt till
+   höger. Sedan kommer InkRevenues sidfot. */
+.gi-strip {
+  background: var(--gi-ink);
+  color: var(--gi-taupe);
+}
+
+.gi-strip__inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px 40px;
+  padding-block: clamp(24px, 3vw, 32px);
+}
+
+.gi-strip__name {
+  margin: 0 0 2px;
+  font-family: var(--gi-font-display);
+  font-size: 1rem;
+  line-height: 1.4;
+  color: var(--gi-bone);
+}
+
+.gi-strip__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 24px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gi-strip a {
+  display: inline-block;
+  padding-block: 4px;
+  font-size: 0.9375rem;
+  color: var(--gi-taupe);
+  overflow-wrap: anywhere;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-decoration-color: var(--gi-line-dark);
+  text-underline-offset: 0.25em;
+  transition:
+    color 0.2s var(--ease-out-quart),
+    text-decoration-color 0.2s var(--ease-out-quart);
+}
+
+.gi-strip a:hover {
+  color: var(--gi-bone);
+  text-decoration-color: currentColor;
+}
+
+/* Fast bokningsknapp, bara på mobil. Ligger i .gi, som inte har någon
+   transformerad förälder — annars skulle position: fixed fastna i den. */
+.gi-sticky {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 30;
+  display: flex;
+  padding: 12px var(--gi-gutter) calc(12px + env(safe-area-inset-bottom));
+  /* Egen mörk platta: listen passerar både ljusa och mörka sektioner, och en
+     svart knapp mot svart blev osynlig. */
+  background: var(--gi-ink);
+  border-top: 1px solid var(--gi-line-dark);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(100%);
+  transition:
+    opacity 0.25s var(--ease-out-quart),
+    transform 0.3s var(--ease-out-quart);
+}
+
+.gi-sticky--visible {
+  pointer-events: auto;
+  opacity: 1;
+  transform: none;
+}
+
+.gi-sticky__cta {
+  flex: 1;
+  justify-content: center;
+  background: var(--gi-bone);
+  color: var(--gi-ink);
+}
+
+.gi-sticky__cta:hover {
+  background: var(--gi-sand);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gi-sticky {
+    transition: none;
+    transform: none;
+  }
+}
+
+@media (min-width: 900px) {
+  .gi-sticky {
+    display: none;
+  }
+}
+
+/* Rörelse. Utan JS eller med reducerad rörelse står allt stilla och synligt. */
+@media (prefers-reduced-motion: no-preference) {
+  .gi-hero__name {
+    animation: gi-rise 1s var(--ease-out-expo) 0.05s both;
+  }
+
+  .gi-hero__place {
+    animation: gi-rise 1s var(--ease-out-expo) 0.15s both;
+  }
+
+  .gi-hero__actions {
+    animation: gi-rise 1s var(--ease-out-expo) 0.25s both;
+  }
+
+  /* Bara transform: filtret i SVG:n räknas ut en gång och flyttas som lager. */
+  .gi-smoke {
+    will-change: transform;
+    animation: gi-smoke-drift 26s ease-in-out infinite alternate;
+  }
+
+  /* Svaren glider fram där webbläsaren kan animera <details>. Andra
+     webbläsare öppnar dem direkt. */
+  @supports (interpolate-size: allow-keywords) {
+    .gi-faq__details {
+      interpolate-size: allow-keywords;
+    }
+
+    .gi-faq__details::details-content {
+      height: 0;
+      overflow: clip;
+      transition:
+        height 0.35s var(--ease-out-quart),
+        content-visibility 0.35s allow-discrete;
+    }
+
+    .gi-faq__details[open]::details-content {
+      height: auto;
+    }
+  }
+}
+
+@keyframes gi-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 18px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes gi-smoke-drift {
+  from {
+    transform: translate3d(2%, 4%, 0);
+  }
+  to {
+    transform: translate3d(-3%, -5%, 0);
   }
 }

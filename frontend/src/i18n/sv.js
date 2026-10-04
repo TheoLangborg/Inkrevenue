@@ -39,6 +39,7 @@ export const sv = {
     studios: "Studios",
     faq: "FAQ",
     cta: "Boka gratis strategisamtal",
+    ctaShort: "Boka samtal",
     openMenu: "Öppna meny",
     closeMenu: "Stäng meny"
   },
@@ -436,6 +437,77 @@ export const sv = {
     cityKind: "{{city}} · Tatueringsstudio"
   },
 
+  // Ghost Inks egen studiosida, pages/studios/GhostInkPage.jsx.
+  ghostInk: {
+    metaTitle: "{{artist}} – tatuerare på {{studio}} i {{city}}",
+    metaDescription:
+      "Boka tatuering eller konsultation hos {{artist}} på {{studio}} i {{city}}. Skicka din förfrågan med en referensbild. Åldersgräns 18 år.",
+    // Raden under namnet i heron. Studion är en rad, inte rubriken.
+    heroPlace: "Tatuerar på {{studio}} i {{city}}",
+    ctaBook: "Boka tid",
+    instagram: "Instagram",
+    // Står under "Om Hampus" tills hans egen text finns i CRM:et. Skärps med
+    // hans egna ord om stilen. Var han tatuerar står redan i heron.
+    aboutFallback: "Han har en egen stil, och din idé är utgångspunkten. Här bokar du honom direkt.",
+    workTitle: "Utvalda verk",
+    slotWork: "Bild kommer",
+    slotWorkHidden: "Portfoliobilderna publiceras snart.",
+    workMore: "Fler verk på Instagram",
+    aboutTitle: "Om {{artist}}",
+    bookingTitle: "Boka tid",
+    // Samma löfte som formulärets tackmeddelande (leadForm.success) och faqAfterA.
+    // ⚠️ Ghost Inks sida visar CRM:ets "Intro ovanför formuläret" i första hand;
+    // texten ligger där också sedan 2026-10-03.
+    bookingLead:
+      "Berätta om din idé i formuläret. Du får normalt svar inom 24 timmar, via e-post eller telefon.",
+    rulesLabel: "Innan du bokar",
+    ruleAgeTitle: "Du ska ha fyllt 18",
+    ruleAgeText: "Åldersgränsen gäller alla tatueringar, oavsett storlek.",
+    ruleImageTitle: "Skicka med en referensbild",
+    ruleImageText:
+      "En bild på motiv, stil eller placering säger mer än en lång beskrivning och gör det lättare att svara på din idé direkt.",
+    // Läggs till när konsultationen går att boka utan bild.
+    ruleImageNoImage: "Har du ingen bild? Välj konsultation.",
+    ruleDepositTitle: "Deposition {{amount}} kr vid konsultation",
+    ruleDepositText:
+      "Gäller konsultationer, främst inför större tatueringar. Depositionen dras av från priset vid tatueringstillfället.",
+    ruleFeeTitle: "Bokningsavgift {{amount}} kr vid konsultation",
+    ruleFeeText:
+      "Avgiften betalas när du bokar konsultationen och håller tiden reserverad för dig.",
+    // Svar som gäller oavsett Hampus villkor. Eftervård, avbokning och pris i
+    // kronor läggs till när han har svarat (tattoo-crm/docs/ghost-ink-studiosida.md).
+    faqTitle: "Vanliga frågor",
+    faqPriceQ: "Vad kostar en tatuering?",
+    faqPriceA:
+      "Priset beror på storlek, placering och hur detaljerat motivet är. Skriv gärna din budget i formuläret, så vet han vad du har tänkt dig.",
+    faqUnsureQ: "Jag vet inte exakt vad jag vill ha. Kan jag boka ändå?",
+    faqUnsureA:
+      "Ja. Välj konsultation i formuläret och beskriv din idé, så går ni igenom den tillsammans.",
+    faqWriteQ: "Vad ska jag skriva i förfrågan?",
+    faqWriteA:
+      "Välj stil, placering och storlek i listorna och beskriv motivet med egna ord. Bifoga en bild som visar vad du tänker dig. Ju mer du berättar, desto lättare är det att svara på din idé.",
+    faqAfterQ: "Vad händer när jag har skickat förfrågan?",
+    // Bekräftelsemejlet går bara ut när kunden har angett e-post
+    // (sendLeadAutoReply i tattoo-crm). Samma 24 timmar som bookingLead.
+    // "Vi" är InkRevenue, som svarar först (användaren 2026-09-18). Namnet
+    // skrivs inte ut på sidan.
+    faqAfterA:
+      "Har du angett e-post får du en bekräftelse direkt, med en sammanfattning av förfrågan. Sedan hör vi av oss, normalt inom 24 timmar, via e-post eller telefon.",
+    faqPrepareQ: "Hur förbereder jag mig inför tatueringen?",
+    faqPrepareA:
+      "Ät ordentligt innan och sov gott natten före. Undvik alkohol dygnet innan. Huden där tatueringen ska sitta ska vara hel och inte solbränd.",
+    faqWhereQ: "Var ligger studion?",
+    faqWhereA: "{{studio}} ligger på {{street}} i {{city}}.",
+    // Sektionen Studion, med foton på arbetsrummet och väntrummet.
+    studioTitle: "Studion",
+    studioText: "Han tatuerar på {{studio}}, {{street}} i {{city}}.",
+    studioMap: "Hitta hit",
+    studioRoomAlt: "Arbetsrummet på {{studio}}",
+    studioLoungeAlt: "Väntrummet på {{studio}}",
+    slotPortrait: "Porträtt kommer",
+    stripLabel: "Kontakt"
+  },
+
   artists: {
     eyebrow: "Tatuerarna",
     title: "Välj vem som tatuerar dig",
@@ -648,6 +720,8 @@ export const sv = {
     honeypot: "Lämna detta fält tomt",
     typeTattoo: "Tatueringsbokning",
     typeConsultation: "Konsultation",
+    typeHint:
+      "Vet du vad du vill ha? Välj tatueringsbokning. Vill du prata igenom idén, eller är motivet stort, välj konsultation.",
     fallbackNote:
       "Stilen du sökte finns inte bland studions valbara stilar, så vi har växlat till en konsultation. Beskriv vad du vill ha så återkommer studion med ett förslag.",
     fallbackBack: "Tillbaka till stilarna",
@@ -676,6 +750,11 @@ export const sv = {
     imageLabel: "Inspirationsbild",
     imageHint:
       "Valfritt. Ladda upp en bild om du vill visa stil, motiv eller referens tydligare. JPG, PNG eller WEBP, max {{max}} MB.",
+    // Studion kräver bilden (requireInspirationImage).
+    imageLabelRequired: "Referensbild",
+    imageHintRequired:
+      "Obligatoriskt. Visa motiv, stil eller placering. JPG, PNG eller WEBP, max {{max}} MB.",
+    imageRequired: "Bifoga en referensbild för att gå vidare.",
     imageProcessing: "Bearbetar bilden...",
     imagePreviewAlt: "Förhandsvisning av inspirationsbild",
     imageRemove: "Ta bort bild",

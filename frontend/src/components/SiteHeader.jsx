@@ -58,8 +58,9 @@ export function SiteHeader({ currentPath }) {
           className={`site-nav${menuOpen ? " site-nav--open" : ""}`}
           aria-label={t("header.nav")}
         >
+          {/* Döljs på smal mobil (App.css), där loggan är länken hem. */}
           <SiteLink
-            className={`site-nav__link ${currentPath === "/" ? "site-nav__link--active" : ""}`}
+            className={`site-nav__link site-nav__link--home ${currentPath === "/" ? "site-nav__link--active" : ""}`}
             aria-current={currentPath === "/" ? "page" : undefined}
             href="/"
             onClick={() => setMenuOpen(false)}
@@ -88,7 +89,10 @@ export function SiteHeader({ currentPath }) {
             href={strategyHref}
             onClick={() => setMenuOpen(false)}
           >
-            {t("header.cta")}
+            {/* Bara en av texterna visas åt gången (App.css). Den långa får inte
+                plats bredvid loggan på en smal mobil. */}
+            <span className="site-header__cta-full">{t("header.cta")}</span>
+            <span className="site-header__cta-short">{t("header.ctaShort")}</span>
           </SiteLink>
         </nav>
 

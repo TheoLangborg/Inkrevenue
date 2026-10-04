@@ -1,5 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useT } from "../i18n/LanguageContext";
+import { StudioImage } from "./StudioImage";
+
+// Bildernas visade bredd, för småversionerna (utils/imageVariants.js). Korten
+// är stående och bilden täcker dem (object-fit: cover), så en liggande bild
+// visas bredare än kortet. Därför används kortens höjd: 300, 260 och 200 px.
+const CARD_SIZES = "(max-width: 560px) 200px, (max-width: 900px) 260px, 300px";
+// size="large" (.rg--large i App.css): korten är 240, 300 och 380 px höga.
+const CARD_SIZES_LARGE = "(max-width: 560px) 240px, (max-width: 900px) 300px, 380px";
+const GRID_SIZES = "240px";
+const LIGHTBOX_SIZES = "90vw";
 
 // Antal bilder då bandet alltid rullar, oavsett mätning.
 const ALWAYS_ROLL_FROM = 5;
@@ -17,7 +27,12 @@ const ALWAYS_ROLL_FROM = 5;
  * SSR-säker: mätning/animation sker enbart i effekter (klientsidan).
  * Förstarender är alltid statiskt läge, så hydrering matchar.
  */
-export function RollingGallery({ images = [], studioName = "" }) {
+// size="large": större kort och kort tonning i kanterna, för ett band som går
+// kant i kant. Sidan lägger då bandet utanför sin innehållskolumn och kan sätta
+// --rg-edge (avståndet till fönsterkanten för knappraden och den rullbara raden).
+export function RollingGallery({ images = [], studioName = "", size = "default" }) {
+  const large = size === "large";
+  const cardSizes = large ? CARD_SIZES_LARGE : CARD_SIZES;
   const t = useT();
   const list = images.filter(Boolean);
   const viewportRef = useRef(null);
@@ -98,84 +113,117 @@ export function RollingGallery({ images = [], studioName = "" }) {
   }, [count]);
 
   // ── Marquee-motor: rullar bandet + drag + hover-paus ──
+  // Rörelsen är en Web Animation på transform. Den körs i webbläsarens
+  // kompositor och fortsätter jämnt när huvudtråden har annat för sig (React,
+  // bildavkodning, skräpsamling). Tidigare satte en rAF-loop transformen varje
+  // bildruta, och då hackade bandet till så fort sidan hade annat att göra
+  // (användaren 2026-10-04). Drag och hover-paus pausar animationen och flyttar
+  // dess tid i stället för att skriva transformen själva.
   useEffect(() => {
     if (mode !== "marquee") return undefined;
     const vp = viewportRef.current;
     const track = trackRef.current;
     if (!vp || !track) return undefined;
+    if (typeof track.animate !== "function") {
+      setMode("scroll");
+      return undefined;
+    }
 
-    let raf = 0;
-    let offset = 0;
+    // Fart i px/sekund, oberoende av skärmens bildfrekvens.
+    const SPEED = 30;
+    let animation = null;
+    let duration = 0;
     let paused = false;
     let dragging = false;
     let startX = 0;
     let startOffset = 0;
     let movedAbs = 0;
+    let resumeTimer = 0;
 
-    const gap = parseFloat(getComputedStyle(track).columnGap || getComputedStyle(track).gap) || 18;
+    // Bandet är bilderna två gånger. Ett varv = avståndet till första kopian.
     const measureSet = () => {
-      const cards = Array.from(track.children).slice(0, count);
-      if (cards.length < 2) return 0;
-      const first = cards[0];
-      const last = cards[cards.length - 1];
-      return last.offsetLeft + last.offsetWidth - first.offsetLeft + gap;
+      const cards = track.children;
+      if (count < 1 || cards.length < count * 2) return 0;
+      return cards[count].offsetLeft - cards[0].offsetLeft;
     };
     let setWidth = measureSet();
 
-    const apply = () => {
-      if (setWidth > 0) {
-        while (offset <= -setWidth) offset += setWidth;
-        while (offset > 0) offset -= setWidth;
-      }
-      track.style.transform = `translateX(${offset}px)`;
+    // Förskjutningen i px (0 till -setWidth) ↔ animationens tid.
+    const getOffset = () => {
+      if (!animation || !duration) return 0;
+      const time = Number(animation.currentTime) || 0;
+      return -((time % duration) / duration) * setWidth;
     };
-    // Fart i px/sekund i stället för px/frame: en 144 Hz-skärm rullade tidigare
-    // 2,4× snabbare än en 60 Hz-skärm. 30 px/s är samma tempo som förut på 60 Hz.
-    const SPEED = 30;
-    let lastFrame = performance.now();
-    const tick = (now) => {
-      const delta = Math.min(now - lastFrame, 100); // hoppa inte långt efter flikbyte
-      lastFrame = now;
-      if (!paused) offset -= (SPEED * delta) / 1000;
-      apply();
-      raf = requestAnimationFrame(tick);
+    const setOffset = (offset) => {
+      if (!animation || !setWidth) return;
+      let wrapped = offset % setWidth;
+      if (wrapped > 0) wrapped -= setWidth;
+      animation.currentTime = (-wrapped / setWidth) * duration;
     };
-    raf = requestAnimationFrame(tick);
 
+    const start = (offset) => {
+      animation?.cancel();
+      animation = null;
+      if (setWidth <= 0) return;
+      duration = (setWidth / SPEED) * 1000;
+      animation = track.animate(
+        [{ transform: "translateX(0px)" }, { transform: `translateX(${-setWidth}px)` }],
+        { duration, iterations: Infinity, easing: "linear" }
+      );
+      setOffset(offset);
+      if (paused) animation.pause();
+    };
+    start(0);
+
+    const resume = () => {
+      paused = false;
+      animation?.play();
+    };
     const onEnter = () => {
       paused = true;
+      animation?.pause();
     };
     const onLeave = () => {
-      if (!dragging) paused = false;
+      if (!dragging) resume();
     };
     const onDown = (e) => {
+      window.clearTimeout(resumeTimer);
       dragging = true;
       paused = true;
+      animation?.pause();
       startX = e.clientX;
-      startOffset = offset;
+      startOffset = getOffset();
       movedAbs = 0;
       vp.classList.add("is-drag");
       window.addEventListener("pointermove", onMove);
       window.addEventListener("pointerup", onUp);
+      window.addEventListener("pointercancel", onUp);
     };
     const onMove = (e) => {
       if (!dragging) return;
       const dx = e.clientX - startX;
       movedAbs = Math.max(movedAbs, Math.abs(dx));
-      offset = startOffset + dx;
+      setOffset(startOffset + dx);
     };
+    // pointercancel räknas som ett släpp: på mobil tar sidans lodräta scroll
+    // över fingret (touch-action: pan-y) och då kommer inget pointerup. Utan det
+    // stod bandet still tills nästa tryck.
     const onUp = () => {
       dragging = false;
       draggedRef.current = movedAbs >= 6; // äkta drag → svälj efterföljande klick
       vp.classList.remove("is-drag");
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
-      window.setTimeout(() => {
-        paused = false;
-      }, 250);
+      window.removeEventListener("pointercancel", onUp);
+      resumeTimer = window.setTimeout(resume, 250);
     };
+    // Korten byter storlek vid brytpunkterna. Behåll var i varvet bandet är.
     const onResize = () => {
-      setWidth = measureSet();
+      const next = measureSet();
+      if (next === setWidth) return;
+      const progress = setWidth ? getOffset() / setWidth : 0;
+      setWidth = next;
+      start(progress * setWidth);
     };
 
     vp.addEventListener("pointerenter", onEnter);
@@ -184,14 +232,15 @@ export function RollingGallery({ images = [], studioName = "" }) {
     window.addEventListener("resize", onResize);
 
     return () => {
-      cancelAnimationFrame(raf);
+      window.clearTimeout(resumeTimer);
+      animation?.cancel();
       vp.removeEventListener("pointerenter", onEnter);
       vp.removeEventListener("pointerleave", onLeave);
       vp.removeEventListener("pointerdown", onDown);
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
       window.removeEventListener("resize", onResize);
-      track.style.transform = "";
     };
   }, [mode, count]);
 
@@ -232,8 +281,10 @@ export function RollingGallery({ images = [], studioName = "" }) {
       tabIndex={clone ? -1 : 0}
       aria-hidden={clone ? "true" : undefined}
     >
-      <img
+      <StudioImage
         src={url}
+        widths={[480, 1024]}
+        sizes={cardSizes}
         alt={t("gallery.imageAlt", { studio: studioName, index: i + 1 })}
         loading="lazy"
         decoding="async"
@@ -249,7 +300,7 @@ export function RollingGallery({ images = [], studioName = "" }) {
   const trackClass = "rg-track" + (mode === "static" ? " rg-track--center" : "");
 
   return (
-    <div className="rg">
+    <div className={large ? "rg rg--large" : "rg"}>
       <div className={vpClass} ref={viewportRef}>
         <div className={trackClass} ref={trackRef}>
           {list.map((url, i) => renderCard(url, i))}
@@ -301,8 +352,10 @@ export function RollingGallery({ images = [], studioName = "" }) {
                   onClick={() => setLightbox(i)}
                   aria-label={t("gallery.openImage", { index: i + 1, total: count })}
                 >
-                  <img
+                  <StudioImage
                     src={url}
+                    widths={[480, 1024]}
+                    sizes={GRID_SIZES}
                     alt={t("gallery.imageAlt", { studio: studioName, index: i + 1 })}
                     loading="lazy"
                     decoding="async"
@@ -344,8 +397,10 @@ export function RollingGallery({ images = [], studioName = "" }) {
             </button>
           ) : null}
           <figure className="rg-lb-figure">
-            <img
+            <StudioImage
               src={list[lightbox]}
+              widths={[1024, 2048]}
+              sizes={LIGHTBOX_SIZES}
               alt={t("gallery.imageAlt", { studio: studioName, index: lightbox + 1 })}
             />
             <figcaption className="rg-lb-counter">
