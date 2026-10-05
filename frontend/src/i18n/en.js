@@ -824,7 +824,7 @@ export const en = {
     errorDescriptionConsultation: "Briefly describe what you'd like to discuss.",
     errorDescriptionTattoo: "Describe the motif and what you're after.",
     errorName: "Please enter your name.",
-    errorContact: "Enter at least your email or your phone number.",
+    errorPhone: "Please enter your phone number so the studio can reach you.",
     errorEmail: "Please enter a valid email address."
   }
 };

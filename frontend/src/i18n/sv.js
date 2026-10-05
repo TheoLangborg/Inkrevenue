@@ -853,7 +853,7 @@ export const sv = {
     errorDescriptionConsultation: "Berätta kort vad du vill diskutera.",
     errorDescriptionTattoo: "Beskriv motiv och önskemål.",
     errorName: "Fyll i ditt namn.",
-    errorContact: "Ange minst din e-post eller ditt telefonnummer.",
+    errorPhone: "Fyll i ditt telefonnummer, så att studion kan nå dig.",
     errorEmail: "Ange en giltig e-postadress."
   }
 };

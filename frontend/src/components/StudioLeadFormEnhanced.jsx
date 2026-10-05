@@ -354,20 +354,21 @@ function computeFieldError(name, formData, t) {
     case "name":
       return formData.name.trim().length < 2 ? t("leadForm.errorName") : "";
     case "email":
-      if (!formData.email.trim() && !formData.phone.trim()) {
-        return t("leadForm.errorContact");
-      }
       if (formData.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
         return t("leadForm.errorEmail");
       }
       return "";
+    case "phone":
+      // Telefon är obligatoriskt: studion måste kunna nå kunden även utan e-post.
+      // Samma regel som servern (publicSiteService, normalizePublicLeadPayload).
+      return formData.phone.replace(/\D+/g, "").length < 7 ? t("leadForm.errorPhone") : "";
     default:
       return "";
   }
 }
 
 const STEP_TATTOO_FIELDS = ["tattooStyle", "placement", "size", "description"];
-const STEP_CONTACT_FIELDS = ["name", "email"];
+const STEP_CONTACT_FIELDS = ["name", "email", "phone"];
 
 // --- PaymentStep: Stripe-kortformulär, renderas inne i <Elements> ---
 function PaymentStep({ amountSek, paymentIntentId, onConfirmed, onCancel, submitting }) {
@@ -1887,8 +1888,8 @@ export function StudioLeadFormEnhanced({
               ) : null}
             </label>
 
-            <label htmlFor="lead-phone">
-              {t("leadForm.phoneLabel")}
+            <label htmlFor="lead-phone" className={getFieldError("phone") ? "has-error" : ""}>
+              {t("leadForm.phoneLabel")} <span className="field-required">*</span>
               <input
                 id="lead-phone"
                 type="tel"
@@ -1897,7 +1898,12 @@ export function StudioLeadFormEnhanced({
                 value={formData.phone}
                 onChange={handleChange}
                 onBlur={handleBlur}
+                required
+                aria-invalid={!!getFieldError("phone")}
               />
+              {getFieldError("phone") ? (
+                <span className="field-error" role="alert">{getFieldError("phone")}</span>
+              ) : null}
             </label>
           </div>
 
