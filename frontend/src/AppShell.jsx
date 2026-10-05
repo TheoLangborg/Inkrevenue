@@ -10,6 +10,7 @@ import { StudioCrmPreviewPage } from "./pages/StudioCrmPreviewPage";
 import { StudioProfilePage } from "./pages/StudioProfilePage";
 import { StudiosDirectoryPage } from "./pages/StudiosDirectoryPage";
 import { SlotOfferPage } from "./pages/SlotOfferPage";
+import { PaymentLinkPage } from "./pages/PaymentLinkPage";
 import { TrialPage } from "./pages/TrialPage";
 import { studioRegistry } from "./pages/studios";
 import { ThemedStudioPage } from "./pages/studios/ThemedStudioPage";
@@ -85,6 +86,19 @@ function getPageFromPath(pathname) {
     return {
       currentPath: pathname,
       element: <SlotOfferPage token={decodeURIComponent(slotOfferMatch[1])} />,
+      hideHeader: true,
+      hideFooter: true
+    };
+  }
+
+  // Betallänk för en bokad tid, från mejl eller SMS. Samma upplägg som
+  // erbjudandesidan: ingen header eller footer, sidans enda syfte är att betala.
+  const paymentLinkMatch = pathname.match(/^\/betala\/([^/]+)$/);
+
+  if (paymentLinkMatch) {
+    return {
+      currentPath: pathname,
+      element: <PaymentLinkPage token={decodeURIComponent(paymentLinkMatch[1])} />,
       hideHeader: true,
       hideFooter: true
     };

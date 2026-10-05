@@ -23,6 +23,7 @@ import {
 import { STUDIO_TIME_ZONE } from "../utils/campaignBanner";
 import { useLanguage, useT } from "../i18n/LanguageContext";
 import { CampaignBanner } from "./CampaignBanner";
+import { ConsultationFirstModal } from "./ConsultationFirstModal";
 import { sv } from "../i18n/sv";
 import { translateOptionLabel } from "../i18n/optionLabels";
 
@@ -137,11 +138,25 @@ const baseForm = {
   description: "",
   website: "",
   preferredSlots: [],
-  requestedDurationMinutes: ""
+  requestedDurationMinutes: "",
+  // Svaret på frågan om en konsultation först. null = inget svar ännu — frågan
+  // har inget förval.
+  wantsConsultationFirst: null
 };
 
 function buildInitialForm() {
   return { ...baseForm };
+}
+
+// Gränsen i nivåtexten: "en timme", "2 timmar", "90 minuter". En prisregel,
+// inte ett tidsestimat — formuläret lovar aldrig hur länge en tatuering tar.
+function formatTierLimit(minutes, t) {
+  if (minutes % 60 === 0) {
+    const hours = minutes / 60;
+    return hours === 1 ? t("leadForm.tierLimitHour") : t("leadForm.tierLimitHours", { hours });
+  }
+
+  return t("leadForm.tierLimitMinutes", { minutes });
 }
 
 function createAvailabilityState(overrides = {}) {
@@ -487,6 +502,7 @@ export function StudioLeadFormEnhanced({
   // typ där bilden är valfri, medan ett fel från bearbetningen ska stå kvar.
   const [imageMissingShown, setImageMissingShown] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
+  const [consultationPromptOpen, setConsultationPromptOpen] = useState(false);
   const [touched, setTouched] = useState(new Set());
   // Sätts när kunden valde "Annat" i stil-dropdownen och vi därför bytte till
   // konsultation, så vi kan förklara varför för kunden.
@@ -682,6 +698,7 @@ export function StudioLeadFormEnhanced({
       preferredStartTime: formData.preferredSlots?.[0]?.startTime || "",
       preferredEndTime: formData.preferredSlots?.[0]?.endTime || "",
       requestedDurationMinutes: formData.requestedDurationMinutes,
+      wantsConsultationFirst: formData.wantsConsultationFirst,
       privacyConsent: hasAcceptedConsent,
       marketingConsent: false,
       website: formData.website
@@ -748,6 +765,28 @@ export function StudioLeadFormEnhanced({
   const needsPayment = Boolean(
     studio?.payment?.stripeConnectReady && prepaymentConfigured && willBookDirectly
   );
+
+  // Betallänken: studion bokar tiden själv och kunden betalar via en länk.
+  // Betalrutan säger då att länken kommer, med båda nivåerna om studion har
+  // två. Allt ur serverns svar (buildPublicPaymentInfo) — formuläret räknar
+  // inga belopp själv.
+  const paymentLinkMode = Boolean(studio?.payment?.paymentLinkEnabled) && !needsPayment;
+  const prepaymentTiers =
+    bookingTypeForPrepayment === "tattoo_session" ? studio?.payment?.prepaymentTiers || null : null;
+  const consultationIsFree =
+    paymentLinkMode &&
+    bookingTypeForPrepayment === "consultation" &&
+    !prepaymentConfigured &&
+    Boolean(studio?.payment?.prepaymentByBookingType?.tattoo_session?.kind);
+  const consultationFirstMinutes =
+    formData.bookingType === "tattoo_session" ? Number(studio?.consultationFirst?.minutes) || 0 : 0;
+  // Av- och ombokningsreglerna för den valda bokningstypen, på formulärets språk.
+  // Texten byggs av servern (bookingPolicy.js i CRM:et) — här visas den bara.
+  const bookingPolicyLines = useMemo(() => {
+    const lines = studio?.bookingPolicy?.byBookingType?.[bookingTypeForPrepayment];
+    const forLanguage = lines?.[language] || lines?.sv;
+    return Array.isArray(forLanguage) ? forLanguage : [];
+  }, [studio?.bookingPolicy, bookingTypeForPrepayment, language]);
 
   useEffect(() => {
     previewRequestIdRef.current += 1;
@@ -1070,6 +1109,14 @@ export function StudioLeadFormEnhanced({
       const imageMissing = imageRequired && !inspirationImage;
       if (imageMissing) setImageMissingShown(true);
       if (hasFieldError || imageMissing) return;
+
+      // Konsultation först: frågan ställs i en liten ruta mellan steg 1 och 2,
+      // bara vid tatuering och bara när studion ställer den. Svaret för kunden
+      // vidare (handleConsultationAnswer); stängs rutan står kunden kvar.
+      if (consultationFirstMinutes > 0) {
+        setConsultationPromptOpen(true);
+        return;
+      }
     }
     if (stepId === "time") {
       // Under första hämtningen finns inga tider att välja. Utan spärren
@@ -1087,6 +1134,19 @@ export function StudioLeadFormEnhanced({
     setCurrentStep((s) => s + 1);
     scrollToTop();
   }
+
+  function handleConsultationAnswer(value) {
+    setFormData((current) => ({ ...current, wantsConsultationFirst: value }));
+    setConsultationPromptOpen(false);
+    // Från steg 1 för svaret kunden vidare. Från "Ändra" i sista steget byts
+    // bara svaret.
+    if (steps[currentStep]?.id === "tattoo") {
+      setCurrentStep((s) => s + 1);
+      scrollToTop();
+    }
+  }
+
+  const closeConsultationPrompt = useCallback(() => setConsultationPromptOpen(false), []);
 
   function handleBack() {
     setStatus({ state: "idle", message: "" });
@@ -1109,6 +1169,9 @@ export function StudioLeadFormEnhanced({
       preferredStartTime: selectedSlot?.startTime || "",
       preferredEndTime: selectedSlot?.endTime || "",
       requestedDurationMinutes: String(selectedSlot?.durationMinutes || formData.requestedDurationMinutes || ""),
+      // Reglerna kunden fick se ovanför knappen. Servern sparar godkännandet
+      // bara när versionen stämmer med den den bygger själv.
+      acceptedPolicyVersion: bookingPolicyLines.length ? studio?.bookingPolicy?.version || "" : "",
       source: getLeadSourceFromUrl(),
       inspirationImage: inspirationImage
         ? {
@@ -1364,6 +1427,15 @@ export function StudioLeadFormEnhanced({
           <span>{steps[currentStep].label}</span>
         </p>
       </div>
+
+      {/* Konsultation först i samma besök: frågan mellan steg 1 och 2 (handleNext). */}
+      <ConsultationFirstModal
+        isOpen={consultationPromptOpen}
+        minutes={consultationFirstMinutes}
+        currentAnswer={formData.wantsConsultationFirst}
+        onAnswer={handleConsultationAnswer}
+        onClose={closeConsultationPrompt}
+      />
 
       <div className="hidden-trap" aria-hidden="true">
         <label htmlFor="lead-website">
@@ -1907,6 +1979,25 @@ export function StudioLeadFormEnhanced({
             </label>
           </div>
 
+          {/* Kunden valde konsultation först i rutan efter steg 1. Står här igen
+              precis före inskicket, så att det är tydligt att bokningen blir två
+              delar i samma besök. "Ändra" öppnar samma ruta. */}
+          {consultationFirstMinutes > 0 && formData.wantsConsultationFirst === true ? (
+            <div className="form-consultation-summary" role="note">
+              <p>
+                <strong>{t("leadForm.consultationFirstSummaryLabel")}</strong>{" "}
+                {t("leadForm.consultationFirstSummary", { minutes: consultationFirstMinutes })}{" "}
+                <button
+                  type="button"
+                  className="field-inline-action"
+                  onClick={() => setConsultationPromptOpen(true)}
+                >
+                  {t("leadForm.consultationFirstChange")}
+                </button>
+              </p>
+            </div>
+          ) : null}
+
           {prepaymentConfigured ? (
             // Punkt 12: rutan måste följa betalgrinden. Utan needsPayment står det
             // "betalas vid bokning" även när formuläret inte tar betalt alls.
@@ -1916,25 +2007,78 @@ export function StudioLeadFormEnhanced({
             // för sig, och en studio med båda påslagna visade "Deposition
             // 500 kr" OCH "Bokningsavgift 200 kr" men debiterade 500.
             <div className="form-payment-notice">
-              {prepayment.kind === "deposit" ? (
+              {paymentLinkMode ? (
+                // Betallänken: studion bokar tiden och skickar en länk. Meningen
+                // om att avgiften inte betalas tillbaka står i reglerna nedanför
+                // när studion visar dem — annars här.
                 <p>
-                  <strong>{t("leadForm.depositLabel")}</strong>{" "}
-                  {t(needsPayment ? "leadForm.depositText" : "leadForm.depositLaterText", {
-                    amount: prepayment.amountSek
-                  })}
+                  <strong>
+                    {t(prepayment.kind === "deposit" ? "leadForm.depositLabel" : "leadForm.feeLabel")}
+                  </strong>{" "}
+                  {prepaymentTiers
+                    ? t(
+                        prepayment.kind === "deposit"
+                          ? "leadForm.depositLinkTiersText"
+                          : "leadForm.feeLinkTiersText",
+                        {
+                          short: prepaymentTiers.shortAmountSek,
+                          standard: prepaymentTiers.standardAmountSek,
+                          limit: formatTierLimit(prepaymentTiers.maxMinutes, t)
+                        }
+                      )
+                    : t(
+                        prepayment.kind === "deposit"
+                          ? "leadForm.depositLinkText"
+                          : "leadForm.feeLinkText",
+                        { amount: prepayment.amountSek }
+                      )}
+                  {prepayment.kind === "booking_fee" && !bookingPolicyLines.length
+                    ? ` ${t("leadForm.feeNotRefundable")}`
+                    : ""}{" "}
+                  {t("leadForm.payNothingNow")}
                 </p>
-              ) : null}
-              {prepayment.kind === "booking_fee" ? (
-                <p>
-                  <strong>{t("leadForm.feeLabel")}</strong>{" "}
-                  {t(needsPayment ? "leadForm.feeText" : "leadForm.feeLaterText", {
-                    amount: prepayment.amountSek
-                  })}
-                </p>
-              ) : null}
+              ) : (
+                <>
+                  {prepayment.kind === "deposit" ? (
+                    <p>
+                      <strong>{t("leadForm.depositLabel")}</strong>{" "}
+                      {t(needsPayment ? "leadForm.depositText" : "leadForm.depositLaterText", {
+                        amount: prepayment.amountSek
+                      })}
+                    </p>
+                  ) : null}
+                  {prepayment.kind === "booking_fee" ? (
+                    <p>
+                      <strong>{t("leadForm.feeLabel")}</strong>{" "}
+                      {t(needsPayment ? "leadForm.feeText" : "leadForm.feeLaterText", {
+                        amount: prepayment.amountSek
+                      })}
+                    </p>
+                  ) : null}
+                </>
+              )}
               {needsPayment ? (
                 <p className="form-payment-notice-stripe">{t("leadForm.stripeNote")}</p>
               ) : null}
+            </div>
+          ) : null}
+
+          {consultationIsFree ? (
+            <div className="form-payment-notice">
+              <p>{t("leadForm.consultationFree")}</p>
+            </div>
+          ) : null}
+
+          {bookingPolicyLines.length ? (
+            // Av- och ombokningsreglerna. Kunden godkänner dem genom att skicka
+            // förfrågan; versionen följer med inskicket (acceptedPolicyVersion).
+            <div className="form-booking-policy">
+              <p className="form-booking-policy__intro">{t("leadForm.policyIntro")}</p>
+              <ul className="form-booking-policy__list">
+                {bookingPolicyLines.map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+              </ul>
             </div>
           ) : null}
 

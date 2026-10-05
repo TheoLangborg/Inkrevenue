@@ -800,6 +800,35 @@ export const sv = {
       "Studion tar ut {{amount}} kr i deposition när tiden bekräftas. Du betalar inget nu.",
     feeLaterText:
       "Studion tar ut en bokningsavgift på {{amount}} kr när tiden bekräftas. Du betalar inget nu.",
+    // Studion bokar tiden själv och skickar en betallänk. Nivåtexten är en
+    // prisregel, inte ett tidsestimat.
+    feeLinkText:
+      "När studion bekräftat din tid får du en länk för att betala bokningsavgiften på {{amount}} kr.",
+    feeLinkTiersText:
+      "När studion bekräftat din tid får du en länk för att betala bokningsavgiften: {{short}} kr för pass under {{limit}}, annars {{standard}} kr.",
+    depositLinkText:
+      "När studion bekräftat din tid får du en länk för att betala depositionen på {{amount}} kr. Den dras av från priset.",
+    depositLinkTiersText:
+      "När studion bekräftat din tid får du en länk för att betala depositionen: {{short}} kr för pass under {{limit}}, annars {{standard}} kr. Den dras av från priset.",
+    feeNotRefundable:
+      "Avgiften dras inte av från priset och betalas inte tillbaka om du avbokar eller inte kommer.",
+    payNothingNow: "Du betalar inget nu.",
+    tierLimitHour: "en timme",
+    tierLimitHours: "{{hours}} timmar",
+    tierLimitMinutes: "{{minutes}} minuter",
+    consultationFree: "Konsultationen är gratis att boka.",
+    consultationFirstQuestion:
+      "Vill du börja med en kort konsultation (ca {{minutes}} min) innan tatueringen?",
+    consultationFirstYes: "Ja, gärna",
+    consultationFirstNo: "Nej, jag vet vad jag vill ha",
+    consultationFirstHint:
+      "Konsultationen ligger direkt före tatueringen, i samma besök. Då hinner ni gå igenom motivet tillsammans först.",
+    consultationFirstClose: "Stäng och fortsätt fylla i",
+    consultationFirstSummaryLabel: "Din bokning:",
+    consultationFirstSummary:
+      "Konsultation (ca {{minutes}} min) + tatueringspass. Konsultationen ligger direkt före tatueringen, i samma besök.",
+    consultationFirstChange: "Ändra",
+    policyIntro: "Genom att skicka förfrågan godkänner du studions av- och ombokningsregler:",
 
     payHeading: "Betala {{amount}} kr",
     paySecure: "Säker betalning via Stripe",
@@ -855,5 +884,49 @@ export const sv = {
     errorName: "Fyll i ditt namn.",
     errorPhone: "Fyll i ditt telefonnummer, så att studion kan nå dig.",
     errorEmail: "Ange en giltig e-postadress."
+  },
+  // Betalsidan /betala/:token. Kunden kommer från en länk i mejl eller SMS
+  // efter att studion bokat tiden.
+  paymentPage: {
+    metaTitle: "Betala din bokning",
+    metaDescription: "Betala förskottet för en bokad tid.",
+    loading: "Hämtar betalningen…",
+    greeting: "Hej {{name}}!",
+    greetingFallback: "Hej!",
+    intro: "{{studio}} har bokat din tid.",
+    typeLabel: "Typ",
+    timeLabel: "Tid",
+    consultationFirst:
+      "Du börjar med en konsultation (ca {{minutes}} min). Tatueringen fortsätter direkt efter.",
+    amountLabelBookingFee: "Bokningsavgift",
+    amountLabelDeposit: "Deposition",
+    payUntil: "Betala senast {{date}} för att behålla tiden.",
+    policyHeading: "Av- och ombokningsregler",
+    acceptLabel: "Jag har läst och godkänner reglerna ovan.",
+    continueButton: "Gå till betalning, {{amount}} kr",
+    preparing: "Förbereder betalningen…",
+    payHeading: "Betala {{amount}} kr",
+    paySecure: "Säker kortbetalning via Stripe, direkt till studion.",
+    payButton: "Betala {{amount}} kr",
+    paying: "Bearbetar…",
+    payFailed: "Betalningen gick inte igenom. Försök igen.",
+    payUnconfirmed: "Betalningen bekräftades inte. Kontakta studion om beloppet har dragits.",
+    startFailed: "Kunde inte starta betalningen. Inga pengar har dragits. Försök igen.",
+    back: "Tillbaka",
+    paidTitle: "Tack, betalningen är klar",
+    paidText: "{{studio}} har fått din betalning på {{amount}} kr. Ett besked kommer också via mejl.",
+    alreadyPaidTitle: "Redan betald",
+    alreadyPaidText: "Förskottet för den här tiden är redan betalt. Du behöver inte göra något mer.",
+    expiredTitle: "Länken har gått ut",
+    expiredText: "Hör av dig till studion så skickar de en ny länk.",
+    cancelledTitle: "Bokningen är avbokad",
+    cancelledText: "Det finns inget att betala.",
+    closedTitle: "Inget att betala",
+    closedText: "Det finns inget att betala via den här länken längre.",
+    unavailableTitle: "Betalningen är inte tillgänglig just nu",
+    unavailableText:
+      "Studion kan inte ta emot kortbetalningar just nu. Inga pengar har dragits. Hör av dig till studion.",
+    notFoundTitle: "Länken finns inte",
+    notFoundText: "Kontrollera att du kopierat hela länken, eller hör av dig till studion."
   }
 };

@@ -164,3 +164,18 @@ export function unsubscribeFromSlotOffers(token) {
     method: "POST"
   });
 }
+
+// ── Betallänken: kunden betalar förskottet för en tid studion bokat ─────────
+// Token i länken är behörigheten. Beloppet bestäms av servern ur bokningen —
+// kroppen bär bara kundens godkännande av reglerna.
+
+export function getPaymentLink(token) {
+  return request(`/api/public/payment-links/${encodeURIComponent(token)}`);
+}
+
+export function createPaymentLinkIntent(token, { acceptedPolicyVersion, language }) {
+  return request(`/api/public/payment-links/${encodeURIComponent(token)}/payment-intent`, {
+    method: "POST",
+    body: JSON.stringify({ acceptedPolicyVersion, language })
+  });
+}

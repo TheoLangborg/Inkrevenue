@@ -775,6 +775,34 @@ export const en = {
       "The studio charges a SEK {{amount}} deposit when your time is confirmed. You pay nothing now.",
     feeLaterText:
       "The studio charges a SEK {{amount}} booking fee when your time is confirmed. You pay nothing now.",
+    feeLinkText:
+      "Once the studio has confirmed your time, you'll get a link to pay the SEK {{amount}} booking fee.",
+    feeLinkTiersText:
+      "Once the studio has confirmed your time, you'll get a link to pay the booking fee: SEK {{short}} for sessions under {{limit}}, otherwise SEK {{standard}}.",
+    depositLinkText:
+      "Once the studio has confirmed your time, you'll get a link to pay the SEK {{amount}} deposit. It is deducted from the price.",
+    depositLinkTiersText:
+      "Once the studio has confirmed your time, you'll get a link to pay the deposit: SEK {{short}} for sessions under {{limit}}, otherwise SEK {{standard}}. It is deducted from the price.",
+    feeNotRefundable:
+      "The fee is not deducted from the price and is not refunded if you cancel or don't show up.",
+    payNothingNow: "You pay nothing now.",
+    tierLimitHour: "an hour",
+    tierLimitHours: "{{hours}} hours",
+    tierLimitMinutes: "{{minutes}} minutes",
+    consultationFree: "The consultation is free to book.",
+    consultationFirstQuestion:
+      "Would you like to start with a short consultation (about {{minutes}} min) before the tattoo?",
+    consultationFirstYes: "Yes, please",
+    consultationFirstNo: "No, I know what I want",
+    consultationFirstHint:
+      "The consultation comes right before the tattoo, in the same visit, so you can go through the design together first.",
+    consultationFirstClose: "Close and keep editing",
+    consultationFirstSummaryLabel: "Your booking:",
+    consultationFirstSummary:
+      "Consultation (about {{minutes}} min) + tattoo session. The consultation comes right before the tattoo, in the same visit.",
+    consultationFirstChange: "Change",
+    policyIntro:
+      "By sending your request, you accept the studio's cancellation and rescheduling policy:",
 
     payHeading: "Pay SEK {{amount}}",
     paySecure: "Secure payment via Stripe",
@@ -826,5 +854,47 @@ export const en = {
     errorName: "Please enter your name.",
     errorPhone: "Please enter your phone number so the studio can reach you.",
     errorEmail: "Please enter a valid email address."
+  },
+  paymentPage: {
+    metaTitle: "Pay for your booking",
+    metaDescription: "Pay the advance payment for a booked appointment.",
+    loading: "Loading your payment…",
+    greeting: "Hi {{name}}!",
+    greetingFallback: "Hi!",
+    intro: "{{studio}} has booked your appointment.",
+    typeLabel: "Type",
+    timeLabel: "Time",
+    consultationFirst:
+      "You'll start with a consultation (about {{minutes}} min). The tattoo session follows right after.",
+    amountLabelBookingFee: "Booking fee",
+    amountLabelDeposit: "Deposit",
+    payUntil: "Pay by {{date}} to keep your time.",
+    policyHeading: "Cancellation and rescheduling policy",
+    acceptLabel: "I have read and accept the policy above.",
+    continueButton: "Continue to payment, SEK {{amount}}",
+    preparing: "Preparing the payment…",
+    payHeading: "Pay SEK {{amount}}",
+    paySecure: "Secure card payment via Stripe, straight to the studio.",
+    payButton: "Pay SEK {{amount}}",
+    paying: "Processing…",
+    payFailed: "The payment didn't go through. Please try again.",
+    payUnconfirmed: "The payment wasn't confirmed. Contact the studio if the amount has been charged.",
+    startFailed: "Couldn't start the payment. Nothing has been charged. Please try again.",
+    back: "Back",
+    paidTitle: "Thank you, the payment is done",
+    paidText: "{{studio}} has received your payment of SEK {{amount}}. You'll also get a confirmation by email.",
+    alreadyPaidTitle: "Already paid",
+    alreadyPaidText: "The advance payment for this appointment has already been paid. There's nothing more to do.",
+    expiredTitle: "The link has expired",
+    expiredText: "Contact the studio and they'll send you a new link.",
+    cancelledTitle: "The booking is cancelled",
+    cancelledText: "There's nothing to pay.",
+    closedTitle: "Nothing to pay",
+    closedText: "There's nothing left to pay via this link.",
+    unavailableTitle: "Payment isn't available right now",
+    unavailableText:
+      "The studio can't accept card payments right now. Nothing has been charged. Please contact the studio.",
+    notFoundTitle: "The link doesn't exist",
+    notFoundText: "Check that you copied the whole link, or contact the studio."
   }
 };
