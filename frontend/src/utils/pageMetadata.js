@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { createContext, useContext, useEffect, useRef } from "react";
 import { useLanguage } from "../i18n/LanguageContext";
 import { DEFAULT_LANGUAGE, HTML_LANG, LANGUAGES, OG_LOCALES, buildLanguagePath } from "../i18n/config";
 
@@ -123,6 +123,14 @@ export function buildPageTitle(title) {
   return title ? `${title} | ${BRAND_NAME}` : BRAND_NAME;
 }
 
+/**
+ * Prerenderingen (entry-server.jsx) lägger ett tomt objekt här och läser sedan
+ * sidans titel och beskrivning, så att den statiska HTML:en får sidans egna
+ * taggar på sidans språk. Länkförhandsvisare kör inte JavaScript och såg annars
+ * startsidans svenska taggar även på /en. I webbläsaren finns inget objekt.
+ */
+export const ServerMetadataContext = createContext(null);
+
 export function usePageMetadata({
   title,
   description = "",
@@ -132,6 +140,12 @@ export function usePageMetadata({
   noIndex = false
 }) {
   const { language } = useLanguage();
+  const serverMetadata = useContext(ServerMetadataContext);
+
+  if (serverMetadata) {
+    serverMetadata.title = title || BRAND_NAME;
+    serverMetadata.description = String(description || "").trim();
+  }
 
   useEffect(() => {
     if (typeof document === "undefined" || typeof window === "undefined") {

@@ -78,6 +78,45 @@ function applyLanguageHead(html, route, language) {
     );
 }
 
+function escapeAttribute(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+/**
+ * Sidans egen titel och beskrivning (som usePageMetadata satte under
+ * renderingen) i stället för startsidans svenska. Länkförhandsvisare kör inte
+ * JavaScript, så utan det här visade en delad /en-länk svensk text.
+ *
+ * Studiosidor hoppas över: de prerendras i laddningsläget, innan studion
+ * hämtats, och har därför ingen riktig titel att skriva in.
+ */
+function applyPageMetadata(html, route, metadata) {
+  if (route.startsWith("/studio/") || !metadata?.title) return html;
+
+  const title = escapeAttribute(metadata.title);
+  const description = metadata.description ? escapeAttribute(metadata.description) : "";
+  // Funktioner som ersättning: en titel med "$" ska inte tolkas som mönster.
+  const setContent = (source, pattern, value) =>
+    source.replace(pattern, (match, start, end) => `${start}${value}${end}`);
+
+  let next = html.replace(/<title>[^<]*<\/title>/, () => `<title>${title}</title>`);
+  next = setContent(next, /(<meta property="og:title"\s+content=")[^"]*(" \/>)/, title);
+  next = setContent(next, /(<meta name="twitter:title"\s+content=")[^"]*(" \/>)/, title);
+  next = setContent(next, /(<meta property="og:image:alt"\s+content=")[^"]*(" \/>)/, title);
+
+  if (description) {
+    next = setContent(next, /(<meta name="description" content=")[^"]*(" \/>)/, description);
+    next = setContent(next, /(<meta property="og:description" content=")[^"]*(" \/>)/, description);
+    next = setContent(next, /(<meta name="twitter:description" content=")[^"]*(" \/>)/, description);
+  }
+
+  return next;
+}
+
 async function main() {
   // Read the HTML shell produced by vite build
   const htmlShell = fs.readFileSync(path.join(distDir, "index.html"), "utf-8");
@@ -95,21 +134,23 @@ async function main() {
     for (const route of ROUTES) {
       const localizedRoute = localizeRoute(route, language);
       let appHtml;
+      let metadata;
 
       try {
         // Import the SSR bundle (pathToFileURL needed on Windows for ESM dynamic import)
         const { pathToFileURL } = await import("url");
         const { render } = await import(pathToFileURL(serverEntry).href);
-        appHtml = render(localizedRoute);
+        ({ html: appHtml, metadata } = render(localizedRoute));
       } catch (err) {
         console.warn(`[prerender] Skipping ${localizedRoute} — render threw:`, err.message);
         continue;
       }
 
-      // Splice rendered HTML into the shell + sätt ruttens språksignaler
-      const html = applyLanguageHead(htmlShell, route, language).replace(
+      // Splice rendered HTML into the shell + sätt ruttens språksignaler,
+      // titel och beskrivning
+      const html = applyPageMetadata(applyLanguageHead(htmlShell, route, language), route, metadata).replace(
         '<div id="root"></div>',
-        `<div id="root">${appHtml}</div>`
+        () => `<div id="root">${appHtml}</div>`
       );
 
       // Write to dist/<route>/index.html
