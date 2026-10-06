@@ -109,6 +109,35 @@ describe("buildSlotOfferTermsView", () => {
     assert.deepEqual(buildSlotOfferTermsView(null), []);
   });
 
+  it("skriver villkoren på engelska på den engelska sidan", () => {
+    const rows = buildSlotOfferTermsView(
+      { prepaymentKind: "deposit", prepaymentAmountSek: 800, cancellationNoticeHours: 24 },
+      "en"
+    );
+
+    assert.deepEqual(
+      rows.map((row) => row.label),
+      ["Deposit", "Cancellation"]
+    );
+    assert.match(rows[0].text, /SEK 800/);
+    assert.match(rows[0].text, /you pay nothing here/);
+    assert.match(rows[1].text, /At least 24 hours/);
+    assert.match(rows[1].text, /SEK 800 deposit/);
+    // Inget svenskt får läcka igenom.
+    rows.forEach((row) => assert.doesNotMatch(`${row.label} ${row.text}`, /[åäö]|kr|Senast/));
+  });
+
+  it("påstår inte heller på engelska att bokningsavgiften kan tas ut vid sen avbokning", () => {
+    const [fee, cancellation] = buildSlotOfferTermsView(
+      { prepaymentKind: "booking_fee", prepaymentAmountSek: 300, cancellationNoticeHours: 24 },
+      "en"
+    );
+
+    assert.equal(fee.label, "Booking fee");
+    assert.match(fee.text, /not deducted from the final price/);
+    assert.equal(cancellation.text, "At least 24 hours before the appointment.");
+  });
+
   it("tolkar ett nollbelopp som inget förskott", () => {
     // depositRequired utan belopp har förekommit. "Deposition 0 kr" är brus.
     assert.deepEqual(

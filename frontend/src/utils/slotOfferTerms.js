@@ -1,3 +1,5 @@
+import { createTranslator } from "../i18n/translate.js";
+
 /**
  * Villkorstexterna på /tid/:token.
  *
@@ -13,9 +15,13 @@
  * Beloppen kommer FÄRDIGA från servern (samma resolver som bokningen använder).
  * Den här filen väljer bara meningar — den räknar aldrig ut ett belopp ur
  * flaggor, för det var precis så konsultationen kunde visas fel i formuläret.
+ *
+ * Meningarna ligger under slotOffer.terms i sv.js och en.js.
  */
-export function buildSlotOfferTermsView(terms) {
+export function buildSlotOfferTermsView(terms, language = "sv") {
   if (!terms) return [];
+
+  const { t } = createTranslator(language);
 
   const amount = Number(terms.prepaymentAmountSek) || 0;
   const isDeposit = terms.prepaymentKind === "deposit" && amount > 0;
@@ -27,31 +33,29 @@ export function buildSlotOfferTermsView(terms) {
   if (isDeposit) {
     rows.push({
       key: "deposit",
-      label: "Deposition",
-      text: `${amount} kr. Studion tar ut den när tiden bekräftas — du betalar inget här.`
+      label: t("slotOffer.terms.depositLabel"),
+      text: t("slotOffer.terms.depositText", { amount })
     });
   }
 
   if (isFee) {
     rows.push({
       key: "booking_fee",
-      label: "Bokningsavgift",
-      text:
-        `${amount} kr. Studion tar ut den när tiden bekräftas — du betalar inget här. ` +
-        "Avgiften räknas inte av mot slutpriset."
+      label: t("slotOffer.terms.bookingFeeLabel"),
+      text: t("slotOffer.terms.bookingFeeText", { amount })
     });
   }
 
   if (noticeHours > 0) {
     rows.push({
       key: "cancellation",
-      label: "Avbokning",
+      label: t("slotOffer.terms.cancellationLabel"),
       // Följden av en sen avbokning nämns BARA för depositionen. Bokningsavgiften
       // har ingen sådan regel i bokningsvägen (applyLateCancellationToDeposit rör
       // bara depositionen), och då får sidan inte påstå att den har det.
       text: isDeposit
-        ? `Senast ${noticeHours} timmar innan tiden. Avbokar du senare kan studion ta betalt för depositionen på ${amount} kr.`
-        : `Senast ${noticeHours} timmar innan tiden.`
+        ? t("slotOffer.terms.cancellationDepositText", { hours: noticeHours, amount })
+        : t("slotOffer.terms.cancellationText", { hours: noticeHours })
     });
   }
 

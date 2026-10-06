@@ -11,7 +11,9 @@ export function StudiosDirectoryPage() {
   const { t, localizePath } = useLanguage();
   const [studios, setStudios] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  // Felet självt, inte dess text: på engelska har det ingen text (serverns är
+  // svensk), och då visas den översatta reservtexten.
+  const [error, setError] = useState(null);
 
   const [filters, setFilters] = useState(() => {
     if (typeof window === "undefined") return { search: "", city: "", style: "" };
@@ -66,12 +68,12 @@ export function StudiosDirectoryPage() {
       .then((response) => {
         if (active) {
           setStudios(Array.isArray(response) ? response.filter(Boolean) : []);
-          setError("");
+          setError(null);
         }
       })
       .catch((nextError) => {
         if (active) {
-          setError(nextError.message);
+          setError(nextError);
         }
       })
       .finally(() => {
@@ -243,7 +245,9 @@ export function StudiosDirectoryPage() {
             </label>
           </div>
 
-          {error ? <div className="error-panel">{error}</div> : null}
+          {error ? (
+            <div className="error-panel">{error.message || t("directory.loadError")}</div>
+          ) : null}
 
           {loading ? (
             <div className="loading-state">{t("directory.loading")}</div>

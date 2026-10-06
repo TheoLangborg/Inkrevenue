@@ -1,4 +1,6 @@
 import { pinStudiosFirst } from "../utils/studioOrder";
+import { DEFAULT_LANGUAGE, splitLanguageFromPath } from "../i18n/config";
+import { createTranslator } from "../i18n/translate";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
 
@@ -46,7 +48,28 @@ async function requestLegacy(path, options = {}) {
   return payload?.data ?? payload;
 }
 
-async function request(path, options = {}) {
+/**
+ * Serverns felmeddelanden (proxyn och CRM:et) finns bara på svenska. På andra
+ * språk får felet därför ingen text, så att anroparen visar sin egen översatta
+ * (`error.message || t(...)`). Vid 429 säger vi själva åt kunden att vänta.
+ * `language` behövs bara där sidans språk inte står i adressen: betalsidan
+ * följer bokningens språk.
+ */
+function getErrorMessage({ payload, textPayload, status, language }) {
+  const pageLanguage =
+    language ||
+    (typeof window === "undefined"
+      ? DEFAULT_LANGUAGE
+      : splitLanguageFromPath(window.location.pathname).language);
+
+  if (pageLanguage !== DEFAULT_LANGUAGE) {
+    return status === 429 ? createTranslator(pageLanguage).t("apiErrors.rateLimited") : "";
+  }
+
+  return payload?.message || getTextErrorMessage(textPayload) || `API-anropet misslyckades (${status}).`;
+}
+
+async function request(path, { language, ...options } = {}) {
   const response = await fetch(`${API_BASE}${path}`, {
     headers: {
       "Content-Type": "application/json",
@@ -62,9 +85,7 @@ async function request(path, options = {}) {
 
   if (!response.ok) {
     const error = new Error(
-      payload?.message ||
-        getTextErrorMessage(textPayload) ||
-        `API-anropet misslyckades (${response.status}).`
+      getErrorMessage({ payload, textPayload, status: response.status, language })
     );
     // Maskinläsbar kod och status vid sidan av texten, så anroparen kan agera på
     // feltypen (t.ex. INSPIRATION_IMAGE_FAILED) i stället för att matcha på ett
@@ -176,6 +197,7 @@ export function getPaymentLink(token) {
 export function createPaymentLinkIntent(token, { acceptedPolicyVersion, language }) {
   return request(`/api/public/payment-links/${encodeURIComponent(token)}/payment-intent`, {
     method: "POST",
-    body: JSON.stringify({ acceptedPolicyVersion, language })
+    body: JSON.stringify({ acceptedPolicyVersion, language }),
+    language
   });
 }

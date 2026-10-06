@@ -1,4 +1,4 @@
-import { LEGAL_DOCUMENTS } from "../data/legalContent";
+import { getLegalDocuments } from "../data/legalContent";
 import { buildPageTitle, usePageMetadata } from "../utils/pageMetadata";
 import { SiteLink } from "../utils/siteRouter";
 import { useLanguage } from "../i18n/LanguageContext";
@@ -10,15 +10,14 @@ import { useLanguage } from "../i18n/LanguageContext";
  * runt i sajten — Googles OAuth-verifiering avvisar policylänkar som bara
  * öppnas som modal. Rutterna är därför också med i prerender.mjs.
  *
- * Själva dokumenttexten är ALLTID svensk: den är juridiskt bindande och en
- * maskinöversättning av villkor skapar mer problem än den löser. På engelska
- * översätts ramen (rubriker, navigation) och en notis förklarar varför brödtexten
- * är på svenska.
+ * Den svenska texten är den juridiskt bindande. På engelska visas en
+ * översättning, och en notis säger att svenskan gäller om de skiljer sig åt.
  */
 export function LegalPage({ document: documentKey }) {
-  const { t, isEnglish } = useLanguage();
-  const content = LEGAL_DOCUMENTS[documentKey];
-  const other = Object.values(LEGAL_DOCUMENTS).find((doc) => doc.path !== content.path);
+  const { t, isEnglish, language } = useLanguage();
+  const documents = getLegalDocuments(language);
+  const content = documents[documentKey];
+  const other = Object.values(documents).find((doc) => doc.path !== content.path);
   const documentLabel = documentKey === "privacy" ? t("legal.privacyLabel") : t("legal.termsLabel");
   const otherLabel = documentKey === "privacy" ? t("legal.termsLabel") : t("legal.privacyLabel");
 
@@ -41,9 +40,7 @@ export function LegalPage({ document: documentKey }) {
       <section className="section section--white">
         <div className="container" style={{ maxWidth: 800 }}>
           {isEnglish ? (
-            <p className="legal-page__language-notice" lang="en">
-              {t("legal.swedishOnlyNotice")}
-            </p>
+            <p className="legal-page__language-notice">{t("legal.translationNotice")}</p>
           ) : null}
 
           <p className="legal-page__updated">{t("legal.updated", { date: content.updated })}</p>
@@ -52,7 +49,6 @@ export function LegalPage({ document: documentKey }) {
             <section
               key={group.heading}
               className="legal-page__group"
-              lang="sv"
               data-reveal="up"
               data-reveal-delay={Math.min(index, 2) || undefined}
             >

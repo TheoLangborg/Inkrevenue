@@ -9,6 +9,10 @@
  * Google-avsnittet i integritetspolicyn granskas av Googles OAuth-team. Ändras
  * kalenderintegrationen i tattoo-crm måste texten uppdateras i samma veva,
  * annars stämmer inte policyn med vad appen faktiskt gör.
+ *
+ * Den svenska versionen är den juridiskt bindande. Den engelska är en
+ * översättning, och sidan säger det (legal.translationNotice). Ändras en
+ * mening på svenska ska den engelska ändras i samma veva.
  */
 
 export const LEGAL_DOCUMENTS = {
@@ -82,6 +86,75 @@ export const LEGAL_DOCUMENTS = {
     ]
   }
 };
+
+// Samma adresser, datum och ordning som de svenska dokumenten.
+const LEGAL_DOCUMENTS_EN = {
+  privacy: {
+    ...LEGAL_DOCUMENTS.privacy,
+    eyebrow: "Privacy policy",
+    title: "How we use your information",
+    lead:
+      "This policy describes what information Ink Revenue collects, why we collect it and how you can have it deleted.",
+    groups: [
+      {
+        heading: "Information you provide in our forms",
+        paragraphs: [
+          "When you enter your name, email, phone number or booking details, we store that information to handle your enquiry and to help you on to the right studio or strategy call.",
+          "If you start filling in a form but don't submit it, we may save the draft and send you reminders by email or text message during the week, so that you can easily pick up where you left off.",
+          "We also use technical information such as the page, the referring link and campaign data to understand where enquiries come from and to improve the service."
+        ]
+      },
+      {
+        heading: "Calendar connection for affiliated studios",
+        paragraphs: [
+          "Studios that use our CRM can choose to connect their calendar from Google, Apple or Outlook. We read the title and time of upcoming events solely to see when the studio is busy, and we add bookings made in the CRM to the calendar. Calendar data is never sold, never used for advertising and never shared with third parties.",
+          "A full description of the calendar connection is available in the CRM's privacy policy at inkrevenue-crm.online/integritet."
+        ]
+      },
+      {
+        heading: "Your rights",
+        paragraphs: [
+          "You have the right to know what information we hold about you, to have incorrect information corrected and to have your information deleted.",
+          "Contact us at info@inkrevenue.online and we will handle your request. We normally reply within 30 days."
+        ]
+      }
+    ]
+  },
+  terms: {
+    ...LEGAL_DOCUMENTS.terms,
+    eyebrow: "Terms of use",
+    title: "Terms for using Ink Revenue",
+    lead: "These terms apply when you use our forms, our studio directory or our CRM.",
+    groups: [
+      {
+        heading: "The service",
+        paragraphs: [
+          "The service is used to send booking enquiries, find studios and book strategy calls. The information you provide must be accurate and relevant to your enquiry.",
+          "Ink Revenue and affiliated studios may use the information to contact you about your booking, follow up on a form you have started and respond to your enquiry."
+        ]
+      },
+      {
+        heading: "Your consent",
+        paragraphs: [
+          "By using the forms, you agree that we store what is needed to provide the service and to follow up on your contact with us.",
+          "If you no longer want to be contacted, you can tell us or the studio you have been in contact with."
+        ]
+      },
+      {
+        heading: "For affiliated studios",
+        paragraphs: [
+          "Studios are responsible for ensuring that information entered into the CRM is handled in accordance with applicable data protection rules, and for obtaining consent from their own customers where required.",
+          "A studio that connects an external calendar is responsible for making sure it is allowed to connect the account it uses."
+        ]
+      }
+    ]
+  }
+};
+
+/** Dokumenten på sidans språk. Saknas språket gäller de svenska. */
+export function getLegalDocuments(language) {
+  return language === "en" ? LEGAL_DOCUMENTS_EN : LEGAL_DOCUMENTS;
+}
 
 export const LEGAL_PATHS = Object.fromEntries(
   Object.entries(LEGAL_DOCUMENTS).map(([key, doc]) => [key, doc.path])

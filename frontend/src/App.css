@@ -4843,7 +4843,7 @@ html.has-reveal .steps[data-reveal]:not([data-revealed])::before {
   margin-top: 4px;
 }
 
-/* Notis på engelska legal-sidor: dokumenten är bindande på svenska */
+/* Notis på engelska legal-sidor: texten är en översättning, svenskan gäller */
 .legal-page__language-notice {
   margin: 0 0 28px;
   padding: 14px 18px;

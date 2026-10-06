@@ -1074,7 +1074,7 @@ export function StudioLeadFormEnhanced({
     }
     setImageProcessing(true);
     try {
-      const preparedImage = await prepareLeadImageUpload(file);
+      const preparedImage = await prepareLeadImageUpload(file, t);
       setInspirationImage(preparedImage);
     } catch (error) {
       setInspirationImage(null);

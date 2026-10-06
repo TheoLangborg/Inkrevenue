@@ -311,7 +311,8 @@ export const en = {
       "Ink Revenue gathers tattoo studios from all over Sweden. Pick a city or style to find the right studio for your idea.",
     exploreCityLink: "Tattoo studio in {{city}}",
     exploreStyleLink: "{{style}} tattoos",
-    jsonLdName: "Tattoo studios on Ink Revenue"
+    jsonLdName: "Tattoo studios on Ink Revenue",
+    loadError: "We couldn't load the studios right now. Please try again in a moment."
   },
 
   studioCard: {
@@ -607,8 +608,8 @@ export const en = {
     readAlso: "Read also: {{name}}",
     openAsPage: "Open as its own page",
     closeDocument: "Close the document",
-    swedishOnlyNotice:
-      "This document is only available in Swedish. The Swedish version is the legally binding one. If you have any questions about it in English, email info@inkrevenue.online and we'll explain.",
+    translationNotice:
+      "This is an English translation. The Swedish version is the legally binding one, and if the two ever differ, the Swedish text applies.",
     privacyLabel: "Privacy policy",
     termsLabel: "Terms of use"
   },
@@ -737,6 +738,12 @@ export const en = {
     imagePreviewAlt: "Preview of the reference image",
     imageRemove: "Remove image",
     imageError: "We couldn't prepare that image for upload. Please try again.",
+    imageTypeUnsupported: "That file format isn't supported. Upload a JPG, PNG or WEBP image.",
+    imageTooLarge: "The image is too large ({{size}} MB). Choose a file of at most {{max}} MB.",
+    imageUnreadable: "We couldn't read that image. Choose another file.",
+    imageCompressFailed: "We couldn't compress the image. Try again with another file.",
+    imageTooDetailed:
+      "The image is too detailed to compress enough. Try a smaller image or a lower resolution.",
 
     checkingAvailability: "Checking available times...",
     availabilityError: "We couldn't check available times right now.",
@@ -890,5 +897,65 @@ export const en = {
       "The studio can't accept card payments right now. Nothing has been charged. Please contact the studio.",
     notFoundTitle: "The link doesn't exist",
     notFoundText: "Check that you copied the whole link, or contact the studio."
+  },
+
+  slotOffer: {
+    metaTitle: "Your appointment",
+    metaDescription: "Accept an appointment that has just become available.",
+    loading: "Loading the appointment…",
+    eyebrow: "An appointment has become available",
+    greeting: "Hi {{name}}!",
+    greetingFallback: "Hi!",
+    withArtist: "with {{artist}}",
+    durationMinutes: "{{count}} minutes",
+    durationHour: "1 hour",
+    durationHours: "{{count}} hours",
+    accept: "Yes please, I'll take it",
+    accepting: "Booking…",
+    firstComeNote: "First come, first served — the appointment is yours as soon as you accept.",
+    consentNote: "By accepting, you agree to the studio's terms above.",
+    notBookable: "Sorry, this appointment can no longer be booked.",
+    unsubscribe: "I don't want any more appointment offers",
+    unsubscribedTitle: "Unsubscribed",
+    unsubscribedText:
+      "You won't get any more texts about available appointments. Contact the studio if you change your mind.",
+    bookedTitle: "The appointment is yours",
+    bookedText: "The studio has received your booking. You'll get a confirmation shortly.",
+    goneTitle: "This link is no longer valid",
+    goneText: "The offer is no longer available.",
+    loadFailed: "This link is no longer valid.",
+    acceptFailed: "Sorry, the appointment couldn't be booked.",
+    unsubscribeFailed: "We couldn't unsubscribe you.",
+    reasons: {
+      already_filled: "Someone else accepted it before you.",
+      slot_closed: "The appointment is no longer available.",
+      offer_expired: "The offer has expired.",
+      offer_revoked: "This offer is no longer valid.",
+      slot_in_past: "The appointment has already passed.",
+      too_soon:
+        "The appointment starts too soon to be booked here. Call the studio if you'd still like to take it."
+    },
+    terms: {
+      depositLabel: "Deposit",
+      depositText:
+        "SEK {{amount}}. The studio charges it once the appointment is confirmed — you pay nothing here.",
+      bookingFeeLabel: "Booking fee",
+      bookingFeeText:
+        "SEK {{amount}}. The studio charges it once the appointment is confirmed — you pay nothing here. The fee is not deducted from the final price.",
+      cancellationLabel: "Cancellation",
+      cancellationText: "At least {{hours}} hours before the appointment.",
+      cancellationDepositText:
+        "At least {{hours}} hours before the appointment. If you cancel later, the studio may charge you the SEK {{amount}} deposit."
+    }
+  },
+
+  errorBoundary: {
+    title: "Something went wrong",
+    text: "An unexpected error occurred. Reload the page to try again.",
+    reload: "Reload"
+  },
+
+  apiErrors: {
+    rateLimited: "Too many attempts from this connection. Please wait a moment and try again."
   }
 };

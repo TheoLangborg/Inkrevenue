@@ -1,12 +1,16 @@
 import { SiteLink } from "../utils/siteRouter";
-import { useT } from "../i18n/LanguageContext";
+import { useLanguage } from "../i18n/LanguageContext";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 
 const FOOTER_CITIES = ["Stockholm", "Göteborg", "Malmö", "Uppsala"];
 const FOOTER_STYLES = ["Fineline", "Blackwork", "Traditionell", "Realism", "Dotwork"];
 
+// Filtervärdet är studiornas egen (svenska) stil-tagg och ändras aldrig; bara
+// länktexten översätts. Övriga stilar heter likadant på engelska.
+const STYLE_LABELS_EN = { Traditionell: "Traditional" };
+
 export function SiteFooter() {
-  const t = useT();
+  const { t, isEnglish } = useLanguage();
 
   return (
     <footer className="footer">
@@ -44,7 +48,7 @@ export function SiteFooter() {
             <p className="footer__discovery-heading">{t("footer.styles")}</p>
             {FOOTER_STYLES.map((style) => (
               <SiteLink key={style} href={`/studios?style=${encodeURIComponent(style)}`}>
-                {t("footer.styleLink", { style })}
+                {t("footer.styleLink", { style: (isEnglish && STYLE_LABELS_EN[style]) || style })}
               </SiteLink>
             ))}
           </div>

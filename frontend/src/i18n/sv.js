@@ -316,7 +316,8 @@ export const sv = {
       "Ink Revenue samlar tatueringsstudios från hela Sverige. Välj stad eller stil för att hitta rätt studio för din idé.",
     exploreCityLink: "Tatueringsstudio i {{city}}",
     exploreStyleLink: "{{style}}-tatuering",
-    jsonLdName: "Tatueringsstudios på Ink Revenue"
+    jsonLdName: "Tatueringsstudios på Ink Revenue",
+    loadError: "Det gick inte att hämta studiorna just nu. Försök igen om en stund."
   },
 
   studioCard: {
@@ -616,8 +617,9 @@ export const sv = {
     readAlso: "Läs även: {{name}}",
     openAsPage: "Öppna som egen sida",
     closeDocument: "Stäng dokumentet",
-    // Visas bara på engelska — dokumenten är juridiskt bindande på svenska.
-    swedishOnlyNotice: "",
+    // Visas bara på engelska: de engelska dokumenten är översättningar och den
+    // svenska versionen är den juridiskt bindande.
+    translationNotice: "",
     privacyLabel: "Integritetspolicy",
     termsLabel: "Användarvillkor"
   },
@@ -753,6 +755,13 @@ export const sv = {
     imageRemove: "Ta bort bild",
     imageError:
       "Det gick inte att förbereda bilden för uppladdning. Försök igen.",
+    // Fel när bilden förbereds i webbläsaren (prepareLeadImageUpload.js).
+    imageTypeUnsupported: "Filformatet stöds inte. Ladda upp en bild i JPG-, PNG- eller WEBP-format.",
+    imageTooLarge: "Bilden är för stor ({{size}} MB). Välj en fil på högst {{max}} MB.",
+    imageUnreadable: "Bilden kunde inte läsas. Välj en annan fil.",
+    imageCompressFailed: "Det gick inte att komprimera bilden. Försök igen med en annan fil.",
+    imageTooDetailed:
+      "Bilden är för detaljrik för att komprimeras tillräckligt. Prova en mindre bild eller en lägre upplösning.",
 
     checkingAvailability: "Kontrollerar lediga tider...",
     availabilityError: "Det gick inte att kontrollera lediga tider just nu.",
@@ -922,5 +931,69 @@ export const sv = {
       "Studion kan inte ta emot kortbetalningar just nu. Inga pengar har dragits. Hör av dig till studion.",
     notFoundTitle: "Länken finns inte",
     notFoundText: "Kontrollera att du kopierat hela länken, eller hör av dig till studion."
+  },
+
+  // Erbjudandet om en ledig tid, /tid/:token. Kunden kommer från ett SMS.
+  slotOffer: {
+    metaTitle: "Din tid",
+    metaDescription: "Tacka ja till en tid som blivit ledig.",
+    loading: "Hämtar tiden…",
+    eyebrow: "En tid har blivit ledig",
+    greeting: "Hej {{name}}!",
+    greetingFallback: "Hej!",
+    withArtist: "hos {{artist}}",
+    durationMinutes: "{{count}} minuter",
+    durationHour: "1 timme",
+    durationHours: "{{count}} timmar",
+    accept: "Ja tack, jag tar tiden",
+    accepting: "Bokar…",
+    firstComeNote: "Först till kvarn — tiden är din så fort du tackat ja.",
+    consentNote: "Genom att tacka ja godkänner du studions villkor ovan.",
+    notBookable: "Tiden går tyvärr inte att boka längre.",
+    unsubscribe: "Jag vill inte ha fler tidserbjudanden",
+    unsubscribedTitle: "Avregistrerad",
+    unsubscribedText: "Du får inga fler SMS om lediga tider. Hör av dig till studion om du ändrar dig.",
+    bookedTitle: "Tiden är din",
+    bookedText: "Studion har fått din bokning. Du får en bekräftelse inom kort.",
+    goneTitle: "Länken gäller inte längre",
+    goneText: "Erbjudandet finns inte kvar.",
+    loadFailed: "Länken gäller inte längre.",
+    acceptFailed: "Tiden gick tyvärr inte att boka.",
+    unsubscribeFailed: "Kunde inte avregistrera dig.",
+    // Nycklarna = `reason` från servern.
+    reasons: {
+      already_filled: "Någon annan hann tacka ja före dig.",
+      slot_closed: "Tiden är inte längre tillgänglig.",
+      offer_expired: "Erbjudandet har gått ut.",
+      offer_revoked: "Det här erbjudandet gäller inte längre.",
+      slot_in_past: "Tiden har redan passerat.",
+      too_soon: "Tiden börjar för snart för att bokas här. Ring studion om du ändå vill ta den."
+    },
+    // slotOfferTerms.js. Följden av en sen avbokning nämns bara för depositionen.
+    terms: {
+      depositLabel: "Deposition",
+      depositText: "{{amount}} kr. Studion tar ut den när tiden bekräftas — du betalar inget här.",
+      bookingFeeLabel: "Bokningsavgift",
+      bookingFeeText:
+        "{{amount}} kr. Studion tar ut den när tiden bekräftas — du betalar inget här. Avgiften räknas inte av mot slutpriset.",
+      cancellationLabel: "Avbokning",
+      cancellationText: "Senast {{hours}} timmar innan tiden.",
+      cancellationDepositText:
+        "Senast {{hours}} timmar innan tiden. Avbokar du senare kan studion ta betalt för depositionen på {{amount}} kr."
+    }
+  },
+
+  // Felgränsen i main.jsx. Den ligger utanför LanguageProvider och läser
+  // språket ur adressen.
+  errorBoundary: {
+    title: "Något gick fel",
+    text: "Ett oväntat fel uppstod. Ladda om sidan för att försöka igen.",
+    reload: "Ladda om"
+  },
+
+  // API-klienten (publicSiteApi.js). På svenska visas serverns egna texter, så
+  // det här används bara på andra språk.
+  apiErrors: {
+    rateLimited: "För många försök från samma anslutning. Vänta en stund och försök igen."
   }
 };

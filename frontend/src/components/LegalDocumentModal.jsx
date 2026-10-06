@@ -1,10 +1,10 @@
-import { LEGAL_DOCUMENTS } from "../data/legalContent";
+import { getLegalDocuments } from "../data/legalContent";
 import { SiteLink } from "../utils/siteRouter";
 import { useLanguage } from "../i18n/LanguageContext";
 
 export function LegalDocumentModal({ activeDocument, onClose }) {
-  const { t, isEnglish } = useLanguage();
-  const content = LEGAL_DOCUMENTS[activeDocument];
+  const { t, isEnglish, language } = useLanguage();
+  const content = getLegalDocuments(language)[activeDocument];
 
   if (!content) {
     return null;
@@ -38,16 +38,14 @@ export function LegalDocumentModal({ activeDocument, onClose }) {
         </div>
 
         <div className="legal-document__content">
-          {/* Dokumenttexten är alltid svensk — den svenska versionen är den
-              juridiskt bindande. Notisen förklarar det för engelska läsare. */}
+          {/* Den engelska texten är en översättning; den svenska versionen är
+              den juridiskt bindande. Notisen säger det till engelska läsare. */}
           {isEnglish ? (
-            <p className="legal-page__language-notice" lang="en">
-              {t("legal.swedishOnlyNotice")}
-            </p>
+            <p className="legal-page__language-notice">{t("legal.translationNotice")}</p>
           ) : null}
 
           {content.groups.map((group) => (
-            <section key={group.heading} lang="sv">
+            <section key={group.heading}>
               <h3>{group.heading}</h3>
               {group.paragraphs.map((paragraph) => (
                 <p key={paragraph}>{paragraph}</p>
