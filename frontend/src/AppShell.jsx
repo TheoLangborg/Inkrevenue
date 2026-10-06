@@ -20,7 +20,6 @@ import { useStudioVisitTracking } from "./utils/useStudioVisitTracking";
 import { useBookingFormAutoScroll } from "./utils/useBookingFormAutoScroll";
 import { LanguageProvider } from "./i18n/LanguageContext";
 import { splitLanguageFromPath } from "./i18n/config";
-import { LanguageHint } from "./components/LanguageHint";
 
 function getPageFromPath(pathname) {
   if (pathname === "/") {
@@ -160,7 +159,6 @@ function AppContent({ page }) {
       {!page.hideHeader && <SiteHeader currentPath={page.currentPath} />}
       <main>{page.element}</main>
       {!page.hideFooter && <SiteFooter />}
-      <LanguageHint />
     </div>
   );
 }

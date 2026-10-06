@@ -3,6 +3,51 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <!-- Automatiskt språkval. Körs först av allt, innan sidan ritas.
+         Besökarens eget val (språkväxlaren, sparat i localStorage) går före.
+         Annars gäller webbläsarens språkinställning: det första språket i
+         listan som sajten har, och engelska om sajten inte har något av dem.
+         Stämmer valet inte med adressen byts den mot samma sida på rätt språk.
+         Sökmotorer, inbäddade sidor (CRM:ets förhandsvisning) och betallänkar
+         (där följer språket bokningen) lämnas orörda. main.jsx renderar inget
+         medan adressen byts, och src/i18n/languagePreference.js läser ut den
+         sparade hänvisaren. Testas i src/i18n/languageRedirect.test.js. -->
+    <script>
+      (function () {
+        try {
+          var w = window, l = w.location, n = w.navigator;
+          if (w.top !== w.self) return;
+          if (/bot|crawl|spider|slurp|lighthouse|headless|inspectiontool|googleother|prerender/i.test(n.userAgent || "")) return;
+
+          var path = l.pathname.replace(/\/+$/, "") || "/";
+          var english = /^\/en(\/|$)/.test(path);
+          var rest = english ? path.slice(3) || "/" : path;
+          if (/^\/(studio-crm-preview$|betala\/)/.test(rest)) return;
+
+          var wanted = null;
+          try { wanted = w.localStorage.getItem("inkrevenue-language"); } catch (e) {}
+          if (wanted !== "sv" && wanted !== "en") {
+            wanted = null;
+            var list = n.languages && n.languages.length ? n.languages : [n.language];
+            for (var i = 0; i < list.length && !wanted; i++) {
+              var code = String(list[i] || "").toLowerCase().split(/[-_]/)[0];
+              if (code === "sv" || code === "en") wanted = code;
+            }
+            if (!wanted && list[0]) wanted = "en";
+          }
+          if (!wanted || wanted === (english ? "en" : "sv")) return;
+
+          // location.replace gör den här sidan till hänvisare. Spara den riktiga.
+          try {
+            w.sessionStorage.setItem("inkrevenue-entry-referrer", JSON.stringify({ referrer: document.referrer, at: Date.now() }));
+          } catch (e) {}
+          w.__inkrevenueLanguageRedirect = true;
+          document.documentElement.style.visibility = "hidden";
+          setTimeout(function () { document.documentElement.style.visibility = ""; }, 3000);
+          l.replace((wanted === "en" ? "/en" + (rest === "/" ? "" : rest) : rest) + l.search + l.hash);
+        } catch (e) {}
+      })();
+    </script>
     <title>Ink Revenue — Fler kunder till din tatueringsstudio</title>
     <meta name="description" content="Ink Revenue hjälper tatueringsstudior i Sverige att fylla kalendern med bokade kunder via skräddarsydd marknadsföring. Betala bara för resultat." />
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />

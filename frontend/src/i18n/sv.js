@@ -27,12 +27,6 @@ export const sv = {
     enShort: "EN"
   },
 
-  languageHint: {
-    text: "This site is also available in English.",
-    action: "Switch to English",
-    dismiss: "Dismiss"
-  },
-
   header: {
     nav: "Huvudnavigation",
     home: "Hem",

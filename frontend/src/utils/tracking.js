@@ -1,3 +1,5 @@
+import { getEntryReferrer } from "../i18n/languagePreference";
+
 const SESSION_STORAGE_KEY = "inkrevenue-session-id";
 
 // Maps utm_source values from URLs to our internal billing source keys.
@@ -71,7 +73,7 @@ export function getTrackingPayload() {
 
   return {
     pageUrl: currentUrl.toString(),
-    referrerUrl: document.referrer || "",
+    referrerUrl: getEntryReferrer(),
     utmSource: currentUrl.searchParams.get("utm_source") || "",
     utmMedium: currentUrl.searchParams.get("utm_medium") || "",
     utmCampaign: currentUrl.searchParams.get("utm_campaign") || "",

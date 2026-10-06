@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { recordStudioVisit } from "../services/publicSiteApi";
 import { isFirstStudioVisitInSession } from "./tracking";
+import { getEntryReferrer } from "../i18n/languagePreference";
 
 /**
  * Räknar ett besök på en studios publika sida.
@@ -21,7 +22,7 @@ export function useStudioVisitTracking(slug) {
     const url = new URL(window.location.href);
     recordStudioVisit(slug, {
       utmSource: url.searchParams.get("utm_source") || "",
-      referrerUrl: document.referrer || "",
+      referrerUrl: getEntryReferrer(),
       firstInSession: isFirstStudioVisitInSession(slug)
     });
   }, [slug]);

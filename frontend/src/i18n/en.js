@@ -25,12 +25,6 @@ export const en = {
     enShort: "EN"
   },
 
-  languageHint: {
-    text: "Den här sidan finns även på svenska.",
-    action: "Byt till svenska",
-    dismiss: "Stäng"
-  },
-
   header: {
     nav: "Main navigation",
     home: "Home",

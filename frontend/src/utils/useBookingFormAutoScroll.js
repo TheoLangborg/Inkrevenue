@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { isBioLinkVisit } from "./bioLinkVisit";
+import { getEntryReferrer } from "../i18n/languagePreference";
 
 // Sidan besökaren landade på. En studiosida man navigerat till inifrån sajten
 // ska inte hoppa, även om fliken en gång öppnades från Instagram.
@@ -70,7 +71,7 @@ export function useBookingFormAutoScroll(slug) {
     if (!slug || window.location.pathname !== LANDING_PATHNAME || window.location.hash) return;
     if (!isBioLinkVisit({
       search: window.location.search,
-      referrer: document.referrer,
+      referrer: getEntryReferrer(),
       userAgent: navigator.userAgent
     })) return;
 
