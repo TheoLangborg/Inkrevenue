@@ -539,7 +539,7 @@ export function ThemedStudioPage({ slug, theme: themePartial = {} }) {
                 {translate("themedStudio.website")}
               </a>
             )}
-            <span style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.35)" }}>inkrevenue.se</span>
+            <span style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.35)" }}>inkrevenue.online</span>
           </div>
         </div>
 
