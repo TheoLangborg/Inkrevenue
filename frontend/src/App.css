@@ -2047,6 +2047,23 @@ h1 {
   z-index: 0;
 }
 
+/* En herobild i koden (pages/studios/studioImages.js): naturlig storlek,
+   centrerad, utan zoom. Innehållet har fast maxbredd och står i mitten, så ett
+   märke i bilden står då på samma ställe i förhållande till rubriken och
+   infokortet på alla skärmbredder. I en kolumn (≤1024 px) visas en del till
+   vänster om märket. */
+.page-hero__media--natural {
+  object-fit: none;
+  object-position: 50% 50%;
+  transform: none;
+}
+
+@media (max-width: 1024px) {
+  .page-hero__media--natural {
+    object-position: 30% 50%;
+  }
+}
+
 .page-hero__scrim {
   position: absolute;
   inset: 0;
@@ -3976,7 +3993,7 @@ h1 {
   }
 
   /* Den smala stående rutan visar bara en tredjedel av ett liggande foto.
-     Ett foto i koden kan välja vilken (pages/studios/cardImages.js). */
+     Ett foto i koden kan välja vilken (pages/studios/studioImages.js). */
   .studio-card__photo {
     object-position: var(--card-photo-narrow-position, 50% 50%);
   }

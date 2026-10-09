@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 888 600">
+  <!-- Katalogkortets bild för InkRevenue Test Studio: delningsbilden
+       (public/og-image.svg) omritad för kortets format. Nedre vänstra hörnet
+       är tomt, där ligger kortets loggbricka. Renderas till card-888.webp. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0a1628"/>
+      <stop offset="100%" stop-color="#111e38"/>
+    </linearGradient>
+    <radialGradient id="glow1" cx="15%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#2e6fa3" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#2e6fa3" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="80%" cy="65%" r="45%">
+      <stop offset="0%" stop-color="#1a4a7a" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#1a4a7a" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="silver" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%"   stop-color="#858489"/>
+      <stop offset="25%"  stop-color="#e7e4ef"/>
+      <stop offset="50%"  stop-color="#858489"/>
+      <stop offset="75%"  stop-color="#c8c8c8"/>
+      <stop offset="100%" stop-color="#858489"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="888" height="600" fill="url(#bg)"/>
+  <rect width="888" height="600" fill="url(#glow1)"/>
+  <rect width="888" height="600" fill="url(#glow2)"/>
+
+  <line x1="0" y1="200" x2="888" y2="200" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
+  <line x1="0" y1="400" x2="888" y2="400" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
+  <line x1="296" y1="0" x2="296" y2="600" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
+  <line x1="592" y1="0" x2="592" y2="600" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
+
+  <!-- Märket i högerkolumnen. Mobilens smala ruta visar bara högra halvan
+       (x 444–888), så texten slutar före x 444. -->
+  <g transform="translate(690 300) rotate(45)">
+    <rect x="-96" y="-96" width="192" height="192" fill="none" stroke="#2e6fa3" stroke-width="9" opacity="0.6"/>
+  </g>
+  <g transform="translate(690 300) rotate(45)">
+    <rect x="-76" y="-76" width="152" height="152" fill="none" stroke="#2e6fa3" stroke-width="3" opacity="0.2"/>
+  </g>
+  <text x="690" y="291" text-anchor="middle" font-family="Space Grotesk, Segoe UI, sans-serif" font-size="56" font-weight="700" fill="url(#silver)">INK</text>
+  <text x="690" y="333" text-anchor="middle" font-family="Space Grotesk, Segoe UI, sans-serif" font-size="31" font-weight="600" fill="url(#silver)">Revenue</text>
+
+  <!-- Texten i vänsterkolumnen, ovanför loggbrickan -->
+  <rect x="56" y="68" width="8" height="8" fill="#2e6fa3" transform="rotate(45 60 72)"/>
+  <text x="78" y="79" fill="#2e6fa3" font-family="Space Grotesk, Segoe UI, sans-serif" font-size="18" font-weight="700" letter-spacing="4">INK REVENUE</text>
+  <text x="56" y="152" fill="#f0eef8" font-family="Georgia, serif" font-size="44" font-weight="700">Fler kunder</text>
+  <text x="56" y="206" fill="#f0eef8" font-family="Georgia, serif" font-size="44" font-weight="700">till din</text>
+  <text x="56" y="260" fill="#f0eef8" font-family="Georgia, serif" font-size="44" font-weight="700">tatueringsstudio.</text>
+  <text x="56" y="314" fill="#8899bb" font-family="Space Grotesk, Segoe UI, sans-serif" font-size="22">Betala bara när vi levererar resultat.</text>
+</svg>

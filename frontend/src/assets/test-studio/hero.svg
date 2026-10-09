@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="3840" height="1400" viewBox="0 0 3840 1400">
+  <!-- Herobakgrund för InkRevenue Test Studio: delningsbildens färger och märke
+       (public/og-image.svg) utan delningsbildens text.
+       Visas i naturlig storlek och centrerad (klassen page-hero__media, naturlig variant), inte
+       skalad. Sidans innehåll har fast maxbredd och står centrerat, så luckan
+       mellan rubriken och infokortet ligger alltid runt 125 px höger om mitten.
+       Märket står vid +30 (x 1920 + 30, användarens val 2026-10-09), lite
+       ovanför rubriken (91 px över mitten, y 700 − 91). Längre åt höger
+       hamnar texten bakom kortet när containern är smal (1025–1280 px).
+       Bred och hög så att kanterna aldrig syns; på mobil visas vänstra delen,
+       utan märke. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0a1628"/>
+      <stop offset="100%" stop-color="#111e38"/>
+    </linearGradient>
+    <radialGradient id="glow1" gradientUnits="userSpaceOnUse" cx="1450" cy="700" r="900">
+      <stop offset="0%" stop-color="#2e6fa3" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#2e6fa3" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" gradientUnits="userSpaceOnUse" cx="1950" cy="609" r="420">
+      <stop offset="0%" stop-color="#1a4a7a" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#1a4a7a" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="silver" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%"   stop-color="#858489"/>
+      <stop offset="25%"  stop-color="#e7e4ef"/>
+      <stop offset="50%"  stop-color="#858489"/>
+      <stop offset="75%"  stop-color="#c8c8c8"/>
+      <stop offset="100%" stop-color="#858489"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="3840" height="1400" fill="url(#bg)"/>
+  <rect width="3840" height="1400" fill="url(#glow1)"/>
+  <rect width="3840" height="1400" fill="url(#glow2)"/>
+
+  <line x1="0" y1="560" x2="3840" y2="560" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
+  <line x1="0" y1="840" x2="3840" y2="840" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
+  <line x1="1520" y1="0" x2="1520" y2="1400" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
+  <line x1="2320" y1="0" x2="2320" y2="1400" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
+
+  <g transform="translate(1950 609) rotate(45)">
+    <rect x="-115" y="-115" width="230" height="230" fill="none" stroke="#2e6fa3" stroke-width="10" opacity="0.7"/>
+    <rect x="-93" y="-93" width="186" height="186" fill="none" stroke="#2e6fa3" stroke-width="3" opacity="0.25"/>
+  </g>
+  <text x="1950" y="598" text-anchor="middle" font-family="Space Grotesk, Segoe UI, sans-serif" font-size="66" font-weight="700" fill="url(#silver)">INK</text>
+  <text x="1950" y="648" text-anchor="middle" font-family="Space Grotesk, Segoe UI, sans-serif" font-size="37" font-weight="600" fill="url(#silver)">Revenue</text>
+</svg>

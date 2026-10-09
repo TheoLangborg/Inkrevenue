@@ -3,7 +3,7 @@ import { getStudioTags } from "../utils/studioTags";
 import { getArtistInitials } from "../utils/artistShowcase";
 import { useT } from "../i18n/LanguageContext";
 import { StudioImage } from "./StudioImage";
-import { studioCardImages } from "../pages/studios/cardImages";
+import { studioImages } from "../pages/studios/studioImages";
 
 export function PublicStudioCard({ studio, compact = false, cardTheme = null, revealDelay }) {
   const t = useT();
@@ -18,10 +18,10 @@ export function PublicStudioCard({ studio, compact = false, cardTheme = null, re
   // Kortets foto är ett lat <img>, inte en CSS-bakgrund: en bakgrund hämtades
   // direkt för varje kort i katalogen, även långt under skärmkanten
   // (docs/bildprestanda.md, steg 4). Toningen ligger som ett eget lager ovanpå.
-  // Ett foto i koden (pages/studios/cardImages.js) går före CRM:ets.
-  const codeImage = studioCardImages[studio.slug] || null;
+  // Ett foto i koden (pages/studios/studioImages.js) går före CRM:ets.
+  const codeImage = studioImages[studio.slug] || null;
   const mediaImageUrl =
-    codeImage?.src ||
+    codeImage?.card ||
     studio.heroImageUrl ||
     studio.publicProfile?.galleryImageUrls?.[0] ||
     null;
@@ -66,8 +66,8 @@ export function PublicStudioCard({ studio, compact = false, cardTheme = null, re
               widths={[480, 1024]}
               sizes="(max-width: 700px) 100vw, 420px"
               style={
-                codeImage?.narrowPosition
-                  ? { "--card-photo-narrow-position": codeImage.narrowPosition }
+                codeImage?.cardNarrowPosition
+                  ? { "--card-photo-narrow-position": codeImage.cardNarrowPosition }
                   : undefined
               }
               alt=""

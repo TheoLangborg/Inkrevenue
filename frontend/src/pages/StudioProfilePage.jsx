@@ -10,6 +10,7 @@ import { StudioImage } from "../components/StudioImage";
 import { buildShowcaseArtists, shouldShowArtistShowcase } from "../utils/artistShowcase";
 import { getStudioTags } from "../utils/studioTags";
 import { studioRegistry } from "./studios";
+import { studioImages } from "./studios/studioImages";
 import { useLanguage } from "../i18n/LanguageContext";
 
 const LOGO_PLACEMENTS = ["panel", "heading", "hidden"];
@@ -180,6 +181,12 @@ export function StudioProfilePage({
   const heroFocusX = clampNumber(publicProfile.heroFocusX, 0, 100, 50);
   const heroFocusY = clampNumber(publicProfile.heroFocusY, 0, 100, 50);
   const heroOverlay = clampNumber(publicProfile.heroOverlayPercent, 0, 90, 65) / 100;
+  // En herobild i koden (studios/studioImages.js) går före CRM:ets. Bara
+  // bakgrunden: delningsbilden i metadatan är fortfarande CRM:ets. Den visas i
+  // naturlig storlek (.page-hero__media--natural), så CRM:ets fokuspunkt och
+  // zoom gäller inte den.
+  const codeHeroImageUrl = studioImages[studio?.slug]?.hero || "";
+  const heroImageUrl = codeHeroImageUrl || studio?.heroImageUrl || "";
   const hasLogo = Boolean(studio?.logoUrl) && logoPlacement !== "hidden";
   const headingImageUrl = String(publicProfile.headingImageUrl || "").trim();
   const logoAsHeading = hasLogo && logoPlacement === "heading";
@@ -382,19 +389,23 @@ export function StudioProfilePage({
             Ett <img> och inte en CSS-bakgrund: bilden är sidans största element
             (LCP) och ska hämtas först, med hög prioritet
             (docs/bildprestanda.md, steg 3). */}
-        {studio.heroImageUrl ? (
+        {heroImageUrl ? (
           <>
             <StudioImage
-              className="page-hero__media"
-              src={studio.heroImageUrl}
+              className={`page-hero__media${codeHeroImageUrl ? " page-hero__media--natural" : ""}`}
+              src={heroImageUrl}
               widths={[1024, 2048]}
               sizes="100vw"
               alt=""
               fetchpriority="high"
-              style={{
-                objectPosition: `${heroFocusX}% ${heroFocusY}%`,
-                transformOrigin: `${heroFocusX}% ${heroFocusY}%`
-              }}
+              style={
+                codeHeroImageUrl
+                  ? undefined
+                  : {
+                      objectPosition: `${heroFocusX}% ${heroFocusY}%`,
+                      transformOrigin: `${heroFocusX}% ${heroFocusY}%`
+                    }
+              }
             />
             <div
               className="page-hero__scrim"
