@@ -2199,9 +2199,10 @@ h1 {
   order: 9;
 }
 
-.studio-lead-form > .form-status[role="status"] {
-  order: 10;
-}
+/* Kvittensen efter inskicket (role="status") står kvar i DOM-ordning, direkt
+   under rubriken. Med order: 10 hamnade den under hela det nollställda steg 1,
+   långt nedanför där sidan scrollar, och kunden såg aldrig att förfrågan gick
+   fram. */
 
 .studio-booking-picker {
   display: grid;
@@ -2940,6 +2941,14 @@ h1 {
 .rg--large .rg-viewport--scroll,
 .rg--large .rg-cta-row {
   padding-inline: var(--rg-edge, 16px);
+}
+
+/* Bandets skuggutrymme (nedre padding 64 px, marginal -50 px) går 26 px in
+   över knappraden, och viewporten är position: relative och ritas därför
+   ovanpå. Utan det här landade tryck på övre halvan av "Se hela portföljen"
+   på bandet och öppnade ingenting. */
+.rg--large .rg-cta-row {
+  position: relative;
 }
 
 .rg--large .rg-viewport--scroll {
