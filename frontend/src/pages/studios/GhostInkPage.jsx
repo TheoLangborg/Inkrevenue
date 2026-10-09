@@ -6,9 +6,9 @@ import { StudioLeadFormEnhanced } from "../../components/StudioLeadFormEnhanced"
 import { RollingGallery } from "../../components/RollingGallery";
 import { StudioImage } from "../../components/StudioImage";
 import { useLanguage } from "../../i18n/LanguageContext";
-import heroWide1280 from "../../assets/ghost-ink/studio-hero-wide-1280.webp";
-import heroWide1920 from "../../assets/ghost-ink/studio-hero-wide-1920.webp";
-import heroWide2560 from "../../assets/ghost-ink/studio-hero-wide-2560.webp";
+import heroBanner840 from "../../assets/ghost-ink/hero-banner-840.webp";
+import heroBanner1280 from "../../assets/ghost-ink/hero-banner-1280.webp";
+import heroBanner1672 from "../../assets/ghost-ink/hero-banner-1672.webp";
 import heroTall640 from "../../assets/ghost-ink/studio-hero-tall-640.webp";
 import heroTall960 from "../../assets/ghost-ink/studio-hero-tall-960.webp";
 import heroTall1280 from "../../assets/ghost-ink/studio-hero-tall-1280.webp";
@@ -48,9 +48,10 @@ import loungeTall960 from "../../assets/ghost-ink/studio-lounge-tall-960.webp";
  * Sidan har ingen profilbild (användaren 2026-10-04).
  *
  * CRM:ets fält går först där det finns ett: Instagram, intro ("Om Hampus"),
- * rubrikraden i heron (headline), formulärets rubrik och ingress, omslagsbilden
- * och dess fokus. 2026-10-03 fylldes de i med sidans egna texter, så att de går
- * att ändra i CRM:et. Texterna här är reserven när ett fält töms.
+ * rubrikraden i heron (headline), formulärets rubrik och ingress. 2026-10-03
+ * fylldes de i med sidans egna texter, så att de går att ändra i CRM:et.
+ * Texterna här är reserven när ett fält töms. Undantaget är heron: bannern i
+ * STUDIO har namnet i bilden och går före CRM:ets omslagsbild.
  *
  * Namnet står i heron, i rubriken "Om Hampus" och i remsan, inte i varje
  * text. Användaren 2026-09-18: det ska inte stå "Hampus" överallt. De andra
@@ -69,19 +70,22 @@ const ARTIST = {
   instagram: "https://www.instagram.com/wardhoffink/"
 };
 
-// Studion: namn, adress och lokalernas bilder (src/assets/ghost-ink).
-// Utan heroImage står röken i heron, utan photos försvinner sektionen Studion.
+// Studion: namn, adress och bilder (src/assets/ghost-ink). Utan heroBanner
+// står CRM:ets omslagsbild i heron, annars röken. Utan photos försvinner
+// sektionen Studion.
 const ROOM_TALL = `${heroTall640} 640w, ${heroTall960} 960w, ${heroTall1280} 1280w`;
 const STUDIO = {
   name: "Ghost Ink",
   street: "Hyttvägen 7A",
   city: "Finspång",
-  // Arbetsrummet. Liggande band på dator, stående på mobil. CRM:ets
-  // omslagsbild går först.
-  heroImage: {
-    wide: `${heroWide1280} 1280w, ${heroWide1920} 1920w, ${heroWide2560} 2560w`,
-    tall: ROOM_TALL,
-    src: heroTall960
+  // "WARDHOFF INK / BLACK & GREY TATTOO ARTIST" står i själva bilden, så den
+  // visas hel och utan toning, och sidans rubrik göms visuellt. Originalet
+  // är 1672 px brett och förstoras inte.
+  heroBanner: {
+    srcSet: `${heroBanner840} 840w, ${heroBanner1280} 1280w, ${heroBanner1672} 1672w`,
+    src: heroBanner1280,
+    width: 1672,
+    height: 941
   },
   // Sektionen Studion: två stående foton bredvid varandra.
   photos: [
@@ -442,13 +446,25 @@ export function GhostInkPage({ slug }) {
       ) : null}
 
       {/* ── HERO ── Som Royalkaves, men lugnare: lägre, och namnet i vanlig
-          rubrikstorlek. Bakom texten: CRM:ets omslagsbild, annars studions
-          eget foto, annars röken. */}
+          rubrikstorlek. Med bannern står namnet i bilden: rubriken göms
+          visuellt och raden och knapparna hamnar under bilden. Utan banner
+          ligger texten på CRM:ets omslagsbild, annars på röken. */}
       <section
-        className={`gi-hero${heroImageUrl || STUDIO.heroImage ? " gi-hero--photo" : ""}`}
+        className={`gi-hero${STUDIO.heroBanner ? " gi-hero--banner" : heroImageUrl ? " gi-hero--photo" : ""}`}
         aria-labelledby="gi-title"
       >
-        {heroImageUrl ? (
+        {STUDIO.heroBanner ? (
+          <img
+            className="gi-hero__banner"
+            src={STUDIO.heroBanner.src}
+            srcSet={STUDIO.heroBanner.srcSet}
+            sizes="100vw"
+            width={STUDIO.heroBanner.width}
+            height={STUDIO.heroBanner.height}
+            alt={t("ghostInk.heroBannerAlt", names)}
+            fetchpriority="high"
+          />
+        ) : heroImageUrl ? (
           <StudioImage
             className="gi-hero__bg"
             src={heroImageUrl}
@@ -458,24 +474,11 @@ export function GhostInkPage({ slug }) {
             style={{ objectPosition: heroObjectPosition }}
             fetchpriority="high"
           />
-        ) : STUDIO.heroImage ? (
-          // Stående beskärning på mobil, där heron är högre än bred.
-          <picture className="gi-hero__picture">
-            <source media="(min-width: 700px)" srcSet={STUDIO.heroImage.wide} sizes="100vw" />
-            <img
-              className="gi-hero__bg"
-              src={STUDIO.heroImage.src}
-              srcSet={STUDIO.heroImage.tall}
-              sizes="100vw"
-              alt=""
-              fetchpriority="high"
-            />
-          </picture>
         ) : (
           <GhostSmoke />
         )}
         <div className="gi-hero__inner">
-          <h1 id="gi-title" className="gi-hero__name">
+          <h1 id="gi-title" className={`gi-hero__name${STUDIO.heroBanner ? " visually-hidden" : ""}`}>
             {ARTIST.name}
           </h1>
           <p className="gi-hero__place">{heroLine}</p>

@@ -433,6 +433,8 @@ export const en = {
       "Book a tattoo or a consultation with {{artist}} at {{studio}} in {{city}}. Send your enquiry with a reference image. You must be 18 or older.",
     // The line under the name in the hero. The studio is a line, not the heading.
     heroPlace: "Tattoos at {{studio}} in {{city}}",
+    // The hero banner. The text in the image first, then what it shows.
+    heroBannerAlt: "Wardhoff Ink – Black & Grey Tattoo Artist. {{artist}} working on a back piece.",
     ctaBook: "Book a time",
     instagram: "Instagram",
     // Shown under "About Hampus" until his own text is in the CRM. Sharpen with

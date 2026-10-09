@@ -3,6 +3,7 @@ import { getStudioTags } from "../utils/studioTags";
 import { getArtistInitials } from "../utils/artistShowcase";
 import { useT } from "../i18n/LanguageContext";
 import { StudioImage } from "./StudioImage";
+import { studioCardImages } from "../pages/studios/cardImages";
 
 export function PublicStudioCard({ studio, compact = false, cardTheme = null, revealDelay }) {
   const t = useT();
@@ -17,7 +18,13 @@ export function PublicStudioCard({ studio, compact = false, cardTheme = null, re
   // Kortets foto är ett lat <img>, inte en CSS-bakgrund: en bakgrund hämtades
   // direkt för varje kort i katalogen, även långt under skärmkanten
   // (docs/bildprestanda.md, steg 4). Toningen ligger som ett eget lager ovanpå.
-  const mediaImageUrl = studio.heroImageUrl || studio.publicProfile?.galleryImageUrls?.[0] || null;
+  // Ett foto i koden (pages/studios/cardImages.js) går före CRM:ets.
+  const codeImage = studioCardImages[studio.slug] || null;
+  const mediaImageUrl =
+    codeImage?.src ||
+    studio.heroImageUrl ||
+    studio.publicProfile?.galleryImageUrls?.[0] ||
+    null;
   // Svag toning, lite mörkare nertill bakom loggan. Bilden ska synas: den
   // tidigare (20–60 %, temana upp till 92 %) gjorde fotona nästan svarta
   // (användaren 2026-10-04).
@@ -58,6 +65,11 @@ export function PublicStudioCard({ studio, compact = false, cardTheme = null, re
               src={mediaImageUrl}
               widths={[480, 1024]}
               sizes="(max-width: 700px) 100vw, 420px"
+              style={
+                codeImage?.narrowPosition
+                  ? { "--card-photo-narrow-position": codeImage.narrowPosition }
+                  : undefined
+              }
               alt=""
               loading="lazy"
               decoding="async"

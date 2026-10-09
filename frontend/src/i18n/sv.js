@@ -439,6 +439,8 @@ export const sv = {
       "Boka tatuering eller konsultation hos {{artist}} på {{studio}} i {{city}}. Skicka din förfrågan med en referensbild. Åldersgräns 18 år.",
     // Raden under namnet i heron. Studion är en rad, inte rubriken.
     heroPlace: "Tatuerar på {{studio}} i {{city}}",
+    // Heronbannern. Texten i bilden först, sedan vad den visar.
+    heroBannerAlt: "Wardhoff Ink – Black & Grey Tattoo Artist. {{artist}} tatuerar en ryggtatuering.",
     ctaBook: "Boka tid",
     instagram: "Instagram",
     // Står under "Om Hampus" tills hans egen text finns i CRM:et. Skärps med

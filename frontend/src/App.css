@@ -3975,6 +3975,12 @@ h1 {
     border-radius: 18px 0 0 18px;
   }
 
+  /* Den smala stående rutan visar bara en tredjedel av ett liggande foto.
+     Ett foto i koden kan välja vilken (pages/studios/cardImages.js). */
+  .studio-card__photo {
+    object-position: var(--card-photo-narrow-position, 50% 50%);
+  }
+
   .studio-card__logo {
     height: 44px;
     width: auto;
@@ -6321,12 +6327,52 @@ html.has-reveal .steps[data-reveal]:not([data-revealed])::before {
   object-fit: cover;
 }
 
-/* Studions eget foto ligger i en <picture>. Den måste ur gridden, annars blir
-   den en egen rad och knuffar texten ur mitten. */
-.gi-hero__picture {
-  position: absolute;
-  inset: 0;
-  z-index: -2;
+/* Bannern har namnet i bilden. Den står hel och utan toning, med raden och
+   knapparna i en låg remsa under. På dator kapas höjden så att remsan syns
+   utan att man scrollar (180 px = sidhuvudet + remsan). Då skärs lite av
+   överkant och nederkant, men inte texten (y 33–49 %). Användaren
+   2026-10-09: mer av bilden, mindre svart remsa. */
+.gi-hero--banner {
+  min-height: 0;
+  padding: 0 0 clamp(20px, 3vw, 28px);
+  gap: clamp(16px, 3vw, 22px);
+}
+
+.gi-hero__banner {
+  display: block;
+  width: 100%;
+  max-width: none;
+  height: auto;
+  max-height: max(360px, calc(100vh - 180px));
+  max-height: max(360px, calc(100svh - 180px));
+  object-fit: cover;
+  object-position: 50% 40%;
+}
+
+.gi-hero--banner .gi-hero__inner {
+  padding-inline: var(--gi-gutter);
+}
+
+.gi-hero--banner .gi-hero__place {
+  margin-top: 0;
+}
+
+.gi-hero--banner .gi-hero__actions {
+  margin-top: 14px;
+}
+
+/* Dator: raden och knapparna på samma rad. Rubriken är dold och absolut
+   placerad, så den tar ingen kolumn. */
+@media (min-width: 900px) {
+  .gi-hero--banner .gi-hero__inner {
+    grid-auto-flow: column;
+    align-items: center;
+    column-gap: 40px;
+  }
+
+  .gi-hero--banner .gi-hero__actions {
+    margin-top: 0;
+  }
 }
 
 /* Mörkare nedåt, så att namnet och knappen går att läsa mot fotot. */
