@@ -12,7 +12,11 @@ import {
 } from "../services/publicSiteApi";
 import { useAbandonedFormDraft } from "../hooks/useAbandonedFormDraft";
 import { getLeadSourceFromUrl, getTrackingPayload } from "../utils/tracking";
-import { prepareLeadImageUpload, MAX_INSPIRATION_IMAGE_MB } from "../utils/prepareLeadImageUpload";
+import {
+  prepareLeadImageUpload,
+  MAX_INSPIRATION_IMAGE_MB,
+  MAX_INSPIRATION_IMAGES
+} from "../utils/prepareLeadImageUpload";
 import { canBookDirectly, resolveTimeStepNotice } from "../utils/leadFormBooking";
 import {
   buildShowcaseArtists,
@@ -489,16 +493,21 @@ export function StudioLeadFormEnhanced({
   const [status, setStatus] = useState({ state: "idle", message: "" });
   const [availability, setAvailability] = useState(() => createAvailabilityState());
   const [visibleWeekIndex, setVisibleWeekIndex] = useState(0);
-  const [inspirationImage, setInspirationImage] = useState(null);
-  const [imageProcessing, setImageProcessing] = useState(false);
-  const [imageError, setImageError] = useState("");
+  // Kundens bilder, färdigbehandlade i den ordning de valdes (högst
+  // MAX_INSPIRATION_IMAGES). Varje post har ett eget id för listnyckeln.
+  const [inspirationImages, setInspirationImages] = useState([]);
+  // null, eller { current, total } medan bilderna bearbetas en i taget.
+  const [imageProcessing, setImageProcessing] = useState(null);
+  // Ett meddelande per bild som inte gick att använda. Övriga bilder läggs till
+  // ändå, så ett fel på en av fem kastar inte bort de fyra andra.
+  const [imageErrors, setImageErrors] = useState([]);
   // Sätts när servern svarade att det var inspirationsbilden som fällde
   // inskickningen. Texten lovar att kunden kan försöka igen utan bild — och
   // steg 1, där bilden väljs, är oåtkomligt efter en betalning (Tillbaka-knappen
   // är dold). Utan den här knappen fanns ingen väg vidare alls.
   const [imageUploadRejected, setImageUploadRejected] = useState(false);
   // Kunden har försökt gå vidare utan bild när bilden krävs. En egen flagga i
-  // stället för imageError: meddelandet ska försvinna när kunden byter till en
+  // stället för imageErrors: meddelandet ska försvinna när kunden byter till en
   // typ där bilden är valfri, medan ett fel från bearbetningen ska stå kvar.
   const [imageMissingShown, setImageMissingShown] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
@@ -598,6 +607,7 @@ export function StudioLeadFormEnhanced({
   const canSubmit = hasStudioSlug && (!previewMode || allowPreviewSubmit);
   const { hasAcceptedConsent, openLegalModal } = useLegalConsent();
   const fileInputRef = useRef(null);
+  const imageIdRef = useRef(0);
   const previewRequestIdRef = useRef(0);
   // Punkt 9: förhandsvisningen har ett tak per minut, och varje anrop kör
   // bokningsreglerna hos studion. Skicka därför aldrig samma frågeställning två
@@ -683,7 +693,11 @@ export function StudioLeadFormEnhanced({
   // ovanför knappen. Ett fel från bearbetningen säger mer än "bifoga en bild",
   // så det går före.
   const showImageMissing =
-    imageRequired && imageMissingShown && !inspirationImage && !imageProcessing && !imageError;
+    imageRequired &&
+    imageMissingShown &&
+    !inspirationImages.length &&
+    !imageProcessing &&
+    !imageErrors.length;
   const draftPayload = useMemo(
     () => ({
       name: formData.name,
@@ -796,7 +810,8 @@ export function StudioLeadFormEnhanced({
     setStatus({ state: "idle", message: "" });
     setAvailability(createAvailabilityState());
     setVisibleWeekIndex(0);
-    setInspirationImage(null);
+    setInspirationImages([]);
+    setImageErrors([]);
     setCurrentStep(0);
     setTouched(new Set());
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -1065,32 +1080,48 @@ export function StudioLeadFormEnhanced({
   }
 
   async function handleImageChange(event) {
-    const file = event.target.files?.[0];
-    setImageError("");
+    const files = Array.from(event.target.files || []);
+    // Väljaren töms direkt: bilderna samlas i listan nedanför, och samma fil ska
+    // gå att välja igen efter att den tagits bort.
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    if (!files.length) return;
+
+    setImageErrors([]);
     setImageUploadRejected(false);
-    if (!file) {
-      setInspirationImage(null);
-      return;
+
+    const room = Math.max(0, MAX_INSPIRATION_IMAGES - inspirationImages.length);
+    const accepted = files.slice(0, room);
+    const errors =
+      files.length > accepted.length
+        ? [t("leadForm.imageLimitReached", { max: MAX_INSPIRATION_IMAGES })]
+        : [];
+    const prepared = [];
+
+    // En i taget, inte parallellt: varje original avkodas i full storlek, och
+    // fem 20 MB-bilder samtidigt räcker för att få en telefon att döda fliken.
+    for (const [index, file] of accepted.entries()) {
+      setImageProcessing({ current: index + 1, total: accepted.length });
+      try {
+        const preparedImage = await prepareLeadImageUpload(file, t);
+        imageIdRef.current += 1;
+        prepared.push({ ...preparedImage, id: imageIdRef.current });
+      } catch (error) {
+        const message = error.message || t("leadForm.imageError");
+        errors.push(accepted.length > 1 ? `${file.name}: ${message}` : message);
+      }
     }
-    setImageProcessing(true);
-    try {
-      const preparedImage = await prepareLeadImageUpload(file, t);
-      setInspirationImage(preparedImage);
-    } catch (error) {
-      setInspirationImage(null);
-      // Rensa filväljaren så samma fil kan väljas igen efter ett fel.
-      if (fileInputRef.current) fileInputRef.current.value = "";
-      setImageError(error.message || t("leadForm.imageError"));
-    } finally {
-      setImageProcessing(false);
+
+    setImageProcessing(null);
+    if (prepared.length) {
+      setInspirationImages((current) => [...current, ...prepared].slice(0, MAX_INSPIRATION_IMAGES));
     }
+    setImageErrors(errors);
   }
 
-  function handleRemoveImage() {
-    setInspirationImage(null);
-    setImageError("");
+  function handleRemoveImage(imageId) {
+    setInspirationImages((current) => current.filter((image) => image.id !== imageId));
+    setImageErrors([]);
     setImageUploadRejected(false);
-    if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
   function scrollToTop() {
@@ -1106,7 +1137,7 @@ export function StudioLeadFormEnhanced({
       const newTouched = new Set([...touched, ...fieldsToValidate]);
       setTouched(newTouched);
       const hasFieldError = fieldsToValidate.some((f) => computeFieldError(f, formData, t));
-      const imageMissing = imageRequired && !inspirationImage;
+      const imageMissing = imageRequired && !inspirationImages.length;
       if (imageMissing) setImageMissingShown(true);
       if (hasFieldError || imageMissing) return;
 
@@ -1173,13 +1204,11 @@ export function StudioLeadFormEnhanced({
       // bara när versionen stämmer med den den bygger själv.
       acceptedPolicyVersion: bookingPolicyLines.length ? studio?.bookingPolicy?.version || "" : "",
       source: getLeadSourceFromUrl(),
-      inspirationImage: inspirationImage
-        ? {
-            fileName: inspirationImage.fileName,
-            contentType: inspirationImage.contentType,
-            dataUrl: inspirationImage.dataUrl
-          }
-        : null,
+      inspirationImages: inspirationImages.map(({ fileName, contentType, dataUrl }) => ({
+        fileName,
+        contentType,
+        dataUrl
+      })),
       ...getTrackingPayload(),
       ...extraPayload
     });
@@ -1197,7 +1226,7 @@ export function StudioLeadFormEnhanced({
     }
     setFormData(buildInitialForm());
     setVisibleWeekIndex(0);
-    setInspirationImage(null);
+    setInspirationImages([]);
     setImageUploadRejected(false);
     setCurrentStep(0);
     setTouched(new Set());
@@ -1299,7 +1328,7 @@ export function StudioLeadFormEnhanced({
   // efter en betalning är Tillbaka-knappen dold — så det här är kundens enda
   // sätt att bli av med bilagan som servern inte kunde ta emot.
   const submitWithoutInspirationImage = useCallback(async () => {
-    setInspirationImage(null);
+    setInspirationImages([]);
     setImageUploadRejected(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
     setStatus({
@@ -1308,7 +1337,7 @@ export function StudioLeadFormEnhanced({
     });
     try {
       await submitLead({
-        inspirationImage: null,
+        inspirationImages: [],
         ...(paidPaymentIntentId ? { paymentIntentId: paidPaymentIntentId } : {})
       });
     } catch (error) {
@@ -1337,7 +1366,7 @@ export function StudioLeadFormEnhanced({
         message: error.message || t("leadForm.paySavedFailed")
       });
     }
-  }, [formData, draftId, inspirationImage, studio, t]);
+  }, [formData, draftId, inspirationImages, studio, t]);
 
   const stepId = steps[currentStep]?.id;
   const progressPercent = Math.round(((currentStep + 1) / steps.length) * 100);
@@ -1724,7 +1753,9 @@ export function StudioLeadFormEnhanced({
           <div className="studio-lead-form__upload">
             <label
               htmlFor="lead-image"
-              className={imageRequired && (imageError || showImageMissing) ? "has-error" : undefined}
+              className={
+                imageRequired && (imageErrors.length || showImageMissing) ? "has-error" : undefined
+              }
             >
               {imageRequired ? (
                 <>{t("leadForm.imageLabelRequired")} <span className="field-required">*</span></>
@@ -1736,35 +1767,64 @@ export function StudioLeadFormEnhanced({
                 id="lead-image"
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
+                multiple
                 onChange={handleImageChange}
-                aria-invalid={Boolean(imageError) || showImageMissing}
+                disabled={Boolean(imageProcessing) || inspirationImages.length >= MAX_INSPIRATION_IMAGES}
+                aria-invalid={imageErrors.length > 0 || showImageMissing}
                 aria-required={imageRequired || undefined}
                 aria-describedby="lead-image-hint"
               />
             </label>
             <p id="lead-image-hint" className="form-note form-note--compact">
               {t(imageRequired ? "leadForm.imageHintRequired" : "leadForm.imageHint", {
+                count: MAX_INSPIRATION_IMAGES,
                 max: MAX_INSPIRATION_IMAGE_MB
               })}
             </p>
             {imageProcessing ? (
-              <p className="form-status form-status--muted">{t("leadForm.imageProcessing")}</p>
+              <p className="form-status form-status--muted" role="status">
+                {imageProcessing.total > 1
+                  ? t("leadForm.imageProcessingMany", imageProcessing)
+                  : t("leadForm.imageProcessing")}
+              </p>
             ) : null}
-            {imageError ? (
-              <p className="form-status form-status--error" role="alert">{imageError}</p>
+            {imageErrors.length ? (
+              imageErrors.map((message) => (
+                <p key={message} className="form-status form-status--error" role="alert">
+                  {message}
+                </p>
+              ))
             ) : showImageMissing ? (
               <p className="form-status form-status--error" role="alert">{t("leadForm.imageRequired")}</p>
             ) : null}
-            {inspirationImage ? (
-              <div className="upload-preview">
-                <img src={inspirationImage.previewUrl} alt={t("leadForm.imagePreviewAlt")} />
-                <div className="upload-preview__meta">
-                  <span>{inspirationImage.fileName}</span>
-                  <button className="btn btn-secondary" type="button" onClick={handleRemoveImage}>
-                    {t("leadForm.imageRemove")}
-                  </button>
-                </div>
-              </div>
+            {inspirationImages.length ? (
+              <>
+                <ul className="upload-previews" aria-label={t("leadForm.imageListLabel")}>
+                  {inspirationImages.map((image, index) => (
+                    <li key={image.id} className="upload-preview upload-preview--thumb">
+                      <img
+                        src={image.previewUrl}
+                        alt={t("leadForm.imagePreviewAlt", { index: index + 1 })}
+                        title={image.fileName}
+                      />
+                      <button
+                        className="upload-preview__remove"
+                        type="button"
+                        onClick={() => handleRemoveImage(image.id)}
+                        aria-label={t("leadForm.imageRemoveNumbered", { index: index + 1 })}
+                      >
+                        <span aria-hidden="true">×</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+                <p className="form-note form-note--compact">
+                  {t("leadForm.imagesAttached", {
+                    count: inspirationImages.length,
+                    max: MAX_INSPIRATION_IMAGES
+                  })}
+                </p>
+              </>
             ) : null}
           </div>
 
@@ -2139,7 +2199,11 @@ export function StudioLeadFormEnhanced({
           {imageUploadRejected ? (
             <div className="form-payment-retry">
               <p className="form-payment-retry-text" role="status">
-                {t("leadForm.imageUploadFailedInfo")}
+                {t(
+                  inspirationImages.length > 1
+                    ? "leadForm.imageUploadFailedInfoMany"
+                    : "leadForm.imageUploadFailedInfo"
+                )}
               </p>
               <button
                 type="button"
@@ -2149,7 +2213,11 @@ export function StudioLeadFormEnhanced({
               >
                 {status.state === "loading"
                   ? t("leadForm.submitting")
-                  : t("leadForm.submitWithoutImage")}
+                  : t(
+                      inspirationImages.length > 1
+                        ? "leadForm.submitWithoutImages"
+                        : "leadForm.submitWithoutImage"
+                    )}
               </button>
             </div>
           ) : null}

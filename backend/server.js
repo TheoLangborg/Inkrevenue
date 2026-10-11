@@ -68,6 +68,11 @@ app.use(
     methods: ["GET", "POST"]
   })
 );
+// Förfrågningsformuläret skickar upp till fem inspirationsbilder som base64
+// (~10 MB). Bara den vägen får det större taket — express använder den första
+// parsern som matchar, så den måste ligga före den allmänna. Hela kedjan av
+// gränser står i tattoo-crm/backend/src/schemas/publicSchemas.js.
+app.use("/api/public/studios/:slug/leads", express.json({ limit: "12mb" }));
 app.use(express.json({ limit: "6mb" }));
 
 // Bara status: CRM-backendens adress är intern och ska inte kunna läsas publikt

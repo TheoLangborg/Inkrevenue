@@ -728,17 +728,21 @@ export const en = {
     descriptionPlaceholderTattoo:
       "Describe the motif, the feel, references and anything else the studio should know.",
 
-    imageLabel: "Reference image",
+    imageLabel: "Reference images",
     imageHint:
-      "Optional. Upload an image if you want to show style, motif or a reference more clearly. JPG, PNG or WEBP, max {{max}} MB.",
+      "Optional. Up to {{count}} images that show style, motif or a reference. JPG, PNG or WEBP, max {{max}} MB per image.",
     // The studio requires the image (requireInspirationImage).
-    imageLabelRequired: "Reference image",
+    imageLabelRequired: "Reference images",
     imageHintRequired:
-      "Required. Show the design, style or placement. JPG, PNG or WEBP, max {{max}} MB.",
-    imageRequired: "Add a reference image to continue.",
+      "Required — at least one image, up to {{count}}. Show the design, style or placement. JPG, PNG or WEBP, max {{max}} MB per image.",
+    imageRequired: "Add at least one reference image to continue.",
     imageProcessing: "Processing the image...",
-    imagePreviewAlt: "Preview of the reference image",
-    imageRemove: "Remove image",
+    imageProcessingMany: "Processing image {{current}} of {{total}}...",
+    imageListLabel: "Attached images",
+    imagePreviewAlt: "Preview of reference image {{index}}",
+    imageRemoveNumbered: "Remove image {{index}}",
+    imagesAttached: "{{count}} of {{max}} images attached",
+    imageLimitReached: "You can attach up to {{max}} images. Remove one to add another.",
     imageError: "We couldn't prepare that image for upload. Please try again.",
     imageTypeUnsupported: "That file format isn't supported. Upload a JPG, PNG or WEBP image.",
     imageTooLarge: "The image is too large ({{size}} MB). Choose a file of at most {{max}} MB.",
@@ -845,7 +849,10 @@ export const en = {
     sendFailed: "We couldn't send that right now. Please try again shortly.",
     imageUploadFailedInfo:
       "Your inspiration image couldn't be saved. You can send the enquiry without it — the studio will get in touch and can ask for it later.",
+    imageUploadFailedInfoMany:
+      "Your inspiration images couldn't be saved. You can send the enquiry without them — the studio will get in touch and can ask for them later.",
     submitWithoutImage: "Send without the image",
+    submitWithoutImages: "Send without the images",
     success:
       "Thanks! Your enquiry has been sent. We normally get back within 24 hours by email or phone — any day of the week.",
 

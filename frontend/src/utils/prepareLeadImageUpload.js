@@ -1,11 +1,25 @@
 const allowedImageTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 // Största fil användaren får välja. Exponeras så att formuläret kan visa gränsen
-// och använda samma siffra i felmeddelandet.
-export const MAX_INSPIRATION_IMAGE_MB = 10;
+// och använda samma siffra i felmeddelandet. Filen skickas aldrig som den är —
+// den krymps här först — så gränsen skyddar telefonens minne, inte servern:
+// hela originalet avkodas innan det ritas om.
+export const MAX_INSPIRATION_IMAGE_MB = 20;
+// Hur många bilder kunden får bifoga. Samma siffra som MAX_INSPIRATION_IMAGES i
+// tattoo-crm/backend/src/services/publicLeadUploadService.js.
+export const MAX_INSPIRATION_IMAGES = 5;
 const maxSourceFileBytes = MAX_INSPIRATION_IMAGE_MB * 1024 * 1024;
-const maxOutputFileBytes = 3.5 * 1024 * 1024;
-const maxDimension = 1600;
-const outputQuality = 0.82;
+// Tak per färdig bild. Fem bilder à 1,5 MB blir ~10 MB base64, och hela kedjan
+// av gränser (proxyn, CRM:et, schemat) står i tattoo-crm/backend/src/schemas/
+// publicSchemas.js. Ändras siffran här måste den kedjan ändras med.
+const maxOutputFileBytes = 1.5 * 1024 * 1024;
+// Första försöket ger en vanlig mobilbild på några hundra KB. De följande tar
+// bara över för ovanligt detaljrika bilder som inte ryms under taket.
+const encodeAttempts = [
+  { maxDimension: 1600, quality: 0.82 },
+  { maxDimension: 1600, quality: 0.72 },
+  { maxDimension: 1280, quality: 0.72 },
+  { maxDimension: 1024, quality: 0.65 }
+];
 
 function sanitizeFileName(value) {
   const normalized = String(value || "")
@@ -71,26 +85,45 @@ export async function prepareLeadImageUpload(file, t) {
   }
 
   const image = await loadImage(file, t);
-  const scale = Math.min(1, maxDimension / Math.max(image.width, image.height));
-  const width = Math.max(1, Math.round(image.width * scale));
-  const height = Math.max(1, Math.round(image.height * scale));
   const canvas = document.createElement("canvas");
-
-  canvas.width = width;
-  canvas.height = height;
-
   const context = canvas.getContext("2d");
 
   if (!context) {
     throw new Error(t("leadForm.imageError"));
   }
 
-  context.drawImage(image, 0, 0, width, height);
+  let blob = null;
+  let drawnDimension = 0;
 
-  const blob = await canvasToBlob(canvas, "image/jpeg", outputQuality);
+  try {
+    for (const attempt of encodeAttempts) {
+      if (attempt.maxDimension !== drawnDimension) {
+        const scale = Math.min(1, attempt.maxDimension / Math.max(image.width, image.height));
+        canvas.width = Math.max(1, Math.round(image.width * scale));
+        canvas.height = Math.max(1, Math.round(image.height * scale));
+        // JPEG saknar genomskinlighet: utan vit botten blir en PNG med
+        // transparent bakgrund svart.
+        context.fillStyle = "#ffffff";
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        drawnDimension = attempt.maxDimension;
+      }
 
-  if (!blob) {
-    throw new Error(t("leadForm.imageCompressFailed"));
+      blob = await canvasToBlob(canvas, "image/jpeg", attempt.quality);
+
+      if (!blob) {
+        throw new Error(t("leadForm.imageCompressFailed"));
+      }
+
+      if (blob.size <= maxOutputFileBytes) {
+        break;
+      }
+    }
+  } finally {
+    // Släpp bildminnet direkt. Formuläret behandlar upp till fem bilder i rad,
+    // och på en telefon är det minnet som tar slut först.
+    canvas.width = 0;
+    canvas.height = 0;
   }
 
   if (blob.size > maxOutputFileBytes) {

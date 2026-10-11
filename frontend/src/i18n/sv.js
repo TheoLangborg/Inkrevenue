@@ -744,17 +744,21 @@ export const sv = {
     descriptionPlaceholderTattoo:
       "Beskriv motiv, känsla, referenser och allt som är viktigt för studion att veta.",
 
-    imageLabel: "Inspirationsbild",
+    imageLabel: "Inspirationsbilder",
     imageHint:
-      "Valfritt. Ladda upp en bild om du vill visa stil, motiv eller referens tydligare. JPG, PNG eller WEBP, max {{max}} MB.",
+      "Valfritt. Upp till {{count}} bilder som visar stil, motiv eller referens. JPG, PNG eller WEBP, max {{max}} MB per bild.",
     // Studion kräver bilden (requireInspirationImage).
-    imageLabelRequired: "Referensbild",
+    imageLabelRequired: "Referensbilder",
     imageHintRequired:
-      "Obligatoriskt. Visa motiv, stil eller placering. JPG, PNG eller WEBP, max {{max}} MB.",
-    imageRequired: "Bifoga en referensbild för att gå vidare.",
+      "Obligatoriskt — minst en bild, upp till {{count}}. Visa motiv, stil eller placering. JPG, PNG eller WEBP, max {{max}} MB per bild.",
+    imageRequired: "Bifoga minst en referensbild för att gå vidare.",
     imageProcessing: "Bearbetar bilden...",
-    imagePreviewAlt: "Förhandsvisning av inspirationsbild",
-    imageRemove: "Ta bort bild",
+    imageProcessingMany: "Bearbetar bild {{current}} av {{total}}...",
+    imageListLabel: "Bifogade bilder",
+    imagePreviewAlt: "Förhandsvisning av inspirationsbild {{index}}",
+    imageRemoveNumbered: "Ta bort bild {{index}}",
+    imagesAttached: "{{count}} av {{max}} bilder bifogade",
+    imageLimitReached: "Du kan bifoga högst {{max}} bilder. Ta bort en bild för att lägga till en annan.",
     imageError:
       "Det gick inte att förbereda bilden för uppladdning. Försök igen.",
     // Fel när bilden förbereds i webbläsaren (prepareLeadImageUpload.js).
@@ -877,7 +881,10 @@ export const sv = {
     // inskickningen — bilden väljs på steg 1 och är inte alltid nåbar därifrån.
     imageUploadFailedInfo:
       "Inspirationsbilden kunde inte sparas. Du kan skicka förfrågan utan bilden — studion hör av sig och kan be om den sedan.",
+    imageUploadFailedInfoMany:
+      "Inspirationsbilderna kunde inte sparas. Du kan skicka förfrågan utan bilderna — studion hör av sig och kan be om dem sedan.",
     submitWithoutImage: "Skicka utan bild",
+    submitWithoutImages: "Skicka utan bilder",
     success:
       "Tack! Din förfrågan är skickad. Vi återkopplar normalt inom 24 timmar via e-post eller telefon — dygnet runt, alla dagar.",
 

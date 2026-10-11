@@ -2541,6 +2541,66 @@ h1 {
   font-size: 0.92rem;
 }
 
+.studio-lead-form__upload input[type="file"]:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+/* Upp till fem bilder bredvid varandra. minmax(min(...), 1fr) så att rutnätet
+   aldrig blir bredare än formulärets kolumn (se skyddsregeln för .form-grid). */
+.upload-previews {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(92px, 100%), 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.upload-preview--thumb {
+  position: relative;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 14px;
+}
+
+.upload-preview--thumb img {
+  display: block;
+  aspect-ratio: 1;
+  height: auto;
+  max-height: none;
+  border: 0;
+  border-radius: 0;
+}
+
+.upload-preview__remove {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(10, 18, 32, 0.72);
+  color: #fff;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.upload-preview__remove:hover {
+  background: rgba(10, 18, 32, 0.9);
+}
+
+.upload-preview__remove:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: -4px;
+  box-shadow: 0 0 0 2px rgba(10, 18, 32, 0.9);
+}
+
 .studio-layout__main,
 .studio-layout__aside {
   display: grid;
@@ -7020,6 +7080,16 @@ html.has-reveal .steps[data-reveal]:not([data-revealed])::before {
 .gi-form .upload-preview img {
   border-color: var(--gi-line);
   border-radius: 2px;
+}
+
+.gi-form .upload-preview--thumb img {
+  border-radius: 0;
+}
+
+.gi-form .upload-preview__remove {
+  border-radius: 2px;
+  background: var(--gi-ink);
+  color: var(--gi-bone);
 }
 
 .gi-form .studio-booking-picker__summary {
