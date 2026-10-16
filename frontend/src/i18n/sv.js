@@ -53,7 +53,10 @@ export const sv = {
     contactHeading: "Kontakta oss:",
     phone: "Telefon:",
     email: "Mejl:",
-    copyright: "Copyright 2026. Ink Revenue. All rights reserved.",
+    address: "Adress:",
+    copyright: "© 2026 Ink Revenue. Drivs av {{name}}, enskild firma.",
+    // Betal- och erbjudandesidorna saknar sidfot. Raden ger samma uppgifter där.
+    operatorNote: "Sidan drivs av Ink Revenue ({{name}}, enskild firma), {{address}}, {{email}}.",
     credit: "Webbdesign av"
   },
 
@@ -626,15 +629,11 @@ export const sv = {
     termsLabel: "Användarvillkor"
   },
 
+  // Informationen vid skicka-knappen (FormLegalLinks). Den är information och
+  // inget godkännande: att svara på en förfrågan kräver inget samtycke.
   consent: {
-    eyebrow: "Samtycke",
-    title: "Godkänner du våra villkor?",
-    lead: "För att använda formulären behöver du godkänna vår integritetspolicy och våra användarvillkor.",
-    privacy: "Integritetspolicy",
-    terms: "Användarvillkor",
-    decline: "Icke godkänn",
-    accept: "Godkänn",
-    notePrefix: "Genom att fortsätta godkänner du vår",
+    notePrefix:
+      "Det du fyller i sparas medan du skriver och används för att svara på din förfrågan. Läs mer i vår",
     notePrivacy: "integritetspolicy",
     noteMiddle: "och våra",
     noteTerms: "användarvillkor"
@@ -658,7 +657,7 @@ export const sv = {
     errorName: "Fyll i ditt namn.",
     errorStudio: "Fyll i studions namn.",
     errorEmail: "Ange en giltig e-postadress.",
-    errorConsent: "Godkänn integritetspolicy och villkor för att fortsätta.",
+    reminderConsent: "Påminn mig via mejl eller sms om jag inte skickar in (högst tre gånger).",
     errorFields: "Kontrollera fälten markerade i rött och försök igen.",
     sending: "Skickar din förfrågan...",
     success: "Tack! Vi har tagit emot din förfrågan och återkommer normalt inom 24 timmar.",
@@ -872,7 +871,10 @@ export const sv = {
     previewReadOnly:
       "Förhandsvisning: formuläret går inte att skicka in härifrån. Öppna er publika sida för att skicka en riktig förfrågan.",
 
-    consentRequired: "Godkänn integritetspolicy och villkor för att fortsätta.",
+    // Påminnelserna kräver kundens kryss (MFL 19 §). Samma löfte som
+    // påminnelseschemat i CRM:et: 2, 72 och 144 timmar.
+    reminderConsent:
+      "Påminn mig via mejl eller sms om jag inte skickar in förfrågan (högst tre gånger).",
     submitting: "Skickar...",
     submit: "Skicka förfrågan",
     sending: "Skickar din förfrågan...",
@@ -940,6 +942,19 @@ export const sv = {
       "Studion kan inte ta emot kortbetalningar just nu. Inga pengar har dragits. Hör av dig till studion.",
     notFoundTitle: "Länken finns inte",
     notFoundText: "Kontrollera att du kopierat hela länken, eller hör av dig till studion."
+  },
+
+  // /paminnelser/stopp/:draftId — länken i en påminnelse om ett avbrutet formulär.
+  reminderStop: {
+    metaTitle: "Stäng av påminnelser",
+    metaDescription: "Stäng av påminnelserna om ditt påbörjade formulär.",
+    title: "Inga fler påminnelser?",
+    text: "Du bad om påminnelser om formuläret du började fylla i. Stäng av dem här, så skickar vi inga fler.",
+    stop: "Stäng av påminnelserna",
+    stopping: "Stänger av...",
+    doneTitle: "Påminnelserna är avstängda",
+    doneText: "Du får inga fler påminnelser om det här formuläret.",
+    failed: "Det gick inte att stänga av påminnelserna just nu. Försök igen om en stund."
   },
 
   // Erbjudandet om en ledig tid, /tid/:token. Kunden kommer från ett SMS.

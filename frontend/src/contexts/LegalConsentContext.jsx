@@ -1,63 +1,21 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { LegalConsentPrompt } from "../components/LegalConsentPrompt";
 import { LegalDocumentModal } from "../components/LegalDocumentModal";
 
-const LEGAL_CONSENT_STORAGE_KEY = "inkrevenue-legal-consent-v2";
+/**
+ * Öppnar integritetspolicyn och villkoren i en modal (FormLegalLinks).
+ *
+ * Här fanns tidigare en samtyckesruta som visades vid första besöket och låste
+ * formulären tills besökaren klickat "Godkänn". Den togs bort efter den
+ * juridiska granskningen 2026-10-16: att svara på en förfrågan kräver inget
+ * samtycke, bara information, och ett samtycke som villkorar tjänsten är inte
+ * frivilligt. Det enda som kräver samtycke, påminnelserna, har en egen ruta i
+ * formulären.
+ */
 
 const LegalConsentContext = createContext(null);
 
-function readStoredConsent() {
-  if (typeof window === "undefined") {
-    return null;
-  }
-
-  try {
-    const storedValue = window.localStorage.getItem(LEGAL_CONSENT_STORAGE_KEY);
-
-    if (!storedValue) {
-      return null;
-    }
-
-    const parsedValue = JSON.parse(storedValue);
-
-    if (parsedValue?.status === "accepted" || parsedValue?.status === "declined") {
-      return parsedValue;
-    }
-
-    if (!parsedValue?.acceptedAt) {
-      return null;
-    }
-
-    return {
-      status: "accepted",
-      acceptedAt: parsedValue.acceptedAt,
-      version: parsedValue.version || "2026-03-24"
-    };
-  } catch {
-    return null;
-  }
-}
-
-function persistConsent(status) {
-  if (typeof window === "undefined") {
-    return null;
-  }
-
-  const consent = {
-    status,
-    updatedAt: new Date().toISOString(),
-    version: "2026-03-24"
-  };
-
-  window.localStorage.setItem(LEGAL_CONSENT_STORAGE_KEY, JSON.stringify(consent));
-  return consent;
-}
-
 export function LegalConsentProvider({ children }) {
-  const [storedConsent, setStoredConsent] = useState(() => readStoredConsent());
-  const [isLegalModalOpen, setIsLegalModalOpen] = useState(() => !readStoredConsent());
   const [activeDocument, setActiveDocument] = useState(null);
-  const hasAcceptedConsent = storedConsent?.status === "accepted";
 
   useEffect(() => {
     if (typeof document === "undefined") {
@@ -75,59 +33,15 @@ export function LegalConsentProvider({ children }) {
     };
   }, [activeDocument]);
 
-  function acceptLegalConsent() {
-    const nextConsent = persistConsent("accepted");
-    setStoredConsent(nextConsent);
-    setIsLegalModalOpen(false);
-  }
-
-  function declineLegalConsent() {
-    const nextConsent = persistConsent("declined");
-    setStoredConsent(nextConsent);
-    setIsLegalModalOpen(false);
-  }
-
-  function openLegalModal() {
-    setIsLegalModalOpen(true);
-  }
-
-  function openLegalDocument(documentType) {
-    setActiveDocument(documentType);
-  }
-
-  function closeLegalDocument() {
-    setActiveDocument(null);
-  }
-
-  function closeLegalModal() {
-    setIsLegalModalOpen(false);
-  }
-
   const value = {
-    hasAcceptedConsent,
-    hasDeclinedConsent: storedConsent?.status === "declined",
-    openLegalModal,
-    openLegalDocument,
-    closeLegalModal,
-    closeLegalDocument,
-    acceptLegalConsent,
-    declineLegalConsent
+    openLegalDocument: setActiveDocument,
+    closeLegalDocument: () => setActiveDocument(null)
   };
 
   return (
     <LegalConsentContext.Provider value={value}>
       {children}
-      <LegalConsentPrompt
-        isOpen={isLegalModalOpen}
-        onAccept={acceptLegalConsent}
-        onDecline={declineLegalConsent}
-        onOpenDocument={openLegalDocument}
-        onClose={closeLegalModal}
-      />
-      <LegalDocumentModal
-        activeDocument={activeDocument}
-        onClose={closeLegalDocument}
-      />
+      <LegalDocumentModal activeDocument={activeDocument} onClose={value.closeLegalDocument} />
     </LegalConsentContext.Provider>
   );
 }

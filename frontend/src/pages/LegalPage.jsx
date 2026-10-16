@@ -58,6 +58,13 @@ export function LegalPage({ document: documentKey }) {
                   {paragraph}
                 </p>
               ))}
+              {group.items?.length ? (
+                <ul className="legal-page__list">
+                  {group.items.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              ) : null}
             </section>
           ))}
 

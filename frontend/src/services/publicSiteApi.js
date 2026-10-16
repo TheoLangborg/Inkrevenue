@@ -166,6 +166,13 @@ export function saveStrategyCallDraft(payload) {
   });
 }
 
+// Länken i påminnelsen om ett avbrutet formulär. Utkastets id är nyckeln.
+export function stopFormDraftReminders(draftId) {
+  return request(`/api/public/form-drafts/${encodeURIComponent(draftId)}/stop-reminders`, {
+    method: "POST"
+  });
+}
+
 // ── Luckåtervinning: kunden klickar på länken i erbjudande-SMS:et ────────────
 // Token i länken är hela autentiseringen — därför skickas den aldrig vidare
 // någon annanstans, och svaret innehåller bara mottagarens egen information.

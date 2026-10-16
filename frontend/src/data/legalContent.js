@@ -10,10 +10,22 @@
  * kalenderintegrationen i tattoo-crm måste texten uppdateras i samma veva,
  * annars stämmer inte policyn med vad appen faktiskt gör.
  *
+ * Policyn innehåller bara det GDPR art. 13 och LEK kräver. Lägg inte till
+ * förklaringar som inte behövs juridiskt.
+ *
+ * ⚠️ Lagringstiderna i policyn verkställs av gallringen i tattoo-crm
+ * (backend/src/services/personalDataRetentionService.js, och väntelistans i
+ * slotRecoveryRetentionService.js). Ändras en siffra på ena stället måste den
+ * ändras på det andra. Underbiträdena ska stämma med biträdesavtalet.
+ *
  * Den svenska versionen är den juridiskt bindande. Den engelska är en
  * översättning, och sidan säger det (legal.translationNotice). Ändras en
  * mening på svenska ska den engelska ändras i samma veva.
+ *
+ * En grupp har `paragraphs` och kan ha `items` (punktlista efter styckena).
  */
+
+import { SITE_OPERATOR, SITE_OPERATOR_ADDRESS } from "./siteOperator";
 
 export const LEGAL_DOCUMENTS = {
   privacy: {
@@ -21,16 +33,45 @@ export const LEGAL_DOCUMENTS = {
     path: "/integritetspolicy",
     eyebrow: "Integritetspolicy",
     title: "Så använder vi dina uppgifter",
-    lead:
-      "Den här policyn beskriver vilka uppgifter Ink Revenue samlar in, varför vi gör det och hur du får dem borttagna.",
-    updated: "2026-07-21",
+    lead: "Vilka personuppgifter Ink Revenue behandlar, varför, hur länge och vilka rättigheter du har.",
+    updated: "2026-10-16",
     groups: [
       {
-        heading: "Uppgifter du lämnar i våra formulär",
+        heading: "Personuppgiftsansvarig",
         paragraphs: [
-          "När du fyller i namn, mejl, telefon eller bokningsdetaljer sparar vi uppgifterna för att hantera din förfrågan och hjälpa dig vidare till rätt studio eller strategisamtal.",
-          "Om du börjar fylla i ett formulär men inte skickar in det kan vi spara utkastet och skicka påminnelser via mejl eller sms under veckan, så att du enkelt kan fortsätta där du slutade.",
-          "Vi använder också teknisk information som sida, referenslänk och kampanjdata för att förstå var förfrågningar kommer ifrån och förbättra tjänsten."
+          `Ink Revenue drivs av ${SITE_OPERATOR.name}, enskild firma, ${SITE_OPERATOR_ADDRESS}, ${SITE_OPERATOR.email}.`,
+          "För bokningsförfrågningar till en studio är studion personuppgiftsansvarig och Ink Revenue behandlar uppgifterna för studions räkning."
+        ]
+      },
+      {
+        heading: "Vad vi behandlar, varför och hur länge",
+        paragraphs: [],
+        items: [
+          "Bokningsförfrågan (namn, kontaktuppgifter, beskrivning och bilder): för att studion ska kunna svara och boka in dig. Grund: åtgärder före avtal. Utan kontaktuppgifter kan studion inte svara. Raderas 12 månader efter senaste kontakten om det inte blir någon bokning eller betalning. Bokningar och betalningar sparas så länge kundrelationen kräver det.",
+          "Utkast: det du skriver sparas medan du skriver, så att förfrågan eller en betalning inte går förlorad. Grund: berättigat intresse. Tas bort 14 dagar efter senaste aktivitet, eller efter 12 månader om du betalat utan att skicka in.",
+          "Påminnelser om formulär du inte skickat in (högst tre): grund samtycke, som du återkallar med länken i påminnelsen.",
+          "Sms om lediga tider från en studios väntelista: grund samtycke, som gäller i 12 månader. Avregistrera dig med länken i varje sms.",
+          "Strategisamtal och förfrågningar från företag: för att svara och ge ett erbjudande. Grund: åtgärder före avtal och berättigat intresse av att följa upp förfrågan. Raderas 24 månader efter senaste kontakten om det inte blir någon affär.",
+          "Studiokonton: för att leverera tjänsten och fakturera. Grund: avtal och bokföringslagen. Fakturor och underlag sparas i sju år.",
+          "Var förfrågan kom ifrån (sida, hänvisande länk, kampanj): för att visa studion källan och räkna ut provisionen. Grund: berättigat intresse. Sparas lika länge som förfrågan."
+        ]
+      },
+      {
+        heading: "Cookies och lagring i webbläsaren",
+        paragraphs: [
+          "Sajten sätter inga egna cookies. I webbläsarens lagring sparas ditt språkval och, tills du stänger fliken, ett sessions-id för besöksräkning och id:t för ditt utkast. På studiosidor med betalning sätter Stripe cookies för att förhindra bedrägerier."
+        ]
+      },
+      {
+        heading: "Mottagare",
+        paragraphs: [
+          "Studion du skickar förfrågan till, och leverantörer som behandlar uppgifter åt oss: Google Cloud och Firebase (databas och filer), Railway och Vercel (drift), Resend (e-post), 46elks (sms), Stripe (betalningar), Sentry (felrapporter) och Google Fonts (typsnitt)."
+        ]
+      },
+      {
+        heading: "Överföring utanför EU",
+        paragraphs: [
+          "Flera leverantörer är amerikanska. Överföringen skyddas av EU–US Data Privacy Framework eller EU-kommissionens standardavtalsklausuler."
         ]
       },
       {
@@ -48,8 +89,8 @@ export const LEGAL_DOCUMENTS = {
       {
         heading: "Dina rättigheter",
         paragraphs: [
-          "Du har rätt att få veta vilka uppgifter vi har om dig, få felaktiga uppgifter rättade och få uppgifter raderade.",
-          "Kontakta oss på info@inkrevenue.online så hanterar vi din begäran. Vi svarar normalt inom 30 dagar."
+          `Du har rätt till tillgång, rättelse, radering, begränsning och dataportabilitet, rätt att invända mot behandling som bygger på berättigat intresse och rätt att när som helst återkalla ett samtycke. Kontakta oss på ${SITE_OPERATOR.email}, så svarar vi inom 72 timmar.`,
+          "Du kan klaga hos Integritetsskyddsmyndigheten (IMY), imy.se."
         ]
       }
     ]
@@ -60,26 +101,19 @@ export const LEGAL_DOCUMENTS = {
     eyebrow: "Användarvillkor",
     title: "Villkor för att använda Ink Revenue",
     lead: "Villkoren gäller när du använder våra formulär, vår studio-katalog eller vårt CRM.",
-    updated: "2026-07-21",
+    updated: "2026-10-16",
     groups: [
       {
         heading: "Tjänsten",
         paragraphs: [
-          "Tjänsten används för att skicka bokningsförfrågningar, hitta studios och boka strategisamtal. Uppgifter du lämnar ska vara korrekta och relevanta för din förfrågan.",
-          "Ink Revenue och anslutna studios får använda uppgifterna för att kontakta dig om din bokning, följa upp ett påbörjat formulär och ge återkoppling på din förfrågan."
-        ]
-      },
-      {
-        heading: "Ditt samtycke",
-        paragraphs: [
-          "Genom att använda formulären godkänner du att vi sparar det som behövs för att kunna leverera tjänsten och följa upp din kontakt.",
-          "Om du inte längre vill bli kontaktad kan du meddela oss eller den studio du varit i kontakt med."
+          "Tjänsten används för att skicka bokningsförfrågningar, hitta studios och boka strategisamtal. Uppgifter du lämnar ska vara korrekta.",
+          "Ink Revenue och anslutna studios får kontakta dig om din förfrågan och din bokning."
         ]
       },
       {
         heading: "För anslutna studios",
         paragraphs: [
-          "Studios ansvarar för att uppgifter som läggs in i CRM:et hanteras enligt gällande dataskyddsregler, och för att inhämta samtycke från sina egna kunder där det krävs.",
+          "Studios ansvarar för att uppgifter som läggs in i CRM:et hanteras enligt dataskyddsreglerna och för att inhämta samtycke från sina kunder där det krävs.",
           "Kopplar studion en extern kalender ansvarar den för att kopplingen får göras för det konto som används."
         ]
       }
@@ -93,15 +127,44 @@ const LEGAL_DOCUMENTS_EN = {
     ...LEGAL_DOCUMENTS.privacy,
     eyebrow: "Privacy policy",
     title: "How we use your information",
-    lead:
-      "This policy describes what information Ink Revenue collects, why we collect it and how you can have it deleted.",
+    lead: "What personal data Ink Revenue processes, why, for how long and what rights you have.",
     groups: [
       {
-        heading: "Information you provide in our forms",
+        heading: "Data controller",
         paragraphs: [
-          "When you enter your name, email, phone number or booking details, we store that information to handle your enquiry and to help you on to the right studio or strategy call.",
-          "If you start filling in a form but don't submit it, we may save the draft and send you reminders by email or text message during the week, so that you can easily pick up where you left off.",
-          "We also use technical information such as the page, the referring link and campaign data to understand where enquiries come from and to improve the service."
+          `Ink Revenue is run by ${SITE_OPERATOR.name}, sole trader, ${SITE_OPERATOR_ADDRESS}, Sweden, ${SITE_OPERATOR.email}.`,
+          "For booking enquiries to a studio, the studio is the data controller and Ink Revenue processes the data on the studio's behalf."
+        ]
+      },
+      {
+        heading: "What we process, why and for how long",
+        paragraphs: [],
+        items: [
+          "Booking enquiry (name, contact details, description and images): so that the studio can reply and book you in. Basis: steps prior to a contract. Without contact details the studio cannot reply. Deleted 12 months after the last contact if no booking or payment is made. Bookings and payments are kept for as long as the customer relationship requires.",
+          "Drafts: what you type is saved as you type, so that the enquiry or a payment isn't lost. Basis: legitimate interest. Removed 14 days after the last activity, or after 12 months if you paid without submitting.",
+          "Reminders about forms you haven't submitted (at most three): basis consent, which you withdraw with the link in the reminder.",
+          "Text messages about free time slots from a studio's waiting list: basis consent, valid for 12 months. Unsubscribe with the link in every message.",
+          "Strategy calls and enquiries from businesses: to reply and make an offer. Basis: steps prior to a contract and legitimate interest in following up the enquiry. Deleted 24 months after the last contact if no deal is made.",
+          "Studio accounts: to deliver the service and invoice. Basis: contract and the Swedish Bookkeeping Act. Invoices and records are kept for seven years.",
+          "Where the enquiry came from (page, referring link, campaign): to show the studio the source and calculate the commission. Basis: legitimate interest. Kept as long as the enquiry."
+        ]
+      },
+      {
+        heading: "Cookies and browser storage",
+        paragraphs: [
+          "The site sets no cookies of its own. Your browser's storage holds your language choice and, until you close the tab, a session ID for counting visits and the ID of your draft. On studio pages that take payments, Stripe sets cookies to prevent fraud."
+        ]
+      },
+      {
+        heading: "Recipients",
+        paragraphs: [
+          "The studio you send the enquiry to, and suppliers that process data on our behalf: Google Cloud and Firebase (database and files), Railway and Vercel (hosting), Resend (email), 46elks (text messages), Stripe (payments), Sentry (error reports) and Google Fonts (fonts)."
+        ]
+      },
+      {
+        heading: "Transfers outside the EU",
+        paragraphs: [
+          "Several suppliers are US companies. Transfers are protected by the EU–US Data Privacy Framework or the European Commission's standard contractual clauses."
         ]
       },
       {
@@ -114,8 +177,8 @@ const LEGAL_DOCUMENTS_EN = {
       {
         heading: "Your rights",
         paragraphs: [
-          "You have the right to know what information we hold about you, to have incorrect information corrected and to have your information deleted.",
-          "Contact us at info@inkrevenue.online and we will handle your request. We normally reply within 30 days."
+          `You have the right of access, rectification, erasure, restriction and data portability, the right to object to processing based on legitimate interest and the right to withdraw a consent at any time. Contact us at ${SITE_OPERATOR.email} and we will reply within 72 hours.`,
+          "You can lodge a complaint with the Swedish Authority for Privacy Protection (IMY), imy.se."
         ]
       }
     ]
@@ -129,21 +192,14 @@ const LEGAL_DOCUMENTS_EN = {
       {
         heading: "The service",
         paragraphs: [
-          "The service is used to send booking enquiries, find studios and book strategy calls. The information you provide must be accurate and relevant to your enquiry.",
-          "Ink Revenue and affiliated studios may use the information to contact you about your booking, follow up on a form you have started and respond to your enquiry."
-        ]
-      },
-      {
-        heading: "Your consent",
-        paragraphs: [
-          "By using the forms, you agree that we store what is needed to provide the service and to follow up on your contact with us.",
-          "If you no longer want to be contacted, you can tell us or the studio you have been in contact with."
+          "The service is used to send booking enquiries, find studios and book strategy calls. The information you provide must be accurate.",
+          "Ink Revenue and affiliated studios may contact you about your enquiry and your booking."
         ]
       },
       {
         heading: "For affiliated studios",
         paragraphs: [
-          "Studios are responsible for ensuring that information entered into the CRM is handled in accordance with applicable data protection rules, and for obtaining consent from their own customers where required.",
+          "Studios are responsible for handling information entered into the CRM in accordance with data protection rules and for obtaining consent from their customers where required.",
           "A studio that connects an external calendar is responsible for making sure it is allowed to connect the account it uses."
         ]
       }

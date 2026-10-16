@@ -50,6 +50,13 @@ export function LegalDocumentModal({ activeDocument, onClose }) {
               {group.paragraphs.map((paragraph) => (
                 <p key={paragraph}>{paragraph}</p>
               ))}
+              {group.items?.length ? (
+                <ul className="legal-page__list">
+                  {group.items.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              ) : null}
             </section>
           ))}
 

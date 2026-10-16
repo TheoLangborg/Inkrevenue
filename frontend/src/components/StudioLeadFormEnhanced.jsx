@@ -4,7 +4,6 @@ import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-
 import { FormLegalLinks } from "./FormLegalLinks";
 import { CustomSelect } from "./CustomSelect";
 import { StudioImage } from "./StudioImage";
-import { useLegalConsent } from "../contexts/LegalConsentContext";
 import {
   createPublicStudioLead,
   createStudioPaymentIntent,
@@ -605,7 +604,10 @@ export function StudioLeadFormEnhanced({
   // mot sitt eget konto.
   const hasStudioSlug = Boolean(studio?.slug);
   const canSubmit = hasStudioSlug && (!previewMode || allowPreviewSubmit);
-  const { hasAcceptedConsent, openLegalModal } = useLegalConsent();
+  // Kundens kryss i "påminn mig". Utkastet sparas ändå, eftersom betalningen
+  // behöver det (se draftId vid createStudioPaymentIntent), men påminnelser
+  // per mejl eller SMS kräver samtycke i förväg (MFL 19 §).
+  const [reminderConsent, setReminderConsent] = useState(false);
   const fileInputRef = useRef(null);
   const imageIdRef = useRef(0);
   const previewRequestIdRef = useRef(0);
@@ -713,11 +715,14 @@ export function StudioLeadFormEnhanced({
       preferredEndTime: formData.preferredSlots?.[0]?.endTime || "",
       requestedDurationMinutes: formData.requestedDurationMinutes,
       wantsConsultationFirst: formData.wantsConsultationFirst,
-      privacyConsent: hasAcceptedConsent,
+      // Betyder "har fått informationen" (FormLegalLinks vid knappen), inte ett
+      // samtycke. Behandlingen bygger på att kunden själv begär en bokning.
+      privacyConsent: true,
       marketingConsent: false,
+      reminderConsent,
       website: formData.website
     }),
-    [formData, hasAcceptedConsent]
+    [formData, reminderConsent]
   );
   const { draftId, clearDraft } = useAbandonedFormDraft({
     type: "studio_lead",
@@ -1235,6 +1240,7 @@ export function StudioLeadFormEnhanced({
     setPaymentIntentId(null);
     setChargedAmountSek(null);
     setPaidPaymentIntentId(null);
+    setReminderConsent(false);
     clearDraft();
     if (fileInputRef.current) fileInputRef.current.value = "";
     scrollToTop();
@@ -1246,14 +1252,6 @@ export function StudioLeadFormEnhanced({
     // needsPayment-grenen nedan och skapa en ny PaymentIntent.
     if (paidPaymentIntentId) {
       await registerPaidLead(paidPaymentIntentId);
-      return;
-    }
-    if (!hasAcceptedConsent) {
-      setStatus({
-        state: "error",
-        message: t("leadForm.consentRequired")
-      });
-      openLegalModal();
       return;
     }
     if (!canSubmit) {
@@ -2038,6 +2036,16 @@ export function StudioLeadFormEnhanced({
               ) : null}
             </label>
           </div>
+
+          <label className="consent-row" htmlFor="lead-reminderConsent">
+            <input
+              id="lead-reminderConsent"
+              type="checkbox"
+              checked={reminderConsent}
+              onChange={(event) => setReminderConsent(event.target.checked)}
+            />
+            <span>{t("leadForm.reminderConsent")}</span>
+          </label>
 
           {/* Kunden valde konsultation först i rutan efter steg 1. Står här igen
               precis före inskicket, så att det är tydligt att bokningen blir två

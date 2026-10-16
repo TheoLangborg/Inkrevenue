@@ -51,7 +51,9 @@ export const en = {
     contactHeading: "Contact us:",
     phone: "Phone:",
     email: "Email:",
-    copyright: "Copyright 2026. Ink Revenue. All rights reserved.",
+    address: "Address:",
+    copyright: "© 2026 Ink Revenue. Operated by {{name}}, sole trader.",
+    operatorNote: "This page is run by Ink Revenue ({{name}}, sole trader), {{address}}, {{email}}.",
     credit: "Web design by"
   },
 
@@ -617,14 +619,8 @@ export const en = {
   },
 
   consent: {
-    eyebrow: "Consent",
-    title: "Do you accept our terms?",
-    lead: "To use the forms you need to accept our privacy policy and our terms of use.",
-    privacy: "Privacy policy",
-    terms: "Terms of use",
-    decline: "Don't accept",
-    accept: "Accept",
-    notePrefix: "By continuing you accept our",
+    notePrefix:
+      "What you enter is saved as you type and used to respond to your enquiry. Read more in our",
     notePrivacy: "privacy policy",
     noteMiddle: "and our",
     noteTerms: "terms of use"
@@ -648,7 +644,7 @@ export const en = {
     errorName: "Please enter your name.",
     errorStudio: "Please enter the studio name.",
     errorEmail: "Please enter a valid email address.",
-    errorConsent: "Accept the privacy policy and terms to continue.",
+    reminderConsent: "Remind me by email or text message if I don't send this (no more than three times).",
     errorFields: "Check the fields marked in red and try again.",
     sending: "Sending your enquiry...",
     success: "Thanks! We've received your enquiry and normally get back within 24 hours.",
@@ -842,7 +838,8 @@ export const en = {
     previewReadOnly:
       "Preview: the form can't be submitted from here. Open your public page to send a real enquiry.",
 
-    consentRequired: "Accept the privacy policy and terms to continue.",
+    reminderConsent:
+      "Remind me by email or text message if I don't send the enquiry (no more than three times).",
     submitting: "Sending...",
     submit: "Send enquiry",
     sending: "Sending your enquiry...",
@@ -906,6 +903,18 @@ export const en = {
       "The studio can't accept card payments right now. Nothing has been charged. Please contact the studio.",
     notFoundTitle: "The link doesn't exist",
     notFoundText: "Check that you copied the whole link, or contact the studio."
+  },
+
+  reminderStop: {
+    metaTitle: "Stop reminders",
+    metaDescription: "Stop the reminders about the form you started.",
+    title: "No more reminders?",
+    text: "You asked for reminders about the form you started filling in. Turn them off here and we won't send any more.",
+    stop: "Turn off reminders",
+    stopping: "Turning off...",
+    doneTitle: "Reminders turned off",
+    doneText: "You won't get any more reminders about this form.",
+    failed: "We couldn't turn off the reminders right now. Please try again shortly."
   },
 
   slotOffer: {

@@ -1,5 +1,6 @@
 import { LegalConsentProvider } from "./contexts/LegalConsentContext";
 import { SiteFooter } from "./components/SiteFooter";
+import { SiteOperatorNote } from "./components/SiteOperatorNote";
 import { SiteHeader } from "./components/SiteHeader";
 import { createDemoStudioPreview } from "./data/demoStudio";
 import { FaqPage } from "./pages/FaqPage";
@@ -11,6 +12,7 @@ import { StudioProfilePage } from "./pages/StudioProfilePage";
 import { StudiosDirectoryPage } from "./pages/StudiosDirectoryPage";
 import { SlotOfferPage } from "./pages/SlotOfferPage";
 import { PaymentLinkPage } from "./pages/PaymentLinkPage";
+import { ReminderStopPage } from "./pages/ReminderStopPage";
 import { TrialPage } from "./pages/TrialPage";
 import { studioRegistry } from "./pages/studios";
 import { ThemedStudioPage } from "./pages/studios/ThemedStudioPage";
@@ -103,6 +105,18 @@ function getPageFromPath(pathname) {
     };
   }
 
+  // Länken i en påminnelse om ett avbrutet formulär. Samma ram som betallänken.
+  const reminderStopMatch = pathname.match(/^\/paminnelser\/stopp\/([^/]+)$/);
+
+  if (reminderStopMatch) {
+    return {
+      currentPath: pathname,
+      element: <ReminderStopPage draftId={decodeURIComponent(reminderStopMatch[1])} />,
+      hideHeader: true,
+      hideFooter: true
+    };
+  }
+
   const studioPreviewMatch = pathname.match(/^\/studio-preview(?:\/([^/]+))?$/);
 
   if (studioPreviewMatch) {
@@ -158,7 +172,7 @@ function AppContent({ page }) {
     <div>
       {!page.hideHeader && <SiteHeader currentPath={page.currentPath} />}
       <main>{page.element}</main>
-      {!page.hideFooter && <SiteFooter />}
+      {page.hideFooter ? <SiteOperatorNote /> : <SiteFooter />}
     </div>
   );
 }

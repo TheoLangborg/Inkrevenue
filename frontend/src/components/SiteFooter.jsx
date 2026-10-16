@@ -1,6 +1,7 @@
 import { SiteLink } from "../utils/siteRouter";
 import { useLanguage } from "../i18n/LanguageContext";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+import { SITE_OPERATOR, SITE_OPERATOR_ADDRESS } from "../data/siteOperator";
 
 const FOOTER_CITIES = ["Stockholm", "Göteborg", "Malmö", "Uppsala"];
 const FOOTER_STYLES = ["Fineline", "Blackwork", "Traditionell", "Realism", "Dotwork"];
@@ -62,6 +63,9 @@ export function SiteFooter() {
           <p>
             {t("footer.email")} <a href="mailto:info@inkrevenue.online">info@inkrevenue.online</a>
           </p>
+          <p>
+            {t("footer.address")} {SITE_OPERATOR_ADDRESS}
+          </p>
         </div>
 
         <LanguageSwitcher className="lang-switch--footer" />
@@ -97,7 +101,7 @@ export function SiteFooter() {
           </a>
         </div>
 
-        <p className="footer__copy">{t("footer.copyright")}</p>
+        <p className="footer__copy">{t("footer.copyright", { name: SITE_OPERATOR.name })}</p>
         <p className="footer__credit">
           {t("footer.credit")}{" "}
           <a href="https://webwork.se/" target="_blank" rel="noopener">

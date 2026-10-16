@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import { FormLegalLinks } from "./FormLegalLinks";
 import { createStrategyCall } from "../services/publicSiteApi";
-import { useLegalConsent } from "../contexts/LegalConsentContext";
 import { useAbandonedFormDraft } from "../hooks/useAbandonedFormDraft";
 import { getTrackingPayload } from "../utils/tracking";
 import { useLanguage } from "../i18n/LanguageContext";
@@ -36,7 +35,8 @@ export function StrategyCallForm() {
   const [formData, setFormData] = useState(initialForm);
   const [status, setStatus] = useState({ state: "idle", message: "" });
   const [touched, setTouched] = useState({});
-  const { hasAcceptedConsent, openLegalModal } = useLegalConsent();
+  // Påminnelser per mejl eller SMS kräver samtycke i förväg (MFL 19 §).
+  const [reminderConsent, setReminderConsent] = useState(false);
   const draftPayload = useMemo(
     () => ({
       name: formData.name,
@@ -44,11 +44,13 @@ export function StrategyCallForm() {
       email: formData.email,
       phone: formData.phone,
       message: formData.message,
-      privacyConsent: hasAcceptedConsent,
+      // Betyder "har fått informationen" (FormLegalLinks vid knappen).
+      privacyConsent: true,
       marketingConsent: false,
+      reminderConsent,
       website: formData.website
     }),
-    [formData, hasAcceptedConsent]
+    [formData, reminderConsent]
   );
   const { draftId, clearDraft } = useAbandonedFormDraft({
     type: "strategy_call",
@@ -74,15 +76,6 @@ export function StrategyCallForm() {
 
   async function handleSubmit(event) {
     event.preventDefault();
-
-    if (!hasAcceptedConsent) {
-      setStatus({
-        state: "error",
-        message: t("strategyForm.errorConsent")
-      });
-      openLegalModal();
-      return;
-    }
 
     const allTouched = { name: true, studio: true, email: true };
     setTouched(allTouched);
@@ -121,6 +114,7 @@ export function StrategyCallForm() {
       });
       setFormData(initialForm);
       setTouched({});
+      setReminderConsent(false);
       clearDraft();
     } catch (error) {
       setStatus({
@@ -210,6 +204,16 @@ export function StrategyCallForm() {
           value={formData.message}
           onChange={handleChange}
         />
+      </label>
+
+      <label className="consent-row" htmlFor="strategy-reminderConsent">
+        <input
+          id="strategy-reminderConsent"
+          type="checkbox"
+          checked={reminderConsent}
+          onChange={(event) => setReminderConsent(event.target.checked)}
+        />
+        <span>{t("strategyForm.reminderConsent")}</span>
       </label>
 
       <div className="hidden-trap" aria-hidden="true">
