@@ -500,6 +500,8 @@ export function ThemedStudioPage({ slug, theme: themePartial = {} }) {
             <div style={{
               "--accent": t.accent,
               "--lav-100": `color-mix(in srgb, ${t.accent} 12%, #fff)`,
+              // Bocken på kvittensen efter skickad förfrågan.
+              "--lead-sent-color": t.accent,
             }}>
               <StudioLeadFormEnhanced
                 studio={studio}

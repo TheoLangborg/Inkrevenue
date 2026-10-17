@@ -828,8 +828,15 @@ export const en = {
     paidMessageBefore: "Your enquiry has been sent to ",
     paidMessageAfter:
       " and the deposit is paid. You'll receive a confirmation by email shortly.",
-    paidNewRequest: "Send another enquiry",
     paidFallbackStudio: "the studio",
+
+    // The receipt after a sent enquiry (LeadSentScreen), paid or not.
+    sentTitle: "Enquiry sent",
+    sentSummaryTitle: "What you sent",
+    sentContactTitle: "The studio will reach you at",
+    sentImageOne: "1 image attached",
+    sentImages: "{{count}} images attached",
+    newRequest: "Send another enquiry",
 
     successPreviewNote: "Preview of the thank-you message shown after an enquiry is sent",
     previewNotice:

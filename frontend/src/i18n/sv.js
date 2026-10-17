@@ -859,8 +859,15 @@ export const sv = {
     paidMessageBefore: "Din förfrågan är skickad till ",
     paidMessageAfter:
       " och depositionsavgiften är betald. Du får en bekräftelse via e-post inom kort.",
-    paidNewRequest: "Skicka ny förfrågan",
     paidFallbackStudio: "studion",
+
+    // Kvittensen efter skickad förfrågan (LeadSentScreen), betald eller inte.
+    sentTitle: "Förfrågan skickad",
+    sentSummaryTitle: "Det här skickade du",
+    sentContactTitle: "Studion når dig på",
+    sentImageOne: "1 bild bifogad",
+    sentImages: "{{count}} bilder bifogade",
+    newRequest: "Skicka ny förfrågan",
 
     successPreviewNote: "Förhandsvisning av tackmeddelandet som visas efter skickad förfrågan",
     previewNotice:

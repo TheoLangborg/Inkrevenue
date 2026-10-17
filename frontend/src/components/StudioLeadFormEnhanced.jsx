@@ -26,6 +26,7 @@ import {
 import { STUDIO_TIME_ZONE } from "../utils/campaignBanner";
 import { useLanguage, useT } from "../i18n/LanguageContext";
 import { CampaignBanner } from "./CampaignBanner";
+import { LeadSentScreen } from "./LeadSentScreen";
 import { ConsultationFirstModal } from "./ConsultationFirstModal";
 import { sv } from "../i18n/sv";
 import { translateOptionLabel } from "../i18n/optionLabels";
@@ -588,7 +589,9 @@ export function StudioLeadFormEnhanced({
   // formuläret räknar servern om beloppet, och det är servern som bestämmer vad som
   // dras. Kortsteget och kvittensen ska säga samma sak som kortet debiteras.
   const [chargedAmountSek, setChargedAmountSek] = useState(null);
-  const [paymentSuccess, setPaymentSuccess] = useState(null); // { amountSek, studioName } after confirmed payment
+  // Kvittensen som ersätter formuläret efter skickad förfrågan (LeadSentScreen).
+  // paid = { amountSek, studioName } när depositionen betalades i samma flöde.
+  const [sentRequest, setSentRequest] = useState(null);
   // Sätts när Stripe-betalningen gått igenom men lead-POST:en misslyckades.
   // Kunden är då redan debiterad, så nästa försök MÅSTE gå med samma
   // paymentIntentId. Nollades det här (som tidigare) hamnade kunden tillbaka på
@@ -1133,6 +1136,50 @@ export function StudioLeadFormEnhanced({
     formTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
+  // Datumet MÅSTE läsas i studions zon. Klockslaget (`slot.label`) kommer
+  // färdigskrivet från servern och är redan svensk tid — formaterades datumet i
+  // besökarens zon kunde raden bli "söndag 14 september kl. 09:00" om en tid som
+  // hos studion är måndag den 15:e.
+  function formatSelectedSlot(slot) {
+    const dateStr = new Date(slot.startTime).toLocaleDateString(locale, {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      timeZone: STUDIO_TIME_ZONE
+    });
+    return t("leadForm.selectedTimeValue", { date: dateStr, time: slot.label });
+  }
+
+  // Det kvittensen visar. Byggs före nollställningen i submitLead, med samma
+  // etiketter som fälten visade och bara de detaljer som faktiskt skickades
+  // (getLeadDetailFields tömmer stil, placering och storlek för en konsultation).
+  function buildSentRequest(data, imageCount) {
+    const labelOf = (options, value) =>
+      options?.find((option) => option.value === value)?.label || value;
+    const details = getLeadDetailFields(data);
+    const chips = [
+      data.bookingType === "consultation" ? t("leadForm.typeConsultation") : t("leadForm.typeTattoo"),
+      labelOf(styleOptions, details.tattooStyle),
+      labelOf(placementOptions, details.placement),
+      labelOf(buildSizeOptions(studio, t), details.size)
+    ]
+      .map((value) => String(value || "").trim())
+      .filter(Boolean);
+
+    const rows = [];
+    const slot = data.preferredSlots?.[0];
+    if (slot?.startTime) rows.push({ label: t("leadForm.selectedTime"), value: formatSelectedSlot(slot) });
+    const artist = artistChoices.find((choice) => choice.id === data.preferredArtistId);
+    if (artist) rows.push({ label: t("leadForm.artistLabel"), value: artist.name });
+
+    const notes = [];
+    if (imageCount === 1) notes.push(t("leadForm.sentImageOne"));
+    else if (imageCount > 1) notes.push(t("leadForm.sentImages", { count: imageCount }));
+
+    const contact = [data.phone, data.email].map((value) => String(value || "").trim()).filter(Boolean);
+    return { chips, rows, notes, contact };
+  }
+
   function handleNext() {
     const stepId = steps[currentStep].id;
     if (stepId === "tattoo") {
@@ -1217,18 +1264,23 @@ export function StudioLeadFormEnhanced({
       ...getTrackingPayload(),
       ...extraPayload
     });
+    const sent = buildSentRequest(
+      formData,
+      (extraPayload.inspirationImages ?? inspirationImages).length
+    );
     if (extraPayload.paymentIntentId) {
-      setPaymentSuccess({
-        amountSek: getChargedAmount(),
-        studioName:
-          studio?.publicProfile?.name || studio?.name || t("leadForm.paidFallbackStudio")
+      setSentRequest({
+        ...sent,
+        paid: {
+          amountSek: getChargedAmount(),
+          studioName:
+            studio?.publicProfile?.name || studio?.name || t("leadForm.paidFallbackStudio")
+        }
       });
     } else {
-      setStatus({
-        state: "success",
-        message: response?.successMessage || t("leadForm.success")
-      });
+      setSentRequest({ ...sent, message: response?.successMessage || t("leadForm.success") });
     }
+    setStatus({ state: "idle", message: "" });
     setFormData(buildInitialForm());
     setVisibleWeekIndex(0);
     setInspirationImages([]);
@@ -1369,32 +1421,30 @@ export function StudioLeadFormEnhanced({
   const stepId = steps[currentStep]?.id;
   const progressPercent = Math.round(((currentStep + 1) / steps.length) * 100);
 
-  if (paymentSuccess) {
+  if (sentRequest) {
+    const { paid } = sentRequest;
     return (
-      <div className="payment-confirmed" ref={formTopRef}>
-        <div className="payment-confirmed__icon">
-          <svg viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <circle cx="26" cy="26" r="25" strokeWidth="2" />
-            <path d="M14 27l8 8 16-16" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </div>
-        <h2 className="payment-confirmed__title">{t("leadForm.paidTitle")}</h2>
-        <p className="payment-confirmed__amount">
-          {t("leadForm.paidAmount", { amount: paymentSuccess.amountSek })}
-        </p>
-        <p className="payment-confirmed__message">
-          {t("leadForm.paidMessageBefore")}
-          <strong>{paymentSuccess.studioName}</strong>
-          {t("leadForm.paidMessageAfter")}
-        </p>
-        <button
-          type="button"
-          className="payment-confirmed__btn"
-          onClick={() => setPaymentSuccess(null)}
-        >
-          {t("leadForm.paidNewRequest")}
-        </button>
-      </div>
+      <LeadSentScreen
+        containerRef={formTopRef}
+        title={paid ? t("leadForm.paidTitle") : t("leadForm.sentTitle")}
+        amount={paid ? t("leadForm.paidAmount", { amount: paid.amountSek }) : ""}
+        message={
+          paid ? (
+            <>
+              {t("leadForm.paidMessageBefore")}
+              <strong>{paid.studioName}</strong>
+              {t("leadForm.paidMessageAfter")}
+            </>
+          ) : (
+            sentRequest.message
+          )
+        }
+        chips={sentRequest.chips}
+        rows={sentRequest.rows}
+        notes={sentRequest.notes}
+        contact={sentRequest.contact}
+        onNewRequest={() => setSentRequest(null)}
+      />
     );
   }
 
@@ -1424,23 +1474,11 @@ export function StudioLeadFormEnhanced({
         </div>
       ) : null}
 
-      {/* Kvittensen MÅSTE ligga på toppnivå. submitLead kör setCurrentStep(0)
-          direkt efter setStatus, så kontaktsteget — där övriga statusmeddelanden
-          bor — avmonteras i samma render. Låg den där blev formuläret bara tomt
-          och kunden fick aldrig veta att förfrågan gick fram. */}
-      {status.state === "success" && status.message ? (
-        <p className="form-status form-status--success" role="status" aria-live="polite">
-          {status.message}
-        </p>
-      ) : null}
-
       {/* Kampanjbannern ligger ovanför stegindikatorn, alltså synlig från första
           steget — det är kunder som INTE kände till kampanjen som ska se den.
           Filtreras på den bokningstyp kunden valt, så löftet stämmer med vad
           backenden faktiskt stämplar på förfrågan. */}
-      {status.state !== "success" ? (
-        <CampaignBanner campaigns={studio?.campaigns} bookingType={formData.bookingType} />
-      ) : null}
+      <CampaignBanner campaigns={studio?.campaigns} bookingType={formData.bookingType} />
 
       <div
         className="form-progress"
@@ -1933,24 +1971,7 @@ export function StudioLeadFormEnhanced({
                 <div className="studio-booking-picker__summary">
                   <div>
                     <strong>{t("leadForm.selectedTime")}</strong>
-                    <span>
-                      {(() => {
-                        const s = formData.preferredSlots[0];
-                        const d = new Date(s.startTime);
-                        // Datumet MÅSTE läsas i studions zon. Klockslaget bredvid
-                        // (`s.label`) kommer färdigskrivet från servern och är redan
-                        // svensk tid — formaterades datumet i besökarens zon kunde
-                        // raden bli "söndag 14 september kl. 09:00" om en tid som
-                        // hos studion är måndag den 15:e.
-                        const dateStr = d.toLocaleDateString(locale, {
-                          weekday: "long",
-                          day: "numeric",
-                          month: "long",
-                          timeZone: STUDIO_TIME_ZONE
-                        });
-                        return t("leadForm.selectedTimeValue", { date: dateStr, time: s.label });
-                      })()}
-                    </span>
+                    <span>{formatSelectedSlot(formData.preferredSlots[0])}</span>
                   </div>
                 </div>
               ) : null}
@@ -2194,9 +2215,10 @@ export function StudioLeadFormEnhanced({
             </p>
           ) : null}
 
-          {status.message && status.state !== "success" ? (
+          {status.message ? (
+            // "Skickar din förfrågan..." är inget fel och ska inte vara rött.
             <p
-              className="form-status form-status--error"
+              className={`form-status ${status.state === "error" ? "form-status--error" : "form-status--muted"}`}
               role="status"
               aria-live="polite"
             >
