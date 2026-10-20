@@ -5474,6 +5474,38 @@ html.has-reveal .steps[data-reveal]:not([data-revealed])::before {
   text-underline-offset: 2px;
 }
 
+.site-operator-note__links {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.site-operator-note__links a {
+  text-decoration: underline;
+}
+
+.site-operator-note__toggle {
+  padding: 4px 2px;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.site-operator-note__toggle:hover,
+.site-operator-note a:hover {
+  color: var(--text);
+}
+
+.site-operator-note__info {
+  max-width: 34rem;
+  margin: 8px auto 0;
+}
+
 .slot-offer__loading {
   color: var(--muted);
   font-size: 1rem;
@@ -5631,6 +5663,405 @@ html.has-reveal .steps[data-reveal]:not([data-revealed])::before {
   }
   .slot-offer__button:hover:not(:disabled) {
     transform: none;
+  }
+}
+
+/* ── Erbjudande om ledig tid (/tid/:token), i CRM:ets utseende ──
+   Samma färger, typsnitt och delar som CRM:et (tattoo-crm/frontend/src/index.css):
+   .auth-card, .auth-action-icon-wrap, .status-badge och .button-primary. Det är
+   studions bokningssystem som skickar erbjudandet, så sidan ska se ut som det.
+   Betallänken använder fortfarande .slot-offer-klasserna ovan. */
+.crm-offer {
+  --co-bg: #f3f5f8;
+  --co-surface: #ffffff;
+  --co-surface-soft: #f7f9fc;
+  --co-surface-muted: #eef2f6;
+  --co-border: #d8e0ea;
+  --co-text: #172033;
+  --co-muted: #60708c;
+  --co-primary: #1f4acc;
+  --co-primary-hover: #1a3fb5;
+  --co-primary-soft: #dbe5ff;
+  --co-success: #0f684f;
+  --co-success-soft: #dbf4ea;
+  --co-danger: #b93b3b;
+  --co-danger-soft: #fde8e8;
+
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 32px 16px;
+  background: var(--co-bg);
+  color: var(--co-text);
+  font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+/* Säljarraden under sidan får samma grå yta, annars ligger en vit list under. */
+main:has(> .crm-offer) + .site-operator-note {
+  background: #f3f5f8;
+}
+
+.crm-offer__brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.crm-offer__brand-text {
+  display: grid;
+  line-height: 1.2;
+}
+
+.crm-offer__brand-text strong {
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.crm-offer__brand-text span {
+  margin-top: 3px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--co-muted);
+}
+
+.crm-offer__card {
+  width: min(100%, 440px);
+  background: var(--co-surface);
+  border: 1px solid var(--co-border);
+  border-radius: 24px;
+  padding: 28px;
+  box-shadow: 0 20px 40px rgba(20, 33, 58, 0.08);
+}
+
+.crm-offer__card > :last-child {
+  margin-bottom: 0;
+}
+
+@media (max-width: 420px) {
+  .crm-offer__card {
+    padding: 22px 18px;
+    border-radius: 20px;
+  }
+}
+
+.crm-offer__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.crm-offer__icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.crm-offer__icon--primary {
+  background: var(--co-primary-soft);
+  color: var(--co-primary);
+}
+
+.crm-offer__icon--success {
+  background: var(--co-success-soft);
+  color: var(--co-success);
+}
+
+.crm-offer__icon--neutral {
+  background: var(--co-surface-muted);
+  color: var(--co-muted);
+}
+
+.crm-offer__icon--danger {
+  background: var(--co-danger-soft);
+  color: var(--co-danger);
+}
+
+.crm-offer__header-text {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Marknadssajtens globala h1 (stor, centrerad, skuggad) får inte läcka in. */
+.crm-offer__title {
+  margin: 0;
+  max-width: none;
+  font-family: inherit;
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  color: var(--co-text);
+  text-shadow: none;
+  text-wrap: balance;
+}
+
+.crm-offer__lead {
+  margin: 6px 0 0;
+  color: var(--co-muted);
+  font-size: 0.92rem;
+}
+
+.crm-offer__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.crm-offer__badge::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.75;
+}
+
+.crm-offer__badge--info {
+  background: #e8efff;
+  color: #1945b5;
+}
+
+.crm-offer__badge--success {
+  background: var(--co-success-soft);
+  color: var(--co-success);
+}
+
+.crm-offer__badge--neutral {
+  background: var(--co-surface-muted);
+  color: var(--co-muted);
+}
+
+.crm-offer__badge--danger {
+  background: var(--co-danger-soft);
+  color: var(--co-danger);
+}
+
+/* Tiden som inte gick att få, överstruken under beskedet. */
+.crm-offer__gone-slot {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--co-border);
+  border-radius: 14px;
+  background: var(--co-surface-soft);
+  color: var(--co-muted);
+  font-size: 0.9rem;
+}
+
+.crm-offer__gone-slot s {
+  color: var(--co-text);
+  font-weight: 600;
+  text-decoration-thickness: 1.5px;
+  text-decoration-color: var(--co-muted);
+}
+
+/* Etikett till vänster, värde till höger, som detaljerna i CRM:ets bokningsvy. */
+.crm-offer__details {
+  margin: 0 0 16px;
+  border: 1px solid var(--co-border);
+  border-radius: 14px;
+}
+
+.crm-offer__detail {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  padding: 12px 14px;
+}
+
+.crm-offer__detail + .crm-offer__detail {
+  border-top: 1px solid var(--co-border);
+}
+
+.crm-offer__detail dt {
+  color: var(--co-muted);
+  font-size: 0.88rem;
+}
+
+.crm-offer__detail dd {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.crm-offer__terms {
+  margin: 0 0 20px;
+  padding: 14px;
+  border: 1px solid var(--co-border);
+  border-radius: 14px;
+  background: var(--co-surface-soft);
+}
+
+.crm-offer__section-label {
+  margin: 0 0 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--co-muted);
+}
+
+.crm-offer__term-list {
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.crm-offer__term dt {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.crm-offer__term dd {
+  margin: 2px 0 0;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--co-muted);
+}
+
+.crm-offer__terms-note {
+  margin: 12px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--co-border);
+  font-size: 0.8rem;
+  color: var(--co-muted);
+}
+
+.crm-offer__button {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 12px;
+  background: var(--co-primary);
+  color: #ffffff;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.crm-offer__button:hover:not(:disabled) {
+  background: var(--co-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(31, 74, 204, 0.32);
+}
+
+.crm-offer__button:active:not(:disabled) {
+  transform: none;
+  box-shadow: none;
+}
+
+.crm-offer__button:focus-visible {
+  outline: 3px solid rgba(31, 74, 204, 0.35);
+  outline-offset: 2px;
+}
+
+.crm-offer__button:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.crm-offer__hint {
+  margin: 10px 0 0;
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--co-muted);
+}
+
+.crm-offer__alert {
+  margin: 12px 0 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--co-danger-soft);
+  color: var(--co-danger);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* Opt-out. Ska finnas och gå att hitta, men aldrig konkurrera med ja-knappen. */
+.crm-offer__footer {
+  margin-top: 22px;
+  padding-top: 14px;
+  border-top: 1px solid var(--co-border);
+  text-align: center;
+}
+
+.crm-offer__unsubscribe {
+  padding: 6px 8px;
+  border: none;
+  background: none;
+  color: var(--co-muted);
+  font: inherit;
+  font-size: 0.82rem;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.crm-offer__unsubscribe:hover {
+  color: var(--co-text);
+}
+
+.crm-offer__loading {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  color: var(--co-muted);
+}
+
+.crm-offer__loading p {
+  margin: 0;
+}
+
+.crm-offer__spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--co-border);
+  border-top-color: var(--co-primary);
+  border-radius: 50%;
+  animation: crmOfferSpin 0.7s linear infinite;
+}
+
+@keyframes crmOfferSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .crm-offer__button {
+    transition: none;
+  }
+  .crm-offer__button:hover:not(:disabled) {
+    transform: none;
+  }
+  .crm-offer__spinner {
+    animation-duration: 1.6s;
   }
 }
 

@@ -44,6 +44,7 @@ export const sv = {
     faq: "FAQ",
     strategy: "Boka strategisamtal",
     privacy: "Integritetspolicy",
+    aboutSite: "Om sidan",
     terms: "Användarvillkor",
     discoveryLabel: "Utforska tatueringar",
     cities: "Städer",
@@ -971,7 +972,15 @@ export const sv = {
     eyebrow: "En tid har blivit ledig",
     greeting: "Hej {{name}}!",
     greetingFallback: "Hej!",
-    withArtist: "hos {{artist}}",
+    intro: "Du står på väntelistan, och den här tiden har just blivit ledig.",
+    introStudio: "Du står på väntelistan hos {{studio}}, och den här tiden har just blivit ledig.",
+    badgeOpen: "Ledig",
+    badgeBooked: "Bokad",
+    detailDate: "Datum",
+    detailTime: "Tid",
+    detailDuration: "Längd",
+    detailArtist: "Tatuerare",
+    termsTitle: "Villkor",
     durationMinutes: "{{count}} minuter",
     durationHour: "1 timme",
     durationHours: "{{count}} timmar",
@@ -979,7 +988,6 @@ export const sv = {
     accepting: "Bokar…",
     firstComeNote: "Först till kvarn — tiden är din så fort du tackat ja.",
     consentNote: "Genom att tacka ja godkänner du studions villkor ovan.",
-    notBookable: "Tiden går tyvärr inte att boka längre.",
     unsubscribe: "Jag vill inte ha fler tidserbjudanden",
     unsubscribedTitle: "Avregistrerad",
     unsubscribedText: "Du får inga fler SMS om lediga tider. Hör av dig till studion om du ändrar dig.",
@@ -990,14 +998,45 @@ export const sv = {
     loadFailed: "Länken gäller inte längre.",
     acceptFailed: "Tiden gick tyvärr inte att boka.",
     unsubscribeFailed: "Kunde inte avregistrera dig.",
-    // Nycklarna = `reason` från servern.
-    reasons: {
-      already_filled: "Någon annan hann tacka ja före dig.",
-      slot_closed: "Tiden är inte längre tillgänglig.",
-      offer_expired: "Erbjudandet har gått ut.",
-      offer_revoked: "Det här erbjudandet gäller inte längre.",
-      slot_in_past: "Tiden har redan passerat.",
-      too_soon: "Tiden börjar för snart för att bokas här. Ring studion om du ändå vill ta den."
+    // Den upptagna tiden, överstruken. Nycklarna under `unavailable` = `reason`
+    // från servern, plus "generic" för okända orsaker.
+    goneSlotLabel: "Gällde",
+    unavailable: {
+      already_filled: {
+        badge: "Upptagen",
+        title: "Tiden är tyvärr upptagen",
+        text: "Någon annan hann tacka ja före dig. Du står kvar på väntelistan och får ett SMS nästa gång en tid blir ledig."
+      },
+      offer_expired: {
+        badge: "Utgånget",
+        title: "Erbjudandet har gått ut",
+        text: "Du står kvar på väntelistan och får ett SMS nästa gång en tid blir ledig."
+      },
+      offer_revoked: {
+        badge: "Inte tillgänglig",
+        title: "Erbjudandet gäller inte längre",
+        text: "Tiden går inte att boka via den här länken."
+      },
+      slot_closed: {
+        badge: "Inte tillgänglig",
+        title: "Tiden är inte längre ledig",
+        text: "Tiden går inte att boka via den här länken."
+      },
+      slot_in_past: {
+        badge: "Passerad",
+        title: "Tiden har redan passerat",
+        text: ""
+      },
+      too_soon: {
+        badge: "Börjar snart",
+        title: "Tiden börjar för snart",
+        text: "Den går inte att boka via länken så nära inpå. Ring studion om du ändå vill ta den."
+      },
+      generic: {
+        badge: "Inte tillgänglig",
+        title: "Tiden går inte att boka",
+        text: "Tiden går tyvärr inte att boka längre."
+      }
     },
     // slotOfferTerms.js. Följden av en sen avbokning nämns bara för depositionen.
     terms: {

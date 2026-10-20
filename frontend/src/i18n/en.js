@@ -42,6 +42,7 @@ export const en = {
     faq: "FAQ",
     strategy: "Book a strategy call",
     privacy: "Privacy policy",
+    aboutSite: "About this site",
     terms: "Terms of use",
     discoveryLabel: "Explore tattoos",
     cities: "Cities",
@@ -930,7 +931,15 @@ export const en = {
     eyebrow: "An appointment has become available",
     greeting: "Hi {{name}}!",
     greetingFallback: "Hi!",
-    withArtist: "with {{artist}}",
+    intro: "You're on the waiting list, and this appointment has just become available.",
+    introStudio: "You're on the waiting list at {{studio}}, and this appointment has just become available.",
+    badgeOpen: "Available",
+    badgeBooked: "Booked",
+    detailDate: "Date",
+    detailTime: "Time",
+    detailDuration: "Duration",
+    detailArtist: "Artist",
+    termsTitle: "Terms",
     durationMinutes: "{{count}} minutes",
     durationHour: "1 hour",
     durationHours: "{{count}} hours",
@@ -938,7 +947,6 @@ export const en = {
     accepting: "Booking…",
     firstComeNote: "First come, first served — the appointment is yours as soon as you accept.",
     consentNote: "By accepting, you agree to the studio's terms above.",
-    notBookable: "Sorry, this appointment can no longer be booked.",
     unsubscribe: "I don't want any more appointment offers",
     unsubscribedTitle: "Unsubscribed",
     unsubscribedText:
@@ -950,14 +958,43 @@ export const en = {
     loadFailed: "This link is no longer valid.",
     acceptFailed: "Sorry, the appointment couldn't be booked.",
     unsubscribeFailed: "We couldn't unsubscribe you.",
-    reasons: {
-      already_filled: "Someone else accepted it before you.",
-      slot_closed: "The appointment is no longer available.",
-      offer_expired: "The offer has expired.",
-      offer_revoked: "This offer is no longer valid.",
-      slot_in_past: "The appointment has already passed.",
-      too_soon:
-        "The appointment starts too soon to be booked here. Call the studio if you'd still like to take it."
+    goneSlotLabel: "Was",
+    unavailable: {
+      already_filled: {
+        badge: "Taken",
+        title: "Sorry, this appointment is taken",
+        text: "Someone else accepted it before you. You're still on the waiting list and will get a text the next time an appointment becomes available."
+      },
+      offer_expired: {
+        badge: "Expired",
+        title: "The offer has expired",
+        text: "You're still on the waiting list and will get a text the next time an appointment becomes available."
+      },
+      offer_revoked: {
+        badge: "Unavailable",
+        title: "This offer is no longer valid",
+        text: "The appointment can't be booked through this link."
+      },
+      slot_closed: {
+        badge: "Unavailable",
+        title: "The appointment is no longer available",
+        text: "The appointment can't be booked through this link."
+      },
+      slot_in_past: {
+        badge: "Passed",
+        title: "The appointment has already passed",
+        text: ""
+      },
+      too_soon: {
+        badge: "Starting soon",
+        title: "The appointment starts too soon",
+        text: "It can't be booked through the link this close to the start. Call the studio if you'd still like to take it."
+      },
+      generic: {
+        badge: "Unavailable",
+        title: "The appointment can't be booked",
+        text: "Sorry, this appointment can no longer be booked."
+      }
     },
     terms: {
       depositLabel: "Deposit",
