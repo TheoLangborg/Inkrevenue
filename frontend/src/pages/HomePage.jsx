@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { CrmPreview } from "../components/CrmPreview";
+import { HomeHeroVisual } from "../components/HomeHeroVisual";
 import { PublicStudioCard } from "../components/PublicStudioCard";
 import { StrategyCallForm } from "../components/StrategyCallForm";
 import { getPublicStudios } from "../services/publicSiteApi";
@@ -63,57 +64,60 @@ export function HomePage() {
   return (
     <div>
       {/* ── Hero ── */}
-      <section className="hero" id="top">
-        <div className="hero__orb hero__orb--left" />
-        <div className="hero__orb hero__orb--right" />
+      {/* Två kolumner: budskapet till vänster, bildrutan till höger. Loggan
+          står redan i sidhuvudet, så heron upprepar den inte. */}
+      <section className="hero hero--home" id="top">
         <div className="container hero__content">
-          <div className="brand-lockup">
-            <img className="brand-logo" src="/ink-revenue-logo.svg" alt={t("common.logoAlt")} />
-            <div className="brand-mark">Ink Revenue</div>
-          </div>
+          <div className="hero-home__copy">
+            <p className="hero-home__eyebrow">{t("home.heroEyebrow")}</p>
+            <h1>
+              {t("home.heroTitleLine1")}{" "}
+              <span className="hero-home__title-soft">{t("home.heroTitleLine2")}</span>
+            </h1>
+            <p className="lead">
+              {t("home.heroLeadBefore")}<strong>{t("home.heroLeadBold")}</strong>
+              {t("home.heroLeadAfter")}
+            </p>
 
-          <h1>{t("home.heroTitleLine1")}<br />{t("home.heroTitleLine2")}</h1>
-          <p className="lead">
-            {t("home.heroLeadBefore")}<strong>{t("home.heroLeadBold")}</strong>
-            {t("home.heroLeadAfter")}
-          </p>
-
-          <div className="cta-row">
-            <SiteLink className="btn btn-primary" href="#bokning">
-              {t("home.ctaStrategy")}
-              <svg className="btn__icon" viewBox="0 0 20 20" aria-hidden="true">
-                <path d="M4 10h12M10 5l5 5-5 5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </SiteLink>
-            <SiteLink className="btn btn-secondary btn-secondary--hero" href="/testa-gratis">
-              <span>{t("home.ctaTrial")}</span>
-              <svg className="btn__icon" viewBox="0 0 20 20" aria-hidden="true">
-                <path d="M4 10h12M10 5l5 5-5 5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </SiteLink>
-          </div>
-          <p className="cta-note">{t("home.ctaNote")}</p>
-
-          <div className="audience-grid">
-            <article className="audience-card audience-card--studio">
-              <p className="audience-card__eyebrow">{t("home.audienceStudioEyebrow")}</p>
-              <h3>{t("home.audienceStudioTitle")}</h3>
-              <p>{t("home.audienceStudioText")}</p>
-              <SiteLink className="btn btn-secondary btn-secondary--light" href="#sa-funkar-det">
-                {t("home.audienceStudioCta")}
+            <div className="cta-row">
+              <SiteLink className="btn btn-primary" href="#bokning">
+                {t("home.ctaStrategy")}
                 <svg className="btn__icon" viewBox="0 0 20 20" aria-hidden="true">
                   <path d="M4 10h12M10 5l5 5-5 5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </SiteLink>
-            </article>
+              <SiteLink className="btn btn-secondary btn-secondary--hero" href="/testa-gratis">
+                <span>{t("home.ctaTrial")}</span>
+                <svg className="btn__icon" viewBox="0 0 20 20" aria-hidden="true">
+                  <path d="M4 10h12M10 5l5 5-5 5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </SiteLink>
+            </div>
 
-            <article className="audience-card audience-card--customer">
-              <p className="audience-card__eyebrow">{t("home.audienceCustomerEyebrow")}</p>
-              <h3>{t("home.audienceCustomerTitle")}</h3>
-              <p>{t("home.audienceCustomerText")}</p>
-              <SiteLink className="btn btn-primary" href="/studios">{t("common.exploreStudios")}</SiteLink>
-            </article>
+            <ul className="hero-points">
+              {[t("home.heroPoint1"), t("home.heroPoint2"), t("home.heroPoint3")].map((point) => (
+                <li key={point}>
+                  <svg viewBox="0 0 20 20" aria-hidden="true">
+                    <path d="M4.5 10.5l3.5 3.5 7.5-8" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  {point}
+                </li>
+              ))}
+            </ul>
+
+            {/* Tatueringskunderna får en lugn rad i stället för ett eget kort. */}
+            <p className="hero-home__customers">
+              {t("home.heroCustomersPrompt")}{" "}
+              <SiteLink href="/studios">
+                {t("common.exploreStudios")}
+                <svg className="btn__icon" viewBox="0 0 20 20" aria-hidden="true">
+                  <path d="M4 10h12M10 5l5 5-5 5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </SiteLink>
+            </p>
           </div>
+
+          <HomeHeroVisual />
         </div>
       </section>
 
@@ -230,6 +234,28 @@ export function HomePage() {
               {featuredStudios.map((studio, index) => (
                 <PublicStudioCard key={studio.id} studio={studio} compact revealDelay={index + 1} />
               ))}
+              {/* Färre än tre studior: platsen som blir över bjuder in nästa studio
+                  i stället för att stå tom. */}
+              {featuredStudios.length < 3 ? (
+                <SiteLink
+                  className="studio-card studio-card--compact studio-card--invite"
+                  href="#bokning"
+                  data-reveal="scale"
+                  data-reveal-delay={featuredStudios.length + 1}
+                >
+                  <div className="studio-card__media" aria-hidden="true">
+                    <span className="studio-card__invite-mark">+</span>
+                  </div>
+                  <div className="studio-card__body">
+                    <div className="studio-card__meta">
+                      <span>{t("home.customersInviteEyebrow")}</span>
+                    </div>
+                    <h3>{t("home.customersInviteTitle")}</h3>
+                    <p>{t("home.customersInviteText")}</p>
+                    <span className="btn btn-secondary studio-card__cta">{t("home.customersInviteCta")}</span>
+                  </div>
+                </SiteLink>
+              ) : null}
             </div>
           ) : (
             <div className="empty-panel" data-reveal="up">

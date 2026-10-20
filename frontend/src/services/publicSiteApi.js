@@ -1,4 +1,5 @@
-import { pinStudiosFirst } from "../utils/studioOrder";
+import { hideTestStudios, pinStudiosFirst } from "../utils/studioOrder";
+import { isTestMode } from "../utils/testMode";
 import { DEFAULT_LANGUAGE, splitLanguageFromPath } from "../i18n/config";
 import { createTranslator } from "../i18n/translate";
 
@@ -98,8 +99,13 @@ async function request(path, { language, ...options } = {}) {
   return payload?.data ?? payload;
 }
 
+// Teststudion listas bara i testläget (?test i adressen). Det gäller katalogen,
+// startsidans kort och "andra studior" på studiosidorna.
 export function getPublicStudios() {
-  return request("/api/public/studios").then(normalizeArrayPayload).then(pinStudiosFirst);
+  return request("/api/public/studios")
+    .then(normalizeArrayPayload)
+    .then((studios) => hideTestStudios(studios, isTestMode()))
+    .then(pinStudiosFirst);
 }
 
 /**

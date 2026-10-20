@@ -136,14 +136,6 @@ svg {
 .hero__content > .lead { animation-delay: 0.22s; }
 .hero__content > .cta-row { animation-delay: 0.32s; }
 .hero__content > .cta-note { animation-delay: 0.4s; }
-.hero__content > .audience-grid { animation: none; }
-
-.audience-card {
-  animation: heroRise 0.85s var(--ease-out-quint) both;
-}
-
-.audience-card--studio { animation-delay: 0.48s; }
-.audience-card--customer { animation-delay: 0.58s; }
 
 @keyframes heroRise {
   from {
@@ -271,61 +263,473 @@ h1 {
   color: rgba(255, 255, 255, 0.82);
 }
 
-.audience-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
-  margin-top: 36px;
+/* ── Startsidans hero (2026-10-20) ──
+   Budskapet till vänster, bildrutan (HomeHeroVisual) till höger. Loggan står
+   redan i sidhuvudet och upprepas inte. TrialPage använder fortfarande den
+   centrerade .hero ovan. */
+.hero--home {
+  padding: 72px 0 140px;
   text-align: left;
 }
 
-.audience-card {
-  padding: 24px;
-  border-radius: 26px;
+/* Den gemensamma toningen (.hero::after) ligger delvis under heron och klipps
+   av overflow: hidden, så den slutade i en hård kant. Här tonar den hela vägen
+   till nästa sektions vita bakgrund. */
+.hero--home::after {
+  bottom: 0;
+  height: 170px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0), #fff 96%);
+}
+
+.hero--home .hero__content {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.9fr);
+  align-items: center;
+  gap: clamp(40px, 5vw, 64px);
+}
+
+/* Entrén sköts per del nedan i stället för per kolumn */
+.hero--home .hero__content > * {
+  animation: none;
+}
+
+.hero-home__copy > * {
+  animation: heroRise 0.8s var(--ease-out-quint) both;
+}
+
+.hero-home__copy > .hero-home__eyebrow { animation-delay: 0.02s; }
+.hero-home__copy > h1 { animation-delay: 0.1s; }
+.hero-home__copy > .lead { animation-delay: 0.2s; }
+.hero-home__copy > .cta-row { animation-delay: 0.3s; }
+.hero-home__copy > .hero-points { animation-delay: 0.38s; }
+.hero-home__copy > .hero-home__customers { animation-delay: 0.46s; }
+
+.hero-home__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 22px;
+  padding: 7px 15px 7px 13px;
+  border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.18);
-  background: rgba(255, 255, 255, 0.12);
-  box-shadow: 0 18px 34px rgba(7, 18, 34, 0.16);
-  transition:
-    transform 0.35s var(--ease-out-quart),
-    border-color 0.35s var(--ease-out-quart),
-    box-shadow 0.35s var(--ease-out-quart);
-}
-
-.audience-card:hover {
-  transform: translateY(-5px);
-  border-color: rgba(255, 255, 255, 0.34);
-  box-shadow: 0 26px 48px rgba(7, 18, 34, 0.26);
-}
-
-.audience-card--customer {
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(231, 240, 255, 0.1)),
-    rgba(255, 255, 255, 0.06);
-}
-
-.audience-card--studio {
-  background:
-    linear-gradient(135deg, rgba(75, 134, 220, 0.2), rgba(255, 255, 255, 0.08)),
-    rgba(255, 255, 255, 0.08);
-}
-
-.audience-card__eyebrow {
-  margin: 0 0 10px;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  letter-spacing: 0.18em;
-  font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(231, 240, 255, 0.92);
 }
 
-.audience-card h3 {
-  margin: 0 0 12px;
-  font-family: "Big Shoulders Display", "Georgia", sans-serif;
-  font-size: 1.5rem;
+/* Romben ur loggan i liten skala */
+.hero-home__eyebrow::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border: 1.5px solid #8fb3ea;
+  transform: rotate(45deg);
+  flex: none;
 }
 
-.audience-card p {
-  margin: 0 0 18px;
-  color: rgba(255, 255, 255, 0.82);
+.hero--home h1 {
+  margin: 0 0 22px;
+  max-width: none;
+  font-size: clamp(38px, 3.5vw, 50px);
+  text-wrap: pretty;
+}
+
+.hero-home__title-soft {
+  display: block;
+  color: #b9cdf0;
+  /* På mobil: "Vi sköter / marknadsföringen åt er." i stället för "åt er." ensamt */
+  text-wrap: balance;
+}
+
+.hero--home .lead {
+  max-width: 540px;
+  margin: 0 0 30px;
+  font-size: 1.08rem;
+  line-height: 1.65;
+}
+
+.hero--home .cta-row {
+  justify-content: flex-start;
+}
+
+.hero-points {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 22px;
+  margin: 22px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.92rem;
+  color: rgba(255, 255, 255, 0.84);
+}
+
+.hero-points li {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.hero-points svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  color: #8fb3ea;
+}
+
+.hero-home__customers {
+  max-width: 540px;
+  margin: 34px 0 0;
+  padding-top: 22px;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.74);
+}
+
+.hero-home__customers a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: #fff;
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 255, 255, 0.35);
+  text-underline-offset: 4px;
+  transition: text-decoration-color 0.25s var(--ease-out-quart);
+}
+
+.hero-home__customers a:hover,
+.hero-home__customers a:focus-visible {
+  text-decoration-color: #fff;
+}
+
+.hero-home__customers a .btn__icon {
+  width: 16px;
+  height: 16px;
+}
+
+.hero-home__customers a:hover .btn__icon {
+  transform: translateX(3px);
+}
+
+/* Bildrutan. Med foto (src/assets/home/hero.webp) fyller fotot ramen, utan
+   foto ritas rombens linjer på mörkblått. */
+.hero-visual {
+  position: relative;
+  justify-self: end;
+  width: 100%;
+  max-width: 460px;
+  margin: 0;
+}
+
+.hero--home .hero__content > .hero-visual {
+  animation: heroRise 0.9s var(--ease-out-quint) 0.18s both;
+}
+
+.hero-visual__frame {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  border-radius: 32px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background:
+    radial-gradient(circle at 30% 18%, rgba(143, 179, 234, 0.3), transparent 55%),
+    radial-gradient(circle at 82% 92%, rgba(109, 134, 179, 0.34), transparent 50%),
+    linear-gradient(160deg, #163866 0%, #0d203b 62%, #0a1a2f 100%);
+  box-shadow:
+    0 40px 80px rgba(7, 18, 34, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.hero-visual__art,
+.hero-visual__photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+}
+
+.hero-visual__photo {
+  object-fit: cover;
+}
+
+/* Svag toning nertill så att korten läses mot vilket foto som helst */
+.hero-visual--photo .hero-visual__frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(10, 26, 47, 0) 55%, rgba(10, 26, 47, 0.38) 100%);
+}
+
+/* Korten är utdrag ur CRM:et: Inter, CRM:ets färger och statusord */
+.hero-chip {
+  position: absolute;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: max-content;
+  max-width: 360px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: #fff;
+  color: #172033;
+  font-family: "Inter", "Segoe UI", sans-serif;
+  font-size: 13px;
+  line-height: 1.35;
+  text-align: left;
+  box-shadow:
+    0 24px 48px rgba(7, 18, 34, 0.3),
+    0 2px 6px rgba(7, 18, 34, 0.12);
+  animation: heroRise 0.8s var(--ease-out-quint) both;
+}
+
+.hero-chip--lead {
+  top: 11%;
+  left: -52px;
+  animation-delay: 0.55s;
+}
+
+.hero-chip--booking {
+  right: -34px;
+  bottom: 12%;
+  animation-delay: 0.7s;
+}
+
+.hero-chip__avatar,
+.hero-chip__date {
+  display: grid;
+  place-items: center;
+  flex: none;
+  font-weight: 700;
+}
+
+.hero-chip__avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #dbe5ff;
+  color: #1f4acc;
+  font-size: 12px;
+}
+
+.hero-chip__date {
+  width: 40px;
+  height: 42px;
+  border-radius: 10px;
+  background: #eef2f6;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.hero-chip__date small {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #60708c;
+}
+
+.hero-chip__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.hero-chip__text strong {
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.hero-chip__text span {
+  overflow: hidden;
+  font-size: 12px;
+  color: #60708c;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hero-chip__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: none;
+  margin-left: 6px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.hero-chip__badge::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.75;
+}
+
+.hero-chip__badge--info { background: #e8efff; color: #1945b5; }
+.hero-chip__badge--booked { background: #e4f3ef; color: #14795f; }
+
+@media (max-width: 1024px) {
+  .hero--home .hero__content {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-visual {
+    justify-self: center;
+    max-width: 520px;
+  }
+
+  .hero-visual__frame {
+    aspect-ratio: 5 / 4;
+  }
+
+  .hero-chip--lead {
+    top: 16px;
+    left: 16px;
+  }
+
+  .hero-chip--booking {
+    right: 16px;
+    bottom: 16px;
+  }
+}
+
+@media (max-width: 600px) {
+  .hero--home .lead {
+    font-size: 1rem;
+  }
+
+  .hero-points {
+    gap: 8px 16px;
+    font-size: 0.86rem;
+  }
+
+  .hero-home__customers {
+    margin-top: 28px;
+    font-size: 0.9rem;
+  }
+
+  .hero-visual__frame {
+    border-radius: 24px;
+  }
+
+  .hero-chip {
+    gap: 10px;
+    max-width: calc(100% - 24px);
+    padding: 10px 11px;
+    border-radius: 13px;
+  }
+
+  .hero-chip--lead {
+    top: 12px;
+    left: 12px;
+  }
+
+  .hero-chip--booking {
+    right: 12px;
+    bottom: 12px;
+  }
+
+  .hero-chip__avatar {
+    width: 32px;
+    height: 32px;
+  }
+
+  .hero-chip__date {
+    width: 36px;
+    height: 38px;
+  }
+}
+
+/* ── Startsidans studiorad: inbjudan när det finns färre än tre studior ── */
+.studio-card.studio-card--invite {
+  border: 1.5px dashed rgba(43, 90, 154, 0.34);
+  background: linear-gradient(180deg, #fff 0%, var(--lav-50) 100%);
+  box-shadow: none;
+}
+
+.studio-card.studio-card--invite:hover,
+.studio-card.studio-card--invite:focus-visible {
+  border-color: rgba(43, 90, 154, 0.55);
+  box-shadow: var(--shadow);
+}
+
+.studio-card--invite .studio-card__media {
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(143, 179, 234, 0.34), transparent 60%),
+    linear-gradient(135deg, var(--ink-600), var(--ink-400));
+}
+
+.studio-card__invite-mark {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  font-size: 2.1rem;
+  font-weight: 300;
+  line-height: 1;
+  color: #fff;
+}
+
+.studio-card__invite-mark::before {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border: 1.5px solid rgba(255, 255, 255, 0.7);
+  border-radius: 10px;
+  transform: rotate(45deg);
+}
+
+/* ── Testläget (?test i adressen): visar att teststudion listas ── */
+.test-mode-badge {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 7px 7px 14px;
+  border-radius: 999px;
+  background: #101826;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  box-shadow: 0 12px 30px rgba(7, 18, 34, 0.35);
+}
+
+.test-mode-badge__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f5a524;
+}
+
+.test-mode-badge__off {
+  padding: 6px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.test-mode-badge__off:hover,
+.test-mode-badge__off:focus-visible {
+  background: rgba(255, 255, 255, 0.26);
 }
 
 .btn {
@@ -4008,8 +4412,7 @@ h1 {
   }
 
   .card-grid,
-  .gallery-grid,
-  .audience-grid {
+  .gallery-grid {
     grid-template-columns: 1fr;
   }
 
@@ -4223,18 +4626,6 @@ h1 {
 
   .brand-mark {
     font-size: clamp(24px, 6.6vw, 34px);
-  }
-
-  .audience-grid {
-    gap: 14px;
-  }
-
-  .audience-card {
-    padding: 20px;
-  }
-
-  .audience-card h3 {
-    font-size: 1.2rem;
   }
 
   /* Smaller buttons on mobile */

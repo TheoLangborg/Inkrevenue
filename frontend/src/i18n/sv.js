@@ -72,19 +72,14 @@ export const sv = {
       " — annonser, innehåll och kundförfrågningar från start till slut. Ni fokuserar på konsten. Vi fyller kalendern.",
     ctaStrategy: "Boka gratis strategisamtal",
     ctaTrial: "Testa gratis i 30 dagar",
-    ctaNote:
-      "Ingen bindning, inga dolda avgifter — testa själv utan betalkort eller låt oss sköta allt",
-    audienceStudioEyebrow: "För studioägare",
-    audienceStudioTitle: "Sluta jaga kunder. Låt dem hitta er.",
-    audienceStudioText:
-      "Vi sätter upp er studio-sida, kör annonser och hanterar förfrågningar — så ni kan hålla fokus på tatueringarna.",
-    audienceStudioCta: "Se hur vi hjälper studios",
-    audienceCustomerEyebrow: "För tatueringskunder",
-    audienceCustomerTitle: "Hitta rätt studio för just din stil.",
-    audienceCustomerText:
-      "Bläddra studios efter stil, stad och känsla — se galleri och skicka förfrågan direkt. Enklare än hashtag-jakt.",
+    heroEyebrow: "För tatueringsstudior",
+    heroPoint1: "Ingen bindningstid",
+    heroPoint2: "Inga dolda avgifter",
+    heroPoint3: "Testa utan betalkort",
+    heroCustomersPrompt: "Letar du efter en tatuerare?",
+    heroPhotoAlt: "Tatuerare i arbete i sin studio",
 
-    howEyebrow: "För Studioägare",
+    howEyebrow: "Kom igång",
     howTitle: "Så här fungerar Ink Revenue",
     howLead: "Tre enkla steg från att ni kontaktar oss till att förfrågningarna börjar komma in.",
     howStep1Title: "Boka ett strategisamtal",
@@ -124,6 +119,10 @@ export const sv = {
     customersEmptyTitle: "Fler studios kommer snart",
     customersEmptyText:
       "Vi fyller på katalogen löpande. Kom tillbaka snart för att upptäcka fler studios och tatuerare.",
+    customersInviteEyebrow: "För studioägare",
+    customersInviteTitle: "Er studio här?",
+    customersInviteText: "Vi bygger er studio-sida och lägger in er i katalogen, där kunderna redan letar.",
+    customersInviteCta: "Boka gratis samtal",
 
     whyTitle: "Varför Ink Revenue Fungerar",
     whyCard1Title: "100% hanterad service",

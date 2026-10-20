@@ -69,19 +69,14 @@ export const en = {
       " — ads, content and client enquiries from start to finish. You focus on the art. We fill the calendar.",
     ctaStrategy: "Book a free strategy call",
     ctaTrial: "Try free for 30 days",
-    ctaNote:
-      "No lock-in, no hidden fees — try it yourself without a card, or let us handle everything",
-    audienceStudioEyebrow: "For studio owners",
-    audienceStudioTitle: "Stop chasing clients. Let them find you.",
-    audienceStudioText:
-      "We set up your studio page, run the ads and handle enquiries — so you can stay focused on tattooing.",
-    audienceStudioCta: "See how we help studios",
-    audienceCustomerEyebrow: "For tattoo clients",
-    audienceCustomerTitle: "Find the right studio for your style.",
-    audienceCustomerText:
-      "Browse studios by style, city and feel — see the gallery and send an enquiry straight away. Easier than hunting hashtags.",
+    heroEyebrow: "For tattoo studios",
+    heroPoint1: "No lock-in",
+    heroPoint2: "No hidden fees",
+    heroPoint3: "Try it without a card",
+    heroCustomersPrompt: "Looking for a tattoo artist?",
+    heroPhotoAlt: "A tattoo artist at work in the studio",
 
-    howEyebrow: "For Studio Owners",
+    howEyebrow: "Getting started",
     howTitle: "How Ink Revenue works",
     howLead: "Three simple steps from getting in touch to enquiries landing in your inbox.",
     howStep1Title: "Book a strategy call",
@@ -121,6 +116,10 @@ export const en = {
     customersEmptyTitle: "More studios coming soon",
     customersEmptyText:
       "We add to the directory continuously. Come back soon to discover more studios and artists.",
+    customersInviteEyebrow: "For studio owners",
+    customersInviteTitle: "Your studio here?",
+    customersInviteText: "We build your studio page and add you to the directory, where clients are already looking.",
+    customersInviteCta: "Book a free call",
 
     whyTitle: "Why Ink Revenue Works",
     whyCard1Title: "100% managed service",

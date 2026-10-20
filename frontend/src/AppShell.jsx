@@ -2,6 +2,7 @@ import { LegalConsentProvider } from "./contexts/LegalConsentContext";
 import { SiteFooter } from "./components/SiteFooter";
 import { SiteOperatorNote } from "./components/SiteOperatorNote";
 import { SiteHeader } from "./components/SiteHeader";
+import { TestModeBadge } from "./components/TestModeBadge";
 import { createDemoStudioPreview } from "./data/demoStudio";
 import { FaqPage } from "./pages/FaqPage";
 import { HomePage } from "./pages/HomePage";
@@ -173,6 +174,7 @@ function AppContent({ page }) {
       {!page.hideHeader && <SiteHeader currentPath={page.currentPath} />}
       <main>{page.element}</main>
       {page.hideFooter ? <SiteOperatorNote /> : <SiteFooter />}
+      <TestModeBadge />
     </div>
   );
 }

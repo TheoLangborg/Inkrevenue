@@ -1,6 +1,6 @@
 import { strict as assert } from "node:assert";
 import { describe, it } from "node:test";
-import { PINNED_STUDIO_SLUGS, pinStudiosFirst } from "./studioOrder.js";
+import { PINNED_STUDIO_SLUGS, TEST_STUDIO_SLUGS, hideTestStudios, pinStudiosFirst } from "./studioOrder.js";
 
 const slugs = (studios) => studios.map((studio) => studio.slug);
 
@@ -32,5 +32,22 @@ describe("pinStudiosFirst", () => {
   it("klarar en lista utan fasta studior och ett trasigt svar", () => {
     assert.deepEqual(slugs(pinStudiosFirst([{ slug: "x" }, { slug: "y" }])), ["x", "y"]);
     assert.deepEqual(pinStudiosFirst(null), []);
+  });
+});
+
+describe("hideTestStudios", () => {
+  const fromCrm = [{ slug: "ghost-ink" }, { slug: "inkrevenue-test-studio" }, { slug: "royalkave" }];
+
+  it("döljer teststudion utanför testläget", () => {
+    assert.deepEqual(slugs(hideTestStudios(fromCrm)), ["ghost-ink", "royalkave"]);
+    assert.ok(TEST_STUDIO_SLUGS.includes("inkrevenue-test-studio"));
+  });
+
+  it("visar alla studior i testläget", () => {
+    assert.deepEqual(slugs(hideTestStudios(fromCrm, true)), ["ghost-ink", "inkrevenue-test-studio", "royalkave"]);
+  });
+
+  it("klarar ett trasigt svar", () => {
+    assert.deepEqual(hideTestStudios(null), []);
   });
 });
