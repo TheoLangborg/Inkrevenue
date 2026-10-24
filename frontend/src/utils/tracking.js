@@ -5,7 +5,8 @@ const SESSION_STORAGE_KEY = "inkrevenue-session-id";
 // Maps utm_source values from URLs to our internal billing source keys.
 // "inkrevenue"   → direct booking link (e.g. studio bio, QR code we produced)
 // "social_media" → post/DM we managed on their social accounts
-// anything else  → leave empty, backend will default to inkrevenue_studio_page (non-billable)
+// anything else  → leave empty, backend will default to inkrevenue_studio_page (billable,
+//                  except for customers who arrive during the studio's free trial)
 const UTM_SOURCE_TO_LEAD_SOURCE = {
   inkrevenue: "inkrevenue",
   social_media: "social_media",
