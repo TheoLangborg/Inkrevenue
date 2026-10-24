@@ -611,6 +611,10 @@ export function StudioLeadFormEnhanced({
   // behöver det (se draftId vid createStudioPaymentIntent), men påminnelser
   // per mejl eller SMS kräver samtycke i förväg (MFL 19 §).
   const [reminderConsent, setReminderConsent] = useState(false);
+  // Kundens kryss i "studion får skicka erbjudanden". Frivilligt och okryssat:
+  // reklam per mejl eller sms kräver samtycke i förväg (MFL 19 §). CRM:et
+  // sparar när samtycket gavs.
+  const [offersConsent, setOffersConsent] = useState(false);
   const fileInputRef = useRef(null);
   const imageIdRef = useRef(0);
   const previewRequestIdRef = useRef(0);
@@ -1247,7 +1251,7 @@ export function StudioLeadFormEnhanced({
       // studion vet att svara på engelska.
       language,
       privacyConsent: true,
-      marketingConsent: false,
+      marketingConsent: offersConsent,
       draftId,
       preferredStartTime: selectedSlot?.startTime || "",
       preferredEndTime: selectedSlot?.endTime || "",
@@ -1293,6 +1297,7 @@ export function StudioLeadFormEnhanced({
     setChargedAmountSek(null);
     setPaidPaymentIntentId(null);
     setReminderConsent(false);
+    setOffersConsent(false);
     clearDraft();
     if (fileInputRef.current) fileInputRef.current.value = "";
     scrollToTop();
@@ -2066,6 +2071,20 @@ export function StudioLeadFormEnhanced({
               onChange={(event) => setReminderConsent(event.target.checked)}
             />
             <span>{t("leadForm.reminderConsent")}</span>
+          </label>
+
+          <label className="consent-row" htmlFor="lead-offersConsent">
+            <input
+              id="lead-offersConsent"
+              type="checkbox"
+              checked={offersConsent}
+              onChange={(event) => setOffersConsent(event.target.checked)}
+            />
+            <span>
+              {t("leadForm.offersConsent", {
+                studio: studio?.publicProfile?.name || studio?.name || t("leadForm.paidFallbackStudio")
+              })}
+            </span>
           </label>
 
           {/* Kunden valde konsultation först i rutan efter steg 1. Står här igen

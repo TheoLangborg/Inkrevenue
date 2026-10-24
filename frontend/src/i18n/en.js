@@ -847,6 +847,7 @@ export const en = {
 
     reminderConsent:
       "Remind me by email or text message if I don't send the enquiry (no more than three times).",
+    offersConsent: "Yes, {{studio}} may send me offers by email and text message.",
     submitting: "Sending...",
     submit: "Send enquiry",
     sending: "Sending your enquiry...",

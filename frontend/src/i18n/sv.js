@@ -882,6 +882,9 @@ export const sv = {
     // påminnelseschemat i CRM:et: 2, 72 och 144 timmar.
     reminderConsent:
       "Påminn mig via mejl eller sms om jag inte skickar in förfrågan (högst tre gånger).",
+    // Frivilligt samtycke till reklam (MFL 19 §). Policyn beskriver det under
+    // "Erbjudanden från studion".
+    offersConsent: "Ja, {{studio}} får skicka mig erbjudanden per mejl och sms.",
     submitting: "Skickar...",
     submit: "Skicka förfrågan",
     sending: "Skickar din förfrågan...",

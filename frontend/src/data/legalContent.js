@@ -34,7 +34,7 @@ export const LEGAL_DOCUMENTS = {
     eyebrow: "Integritetspolicy",
     title: "Så använder vi dina uppgifter",
     lead: "Vilka personuppgifter Ink Revenue behandlar, varför, hur länge och vilka rättigheter du har.",
-    updated: "2026-10-16",
+    updated: "2026-10-24",
     groups: [
       {
         heading: "Personuppgiftsansvarig",
@@ -51,6 +51,7 @@ export const LEGAL_DOCUMENTS = {
           "Utkast: det du skriver sparas medan du skriver, så att förfrågan eller en betalning inte går förlorad. Grund: berättigat intresse. Tas bort 14 dagar efter senaste aktivitet, eller efter 12 månader om du betalat utan att skicka in.",
           "Påminnelser om formulär du inte skickat in (högst tre): grund samtycke, som du återkallar med länken i påminnelsen.",
           "Sms om lediga tider från en studios väntelista: grund samtycke, som gäller i 12 månader. Avregistrera dig med länken i varje sms.",
+          "Erbjudanden från studion per mejl och sms, om du kryssat i rutan i formuläret: grund samtycke, som du återkallar genom att svara ”stopp” på ett mejl eller säga till studion.",
           "Strategisamtal och förfrågningar från företag: för att svara och ge ett erbjudande. Grund: åtgärder före avtal och berättigat intresse av att följa upp förfrågan. Raderas 24 månader efter senaste kontakten om det inte blir någon affär.",
           "Studiokonton: för att leverera tjänsten och fakturera. Grund: avtal och bokföringslagen. Fakturor och underlag sparas i sju år.",
           "Var förfrågan kom ifrån (sida, hänvisande länk, kampanj): för att visa studion källan och räkna ut provisionen. Grund: berättigat intresse. Sparas lika länge som förfrågan."
@@ -144,6 +145,7 @@ const LEGAL_DOCUMENTS_EN = {
           "Drafts: what you type is saved as you type, so that the enquiry or a payment isn't lost. Basis: legitimate interest. Removed 14 days after the last activity, or after 12 months if you paid without submitting.",
           "Reminders about forms you haven't submitted (at most three): basis consent, which you withdraw with the link in the reminder.",
           "Text messages about free time slots from a studio's waiting list: basis consent, valid for 12 months. Unsubscribe with the link in every message.",
+          "Offers from the studio by email and text message, if you ticked the box in the form: basis consent, which you withdraw by replying “stop” to an email or telling the studio.",
           "Strategy calls and enquiries from businesses: to reply and make an offer. Basis: steps prior to a contract and legitimate interest in following up the enquiry. Deleted 24 months after the last contact if no deal is made.",
           "Studio accounts: to deliver the service and invoice. Basis: contract and the Swedish Bookkeeping Act. Invoices and records are kept for seven years.",
           "Where the enquiry came from (page, referring link, campaign): to show the studio the source and calculate the commission. Basis: legitimate interest. Kept as long as the enquiry."
