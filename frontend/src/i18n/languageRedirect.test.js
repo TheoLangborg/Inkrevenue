@@ -106,11 +106,19 @@ describe("språkskriptet i index.html", () => {
     assert.equal(run({ path: "/en/studios", search: "?city=Malm%C3%B6", languages: ["sv"] }).replacedWith, "/studios?city=Malm%C3%B6");
   });
 
-  it("väljer det första språket i listan som sajten har", () => {
-    assert.equal(run({ path: "/", languages: ["en-US", "sv-SE"] }).replacedWith, "/en");
+  it("väljer svenska när svenska finns någonstans i listan, även efter engelska", () => {
+    assert.equal(run({ path: "/", languages: ["en-US", "sv-SE"] }).replacedWith, null);
+    assert.equal(run({ path: "/en", languages: ["en-US", "en", "sv"] }).replacedWith, "/");
     assert.equal(run({ path: "/en", languages: ["de-DE", "sv", "en"] }).replacedWith, "/");
     // Finlandssvenska är svenska.
     assert.equal(run({ path: "/en", languages: ["sv-FI"] }).replacedWith, "/");
+    // navigator.language räcker när languages saknas.
+    assert.equal(run({ path: "/en", languages: undefined, language: "sv-SE" }).replacedWith, "/");
+  });
+
+  it("väljer engelska bara när svenska inte finns alls", () => {
+    assert.equal(run({ path: "/", languages: ["en-US", "en"] }).replacedWith, "/en");
+    assert.equal(run({ path: "/", languages: ["de-DE", "en", "fr"] }).replacedWith, "/en");
   });
 
   it("väljer engelska när sajten inte har något av besökarens språk", () => {

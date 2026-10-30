@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <!-- Automatiskt språkval. Körs först av allt, innan sidan ritas.
          Besökarens eget val (språkväxlaren, sparat i localStorage) går före.
-         Annars gäller webbläsarens språkinställning: det första språket i
-         listan som sajten har, och engelska om sajten inte har något av dem.
+         Annars gäller webbläsarens språkinställning: svenska om svenska står
+         någonstans i listan (även efter engelska), annars engelska.
          Stämmer valet inte med adressen byts den mot samma sida på rätt språk.
          Sökmotorer, inbäddade sidor (CRM:ets förhandsvisning) och betallänkar
          (där följer språket bokningen) lämnas orörda. main.jsx renderar inget
@@ -30,8 +30,7 @@
             wanted = null;
             var list = n.languages && n.languages.length ? n.languages : [n.language];
             for (var i = 0; i < list.length && !wanted; i++) {
-              var code = String(list[i] || "").toLowerCase().split(/[-_]/)[0];
-              if (code === "sv" || code === "en") wanted = code;
+              if (String(list[i] || "").toLowerCase().split(/[-_]/)[0] === "sv") wanted = "sv";
             }
             if (!wanted && list[0]) wanted = "en";
           }
