@@ -28,6 +28,8 @@ import { useLanguage, useT } from "../i18n/LanguageContext";
 import { CampaignBanner } from "./CampaignBanner";
 import { LeadSentScreen } from "./LeadSentScreen";
 import { ConsultationFirstModal } from "./ConsultationFirstModal";
+import { TryOnLauncher } from "./TryOnLauncher";
+import { hasTryOn } from "../utils/tryOn";
 import { sv } from "../i18n/sv";
 import { translateOptionLabel } from "../i18n/optionLabels";
 
@@ -1097,11 +1099,19 @@ export function StudioLeadFormEnhanced({
     // gå att välja igen efter att den tagits bort.
     if (fileInputRef.current) fileInputRef.current.value = "";
     if (!files.length) return;
+    await addImageFiles(files);
+  }
 
+  // source "tryon": bilderna från provningen på kroppen (TryOnLauncher). En ny
+  // provning ersätter den förra, så att samma provning inte bifogas två gånger.
+  async function addImageFiles(files, source = "") {
     setImageErrors([]);
     setImageUploadRejected(false);
 
-    const room = Math.max(0, MAX_INSPIRATION_IMAGES - inspirationImages.length);
+    const keptCount = source
+      ? inspirationImages.filter((image) => image.source !== source).length
+      : inspirationImages.length;
+    const room = Math.max(0, MAX_INSPIRATION_IMAGES - keptCount);
     const accepted = files.slice(0, room);
     const errors =
       files.length > accepted.length
@@ -1116,7 +1126,7 @@ export function StudioLeadFormEnhanced({
       try {
         const preparedImage = await prepareLeadImageUpload(file, t);
         imageIdRef.current += 1;
-        prepared.push({ ...preparedImage, id: imageIdRef.current });
+        prepared.push({ ...preparedImage, id: imageIdRef.current, source });
       } catch (error) {
         const message = error.message || t("leadForm.imageError");
         errors.push(accepted.length > 1 ? `${file.name}: ${message}` : message);
@@ -1125,7 +1135,12 @@ export function StudioLeadFormEnhanced({
 
     setImageProcessing(null);
     if (prepared.length) {
-      setInspirationImages((current) => [...current, ...prepared].slice(0, MAX_INSPIRATION_IMAGES));
+      setInspirationImages((current) =>
+        [...(source ? current.filter((image) => image.source !== source) : current), ...prepared].slice(
+          0,
+          MAX_INSPIRATION_IMAGES
+        )
+      );
     }
     setImageErrors(errors);
   }
@@ -1822,6 +1837,13 @@ export function StudioLeadFormEnhanced({
                 max: MAX_INSPIRATION_IMAGE_MB
               })}
             </p>
+            {hasTryOn(studio?.slug) ? (
+              <TryOnLauncher
+                images={inspirationImages}
+                disabled={Boolean(imageProcessing)}
+                onImages={(files) => addImageFiles(files, "tryon")}
+              />
+            ) : null}
             {imageProcessing ? (
               <p className="form-status form-status--muted" role="status">
                 {imageProcessing.total > 1

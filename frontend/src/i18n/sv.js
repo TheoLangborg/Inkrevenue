@@ -963,6 +963,10 @@ export const sv = {
     imagePreviewAlt: "Förhandsvisning av inspirationsbild {{index}}",
     imageRemoveNumbered: "Ta bort bild {{index}}",
     imagesAttached: "{{count}} av {{max}} bilder bifogade",
+    // Provningen på kroppen (TryOnLauncher), bara hos studior i TRYON_STUDIO_SLUGS.
+    tryOnButton: "Prova motivet på kroppen",
+    tryOnHint: "Fota där tatueringen ska sitta och se hur den blir. Bilden läggs till här.",
+    tryOnTitle: "Prova tatueringen på kroppen",
     imageLimitReached: "Du kan bifoga högst {{max}} bilder. Ta bort en bild för att lägga till en annan.",
     imageError:
       "Det gick inte att förbereda bilden för uppladdning. Försök igen.",

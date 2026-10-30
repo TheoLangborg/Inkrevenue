@@ -942,6 +942,10 @@ export const en = {
     imagePreviewAlt: "Preview of reference image {{index}}",
     imageRemoveNumbered: "Remove image {{index}}",
     imagesAttached: "{{count}} of {{max}} images attached",
+    // Trying the design on the body (TryOnLauncher), only for studios in TRYON_STUDIO_SLUGS.
+    tryOnButton: "Try the design on your body",
+    tryOnHint: "Take a photo of where the tattoo will go and see how it looks. The picture is added here.",
+    tryOnTitle: "Try the tattoo on your body",
     imageLimitReached: "You can attach up to {{max}} images. Remove one to add another.",
     imageError: "We couldn't prepare that image for upload. Please try again.",
     imageTypeUnsupported: "That file format isn't supported. Upload a JPG, PNG or WEBP image.",

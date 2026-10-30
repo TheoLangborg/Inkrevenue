@@ -3075,6 +3075,78 @@ h1 {
   opacity: 0.55;
 }
 
+/* Prova motivet på kroppen (TryOnLauncher): knappen under bilderna, och kundvyn
+   från tryon-lab i helskärm ovanpå allt. */
+.tryon-launch {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid rgba(43, 90, 154, 0.28);
+  border-radius: 18px;
+  background: var(--lav-50);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.tryon-launch:hover:not([aria-disabled="true"]) {
+  border-color: var(--ink-400);
+  background: var(--ink-100);
+}
+
+.tryon-launch[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+/* registreringsmärket från Tryon Lab */
+.tryon-launch__mark {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--ink-700)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cg fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='16' cy='16' r='5.5'/%3E%3Cpath d='M16 5v7M16 20v7M5 16h7M20 16h7'/%3E%3C/g%3E%3C/svg%3E")
+    center / 30px no-repeat;
+}
+
+.tryon-launch__text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.tryon-launch__text strong {
+  font-weight: 650;
+}
+
+.tryon-launch__text span {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.tryon-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  background: var(--ink-900);
+}
+
+.tryon-overlay[hidden] {
+  display: none;
+}
+
+.tryon-overlay__frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
 /* Upp till fem bilder bredvid varandra. minmax(min(...), 1fr) så att rutnätet
    aldrig blir bredare än formulärets kolumn (se skyddsregeln för .form-grid). */
 .upload-previews {

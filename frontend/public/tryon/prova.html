@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#0a1a2f">
+  <title>Prova din tatuering</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23215fb0'/%3E%3Cg fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='16' cy='16' r='5.5'/%3E%3Cpath d='M16 5v7M16 20v7M5 16h7M20 16h7'/%3E%3C/g%3E%3C/svg%3E">
+  <link rel="preload" href="fonts/familjen-grotesk.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="prova.css">
+</head>
+<body>
+<div class="app" id="app" data-screen="start">
+
+  <header class="top">
+    <!-- Bara när kundvyn är inbäddad i studions förfrågan: tillbaka till formuläret, provningen finns kvar. -->
+    <button class="icon-btn close-btn" type="button" id="btnClose" aria-label="Tillbaka till förfrågan" title="Tillbaka till förfrågan" hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg>
+    </button>
+    <h1 class="top-title" id="topTitle">Prova din tatuering</h1>
+    <button class="icon-btn" type="button" id="btnUndo" data-for="needMotif place edit" aria-label="Ångra" title="Ångra (Ctrl+Z)" disabled hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7v6h6"/><path d="M20.5 17a8.5 8.5 0 0 0-14.3-6.2L3.5 13"/></svg>
+    </button>
+    <button class="icon-btn" type="button" id="btnRedo" data-for="needMotif place edit" aria-label="Gör om" title="Gör om (Ctrl+Y)" disabled hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 7v6h-6"/><path d="M3.5 17a8.5 8.5 0 0 1 14.3-6.2l2.7 2.2"/></svg>
+    </button>
+    <button class="icon-btn" type="button" id="btnZoom" data-for="place" aria-label="Visa bara bilden" hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 9V4.5H9M15 4.5h4.5V9M19.5 15v4.5H15M9 19.5H4.5V15"/></svg>
+    </button>
+    <button class="pill" type="button" id="btnDone" data-for="edit" hidden>Klar</button>
+  </header>
+
+  <main class="stage" id="stage">
+    <canvas id="cv" data-for="needMotif place edit" hidden aria-label="Din bild. Dra för att flytta tatueringen, nyp med två fingrar eller dra i hörnet för att ändra storlek och vrida."></canvas>
+    <button class="img-save" type="button" id="btnSaveImg" aria-label="Spara bilden" title="Spara bilden" hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 19.5h14"/></svg>
+    </button>
+
+    <div class="sel" id="sel" hidden>
+      <button class="sel-x" type="button" id="selDelete" aria-label="Ta bort tatueringen">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg>
+      </button>
+      <span class="sel-handle" id="selHandle" title="Dra för att ändra storlek och vrida">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M11 7h6v6M13 17H7v-6"/></svg>
+      </span>
+    </div>
+    <button class="zoom-close" type="button" id="btnZoomClose" aria-label="Tillbaka till verktygen" hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg>
+    </button>
+
+    <section class="start" data-for="start" aria-labelledby="startTitle">
+      <div class="start-inner">
+        <span class="mark" aria-hidden="true"></span>
+        <h2 id="startTitle">Se tatueringen på dig innan du bokar</h2>
+        <p>Fota kroppsdelen, lägg in tatueringen och flytta den dit du vill ha den. <span id="privacyNote">Inget laddas upp, bilden stannar i din telefon.</span></p>
+        <div class="start-actions">
+          <label class="big-btn primary">
+            <input class="sr-only" id="inCamera" type="file" accept="image/*" capture="environment" data-pick="body">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6h1.6l1.4-2h5l1.4 2h1.6A2.5 2.5 0 0 1 20 8.5v9a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 17.5z"/><circle cx="12" cy="13" r="3.5"/></svg>
+            <span>Ta foto</span>
+          </label>
+          <label class="big-btn">
+            <input class="sr-only" id="inPhoto" type="file" accept="image/*" data-pick="body">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="9" cy="10" r="1.8"/><path d="M20.5 15.5l-4.5-4.5-9 8.5"/></svg>
+            <span>Välj bild</span>
+          </label>
+        </div>
+        <p class="tip">Bäst blir det i dagsljus, utan blixt, med hela kroppsdelen i bild.</p>
+      </div>
+    </section>
+
+    <div class="swatches" data-for="edit" role="group" aria-label="Bakgrund bakom tatueringen" hidden>
+      <button class="swatch" type="button" data-view="checker" aria-label="Rutmönster" aria-pressed="true"></button>
+      <button class="swatch" type="button" data-view="black" aria-label="Svart" aria-pressed="false"></button>
+      <button class="swatch" type="button" data-view="white" aria-label="Vitt" aria-pressed="false"></button>
+    </div>
+    <p class="coach" id="coach" hidden>Dra för att flytta. Dra i hörnet eller nyp med två fingrar för att ändra storlek och vrida.</p>
+    <div class="busy" id="busy" hidden><span class="spinner" aria-hidden="true"></span><span id="busyText">Läser bilden</span></div>
+  </main>
+
+  <footer class="dock">
+    <div class="dock-inner">
+
+      <!-- Ark: rubriken med Klar står still, och bara innehållet under den rullar. -->
+      <section class="sheet" id="sheetAdjust" aria-labelledby="hAdjust" hidden>
+        <div class="sheet-head">
+          <h2 id="hAdjust">Justera</h2>
+          <button class="text-btn" type="button" id="btnResetPl">Nollställ</button>
+          <button class="pill small" type="button" data-close>Klar</button>
+        </div>
+        <div class="sheet-body">
+          <div class="field">
+            <div class="field-head"><label for="rngScale">Storlek</label><output for="rngScale" id="outScale">38 %</output></div>
+            <input type="range" id="rngScale" min="3" max="100" value="38">
+          </div>
+          <div class="field">
+            <div class="field-head"><label for="rngRot">Vridning</label><output for="rngRot" id="outRot">0°</output></div>
+            <input type="range" id="rngRot" min="-180" max="180" value="0">
+          </div>
+          <div class="field">
+            <div class="field-head"><span class="field-label" id="lblInk">Färger</span></div>
+            <div class="seg" role="radiogroup" aria-labelledby="lblInk">
+              <label><input class="sr-only" type="radio" name="ink" value="color"><span>Som bilden</span></label>
+              <label><input class="sr-only" type="radio" name="ink" value="gray"><span>Svartgrå</span></label>
+            </div>
+            <p class="sheet-note ink-note">Vill du ha andra färger? Skriv det till tatueraren.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="sheet" id="sheetMotif" aria-labelledby="hMotif" hidden>
+        <div class="sheet-head">
+          <h2 id="hMotif">Byt motiv</h2>
+          <button class="pill small" type="button" data-close>Klar</button>
+        </div>
+        <div class="sheet-body">
+          <div class="tray" id="motifTray">
+            <label class="tile add">
+              <input class="sr-only" type="file" accept="image/*" multiple data-pick="motif">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+              <span>Lägg till</span>
+            </label>
+          </div>
+          <p class="sheet-note">Tryck på ett motiv för att byta till det, eller lägg till ett nytt.</p>
+        </div>
+      </section>
+
+      <section class="sheet" id="sheetPhoto" aria-labelledby="hPhoto" hidden>
+        <div class="sheet-head">
+          <h2 id="hPhoto">Byt foto</h2>
+          <button class="pill small" type="button" data-close>Klar</button>
+        </div>
+        <div class="sheet-body">
+          <div class="sheet-pair">
+            <label class="big-btn">
+              <input class="sr-only" type="file" accept="image/*" capture="environment" data-pick="body">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6h1.6l1.4-2h5l1.4 2h1.6A2.5 2.5 0 0 1 20 8.5v9a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 17.5z"/><circle cx="12" cy="13" r="3.5"/></svg>
+              <span>Ta foto</span>
+            </label>
+            <label class="big-btn">
+              <input class="sr-only" type="file" accept="image/*" data-pick="body">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="9" cy="10" r="1.8"/><path d="M20.5 15.5l-4.5-4.5-9 8.5"/></svg>
+              <span>Välj bild</span>
+            </label>
+          </div>
+          <p class="sheet-note center">Tatueringen följer med till det nya fotot.</p>
+        </div>
+      </section>
+
+      <section class="sheet" id="sheetAdvanced" aria-labelledby="hAdvanced" hidden>
+        <div class="sheet-head">
+          <h2 id="hAdvanced">Avancerat</h2>
+          <button class="pill small" type="button" data-close>Klar</button>
+        </div>
+        <div class="sheet-body">
+          <div class="field">
+            <div class="field-head"><label for="rngCut">Rensning</label><output for="rngCut" id="outCut">14</output></div>
+            <input type="range" id="rngCut" min="0" max="40" value="14">
+          </div>
+          <div class="field">
+            <div class="field-head"><label for="rngOp">Färgstyrka</label><output for="rngOp" id="outOp">90 %</output></div>
+            <input type="range" id="rngOp" min="30" max="100" value="90">
+          </div>
+          <label class="switch"><span>Ta bort pappret</span><input type="checkbox" role="switch" id="swClean"></label>
+          <label class="switch"><span>Jämna ut skuggor</span><input type="checkbox" role="switch" id="swFlatten"></label>
+          <p class="sheet-note" id="alphaHint" hidden>Bilden har redan genomskinlig bakgrund, så det finns inget papper att ta bort.</p>
+          <label class="switch"><span>Rätta ljuset i fotot</span><input type="checkbox" role="switch" id="swLight" checked></label>
+          <div class="sheet-row">
+            <button class="pill ghost" type="button" id="btnRing">Ringa in</button>
+            <button class="pill ghost" type="button" id="btnCrop">Beskär</button>
+            <button class="pill ghost" type="button" id="btnWhite">Vitt bläck</button>
+          </div>
+          <div class="sheet-row">
+            <button class="text-btn" type="button" id="btnResetMotif">Återställ tatueringen</button>
+          </div>
+          <p class="sheet-note center">Allt här ställs in automatiskt. Ändra bara om något ser fel ut. Återställ tar tillbaka det automatiska.</p>
+        </div>
+      </section>
+
+      <div class="dock-stack" data-for="needMotif" hidden>
+        <label class="big-btn primary">
+          <input class="sr-only" id="inMotif" type="file" accept="image/*" multiple data-pick="motif">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          <span>Lägg till tatuering</span>
+        </label>
+        <p class="dock-hint">Välj en bild på tatueringen. Ett foto av en teckning på papper går bra, pappret tas bort.</p>
+        <label class="text-btn">
+          <input class="sr-only" type="file" accept="image/*" data-pick="body">
+          Byt foto
+        </label>
+      </div>
+
+      <div class="dock-stack" id="placeTools" data-for="place" hidden>
+        <nav class="tools" aria-label="Verktyg">
+          <!-- Byt motiv och Byt foto visar en liten bild av det som byts, så att det syns vilken knapp som gör vad. -->
+          <button class="tool" type="button" id="tMotif" aria-pressed="false">
+            <span class="tool-pic" aria-hidden="true"><img id="motifPic" alt=""></span>
+            <span>Byt motiv</span>
+          </button>
+          <button class="tool" type="button" id="tPhoto" aria-pressed="false">
+            <span class="tool-pic" aria-hidden="true"><img id="photoPic" alt=""></span>
+            <span>Byt foto</span>
+          </button>
+          <button class="tool" type="button" id="tAdjust" aria-pressed="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
+            <span>Justera</span>
+          </button>
+          <button class="tool" type="button" id="tClean">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.4 4.9a1.5 1.5 0 0 1 2.1 0l2.6 2.6a1.5 1.5 0 0 1 0 2.1L10.5 18H6.6l-2-2a1.5 1.5 0 0 1 0-2.1z"/><path d="M9 10.3l4.7 4.7M10.5 18H20"/></svg>
+            <span>Sudda</span>
+          </button>
+          <button class="tool" type="button" id="tFlip" aria-pressed="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5v17"/><path d="M8.5 7L4 17h4.5z"/><path d="M15.5 7L20 17h-4.5z"/></svg>
+            <span>Spegla</span>
+          </button>
+        </nav>
+        <button class="big-btn primary" type="button" id="btnSend">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 3.5L10 14"/><path d="M20.5 3.5l-6.5 17-4-6.5-6.5-4z"/></svg>
+          <span>Skicka till tatueraren</span>
+        </button>
+        <button class="text-btn more" type="button" id="tAdvanced">Avancerat</button>
+      </div>
+
+      <div class="dock-stack" data-for="edit" hidden>
+        <div class="tab-body" data-tab="ring" hidden>
+          <p class="dock-hint" id="ringHint"></p>
+          <div class="sheet-row" id="ringActions" hidden>
+            <button class="pill ghost" type="button" id="btnRingAgain">Ringa in igen</button>
+            <button class="pill ghost" type="button" id="btnRingErase">Sudda rester</button>
+          </div>
+        </div>
+        <div class="tab-body" data-tab="crop" hidden>
+          <p class="dock-hint">Dra en ruta runt det du vill behålla, till exempel en tatuering på ett ark med flera.</p>
+        </div>
+        <div class="tab-body" data-tab="erase" hidden>
+          <p class="dock-hint">Måla över det som ska bort, som en signatur eller text.</p>
+          <div class="field">
+            <div class="field-head"><label for="rngBrush">Penselstorlek</label><output for="rngBrush" id="outBrush">4 %</output></div>
+            <input type="range" id="rngBrush" min="1" max="15" step="0.5" value="4">
+          </div>
+        </div>
+        <div class="tab-body" data-tab="white" hidden>
+          <p class="dock-hint">Tryck på en vit yta inuti tatueringen så blir den vitt bläck. Tryck igen för att ta bort den.</p>
+          <button class="pill ghost" type="button" id="btnFindWhite">Hitta vita ytor</button>
+        </div>
+      </div>
+
+    </div>
+  </footer>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<noscript><p class="noscript">Prova din tatuering kräver JavaScript.</p></noscript>
+<script src="engine.js" defer></script>
+<script src="prova.js" defer></script>
+</body>
+</html>
