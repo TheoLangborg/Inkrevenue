@@ -15,6 +15,9 @@ if (!window.__inkrevenueLanguageRedirect) {
   // Likaså ?test: katalogen skriver om adressen med sina filter och tar då
   // bort den. Läst här sparas testläget för fliken innan något hinner det.
   isTestMode();
+  // Schemat som prerenderingen skrev in. Sidorna lägger själva in sitt via
+  // useJsonLd, så utan det här fanns varje schema två gånger.
+  document.querySelectorAll('script[type="application/ld+json"][data-prerendered]').forEach((element) => element.remove());
 
   ReactDOM.createRoot(document.getElementById("root")).render(
     <React.StrictMode>

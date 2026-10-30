@@ -47,6 +47,10 @@ export const sv = {
     aboutSite: "Om sidan",
     terms: "Användarvillkor",
     discoveryLabel: "Utforska tatueringar",
+    forStudios: "För studioägare",
+    bookingSystem: "Bokningssystem för tatuerare",
+    marketing: "Marknadsföring för studior",
+    trial: "Testa gratis i 30 dagar",
     cities: "Städer",
     styles: "Stilar",
     cityLink: "Tatuering i {{city}}",
@@ -63,6 +67,8 @@ export const sv = {
 
   home: {
     metaTitle: "Fler kunder till din tatueringsstudio",
+    schemaServiceName: "Marknadsföring och bokningssystem för tatueringsstudior",
+    schemaServiceType: "Marknadsföring för tatueringsstudior",
     metaDescription:
       "Ink Revenue tar hand om hela er marknadsföring — annonser, innehåll och kundförfrågningar från start till slut. Ni fokuserar på konsten. Vi fyller kalendern.",
     heroTitleLine1: "Fler bokningar. Mindre admin.",
@@ -152,6 +158,7 @@ export const sv = {
     plan2Model: "% per inkommen kund",
     plan2Text:
       "Vi kör er marknadsföring på sociala medier och annonser. Ni betalar en andel per kund vi genererar — ingen fast månadsavgift.",
+    plan2Link: "Så sköter vi marknadsföringen",
     plan3Title: "Bokningsplan",
     plan3Model: "Månadsabonnemang",
     plan3Text:
@@ -438,6 +445,8 @@ export const sv = {
   // Ghost Inks egen studiosida, pages/studios/GhostInkPage.jsx.
   ghostInk: {
     metaTitle: "{{artist}} – tatuerare på {{studio}} i {{city}}",
+    // Yrket i sidans strukturerade data (schema.org Person.jobTitle).
+    schemaJobTitle: "Tatuerare",
     metaDescription:
       "Boka tatuering eller konsultation hos {{artist}} på {{studio}} i {{city}}. Skicka din förfrågan med en referensbild. Åldersgräns 18 år.",
     // Raden under namnet i heron. Studion är en rad, inte rubriken.
@@ -541,7 +550,7 @@ export const sv = {
   trial: {
     metaTitle: "Testa gratis i 30 dagar",
     metaDescription:
-      "Skapa ett konto och testa Ink Revenue gratis i 30 dagar — utan betalkort. Egen studio-sida, smartare bokningsförfrågningar och allt samlat på ett ställe. Ingen bindningstid.",
+      "Testa Ink Revenue gratis i 30 dagar — utan betalkort. Egen studio-sida, smartare bokningsförfrågningar och allt samlat på ett ställe. Ingen bindningstid.",
     eyebrow: "För tatueringsstudior & artister",
     title: "Testa gratis i 30 dagar",
     lead: "Er egen studio-sida, bokningsförfrågningar med idé, placering och budget redan ifyllt — och allt samlat i en egen inloggning. Skapa kontot på några minuter.",
@@ -586,6 +595,203 @@ export const sv = {
     altText:
       "Annonser, innehåll och uppföljning av varje förfrågan — helt hanterat av oss. Boka ett gratis strategisamtal så går vi igenom vad som passar er studio bäst.",
     altCta: "Boka gratis strategisamtal"
+  },
+
+  // Landningssidorna i pages/SeoLandingPage.jsx. Påståendena här ska finnas
+  // någon annanstans på sajten också (startsidan, FAQ, testa-gratis) — de
+  // lovar inget nytt. Frågorna står ordagrant i sidans FAQPage-schema.
+  landing: {
+    relatedTitle: "Läs också",
+    relatedBookingSystem: "Bokningssystem för tatuerare",
+    relatedMarketing: "Marknadsföring för tatueringsstudior",
+    relatedStudios: "Hitta tatueringsstudios",
+    relatedFaq: "Vanliga frågor om Ink Revenue",
+
+    bookingSystem: {
+      metaTitle: "Bokningssystem för tatuerare – testa gratis",
+      metaDescription:
+        "Bokningsförfrågningar med idé, placering, budget och referensbilder ifyllt. Egen studiosida, inkorg och bokningar på ett ställe. Testa 30 dagar gratis.",
+      breadcrumb: "Bokningssystem för tatuerare",
+      eyebrow: "Bokningssystem för tatuerare",
+      title: "Ett bokningssystem byggt för tatuerare och tatueringsstudior",
+      lead: "En tatuering börjar med en idé, inte med en tjänst i en lista. Hos Ink Revenue skickar kunden idé, placering, storlek, budget och referensbilder i samma förfrågan — och ni har allt samlat i en egen inloggning.",
+      ctaPrimary: "Testa gratis i 30 dagar",
+      ctaSecondary: "Boka gratis strategisamtal",
+      introTitle: "Varför ett vanligt bokningssystem inte räcker för tatueringar",
+      introParagraphs: [
+        "De flesta bokningssystem utgår från att kunden väljer en tjänst med fast tid och fast pris, som en klippning. Så fungerar sällan en tatuering. Storlek, placering, detaljnivå och om det är en cover-up avgör hur lång tid det tar och vad det kostar. Därför börjar nästan varje bokning med en konversation.",
+        "Den konversationen sker ofta i DM, utspridd över Instagram, Facebook och sms. Det tar tid, och förfrågningar glöms bort. Ink Revenue samlar den i ett formulär som ställer rätt frågor från början, så att ni kan bedöma jobbet och svara med ett prisförslag direkt."
+      ],
+      featuresEyebrow: "Det här ingår",
+      featuresTitle: "Allt ni behöver för att ta emot bokningar",
+      features: [
+        {
+          title: "Förfrågningar med substans",
+          text: "Kunden beskriver idé, stil, placering, storlek och budget och bifogar upp till fem referensbilder. Ni slipper fram-och-tillbaka i DM och kan svara med ett prisförslag direkt."
+        },
+        {
+          title: "Er egen studiosida",
+          text: "Logotyp, galleri, stilar och om-text på en sida som syns i vår studiokatalog, där kunder söker studio efter stil och stad. Länka den i Instagram-bion."
+        },
+        {
+          title: "Allt samlat på ett ställe",
+          text: "Förfrågningar, bokningar, väntelista och statistik i er egen inloggning. Inga kalkylark och inga missade meddelanden."
+        },
+        {
+          title: "Kunden väljer tatuerare",
+          text: "Är ni flera i studion visas varje tatuerare med namn och portfolio, och kunden kan välja vem den vill boka."
+        },
+        {
+          title: "Byggt för mobilen",
+          text: "De flesta kunder kommer från Instagram och TikTok i telefonen. Studiosidan och formuläret är gjorda för att fyllas i där."
+        },
+        {
+          title: "Ni äger er data",
+          text: "Ingen bindningstid. Era kunder, bilder och förfrågningar är alltid era, och ni avslutar när ni vill."
+        }
+      ],
+      stepsEyebrow: "Så kommer ni igång",
+      stepsTitle: "Från konto till förfrågningar i tre steg",
+      steps: [
+        {
+          title: "Skapa ert konto",
+          text: "Registrera studion på ett par minuter. Inget betalkort och inga säljsamtal — ni testar i er egen takt."
+        },
+        {
+          title: "Sätt upp er sida",
+          text: "Ladda upp logotyp och galleri, välj era stilar och aktivera bokningsformuläret."
+        },
+        {
+          title: "Ta emot förfrågningar",
+          text: "Dela er sida i bion och låt kunderna höra av sig. Allt landar i er inkorg."
+        }
+      ],
+      fitTitle: "För soloartister och studios med flera tatuerare",
+      fitParagraphs: [
+        "Bokningssystemet passar lika bra för den som tatuerar själv som för en studio med flera artister. Soloartisten får en enkel sida att länka till och slipper hålla ordning på förfrågningar i DM. Studion med flera tatuerare får alla förfrågningar på ett ställe och kan låta kunden välja artist redan i formuläret.",
+        "Vill ni hellre att någon annan sköter marknadsföringen också kan vi ta hand om den: annonser, innehåll och uppföljning av varje förfrågan. Bokningssystemet ingår då i upplägget."
+      ],
+      faqTitle: "Vanliga frågor om bokningssystemet",
+      faq: [
+        {
+          q: "Vad kostar bokningssystemet?",
+          a: "Bokningsplanen är ett månadsabonnemang utan bindningstid. Ni testar först gratis i 30 dagar utan betalkort, och testperioden övergår inte automatiskt i ett abonnemang. Exakta priser går vi igenom under ett gratis strategisamtal."
+        },
+        {
+          q: "Kan kunderna boka direkt från Instagram?",
+          a: "Ja. Ni lägger länken till er studiosida i bion, och kunden fyller i formuläret i mobilen. Förfrågan landar i er inkorg hos Ink Revenue."
+        },
+        {
+          q: "Fungerar det om jag tatuerar själv?",
+          a: "Ja. Ink Revenue passar lika bra för soloartister som för studios med flera tatuerare. Ni får samma studiosida, samma formulär och samma inloggning."
+        },
+        {
+          q: "Hur snabbt kommer vi igång?",
+          a: "Kontot skapar ni på några minuter. Sedan laddar ni upp logotyp och galleri, väljer era stilar och aktiverar formuläret, och därefter kan kunderna skicka förfrågningar."
+        },
+        {
+          q: "Vad händer med vår data om vi slutar?",
+          a: "Ni kan avsluta när ni vill, utan bindningstid. Ni äger alltid er data och era bilder."
+        }
+      ],
+      ctaTitle: "Testa bokningssystemet gratis",
+      ctaText:
+        "30 dagar räcker gott för att sätta upp sidan och känna på flödet. Ni lägger aldrig in något betalkort, och vill ni fortsätta väljer ni upplägg själva.",
+      trust: ["30 dagar gratis", "Inget betalkort", "Ingen bindningstid", "Ni äger alltid er data"]
+    },
+
+    marketing: {
+      metaTitle: "Marknadsföring för tatueringsstudior",
+      metaDescription:
+        "Vi sköter marknadsföringen åt tatueringsstudior: annonser, innehåll i sociala medier och uppföljning av varje förfrågan. Ingen bindningstid.",
+      breadcrumb: "Marknadsföring för tatueringsstudior",
+      eyebrow: "Marknadsföring för tatueringsstudior",
+      title: "Marknadsföring för tatueringsstudior, helt skött av oss",
+      lead: "Ink Revenue tar hand om annonser, innehåll och kundförfrågningar för tatueringsstudior i hela Sverige. Ni godkänner materialet, vi gör resten, och ni ser varje förfrågan och bokning i en egen inloggning.",
+      ctaPrimary: "Boka gratis strategisamtal",
+      ctaSecondary: "Testa bokningssystemet gratis",
+      introTitle: "Ni vill tatuera, inte skriva annonstexter",
+      introParagraphs: [
+        "De flesta tatuerare vill lägga tiden på konsten, inte på annonser, inlägg och algoritmer. Ändå avgörs mycket av hur studion syns på Instagram, TikTok, Facebook och Google, och av hur snabbt någon svarar när en kund hör av sig. Många studios tappar kunder för att de syns dåligt eller svarar för långsamt.",
+        "Det är där vi kommer in. Vi är specialiserade på tatueringsbranschen och sköter hela kedjan, från inlägget eller annonsen som väcker intresset till uppföljningen av förfrågan. Ni behöver inte lära er ett enda marknadsföringsverktyg."
+      ],
+      featuresEyebrow: "Det här gör vi",
+      featuresTitle: "En hel marknadsföringsavdelning för er studio",
+      features: [
+        {
+          title: "Annonser i sociala medier",
+          text: "Vi sätter upp och sköter era annonser och följer löpande upp vad som ger förfrågningar, så att budgeten går dit den gör nytta."
+        },
+        {
+          title: "Innehåll i era kanaler",
+          text: "Vi tar fram inlägg för Instagram, TikTok och Facebook utifrån era bilder och er stil. Ni godkänner innan något publiceras."
+        },
+        {
+          title: "Uppföljning av varje förfrågan",
+          text: "Alla förfrågningar samlas på ett ställe. Vi svarar, följer upp och bokar in, så att ingen kund blir liggande obesvarad."
+        },
+        {
+          title: "En studiosida som säljer",
+          text: "Er sida lyfter stil, galleri och känsla, så att rätt kunder känner igen sig direkt och hör av sig med en genomtänkt förfrågan."
+        },
+        {
+          title: "Synlighet i studiokatalogen",
+          text: "Ni syns i vår katalog, där kunder filtrerar på stil och stad och skickar en förfrågan direkt via er studiosida."
+        },
+        {
+          title: "Statistik i realtid",
+          text: "Ni loggar in och ser alla förfrågningar, bokningar och er statistik. Inga gissningar om vad marknadsföringen ger."
+        }
+      ],
+      stepsEyebrow: "Kom igång",
+      stepsTitle: "Så fungerar det",
+      steps: [
+        {
+          title: "Boka ett strategisamtal",
+          text: "Vi lär känna er studio, era mål och vilka kunder ni vill nå. Samtalet är gratis och utan förpliktelser."
+        },
+        {
+          title: "Vi sätter upp allt åt er",
+          text: "Vi bygger er studiosida, optimerar er profil och startar rätt kanaler. Ni godkänner, vi kör."
+        },
+        {
+          title: "Förfrågningarna kommer in",
+          text: "Ni ser förfrågningar, bokningar och statistik i er inloggning. Vi sköter uppföljningen, ni tatuerar."
+        }
+      ],
+      fitTitle: "Betala per kund, inte per månad",
+      fitParagraphs: [
+        "Marknadsföringsplanen kostar en andel per kund vi genererar, utan fast månadsavgift. Vill ni ha allt i ett finns kombipaketet med marknadsföring, studiosida och bokningshantering, också det med betalning per kund. Exakta priser går vi igenom under strategisamtalet.",
+        "Upplägget passar både soloartister och studios med flera tatuerare, och vi anpassar det efter er situation. Vill ni hellre sköta marknadsföringen själva kan ni börja med bara bokningssystemet och testa det gratis i 30 dagar."
+      ],
+      faqTitle: "Vanliga frågor om marknadsföringen",
+      faq: [
+        {
+          q: "Behöver vi sköta något själva?",
+          a: "Nej. Ni godkänner material och svarar på våra frågor. Vi sköter annonser, innehåll, kundkontakt och uppföljning. Ju mer ni berättar om er stil, desto bättre blir resultatet."
+        },
+        {
+          q: "Vad kostar marknadsföringen?",
+          a: "Marknadsföringsplanen kostar en andel per kund vi genererar, utan fast månadsavgift. Kombipaketet med studiosida och bokningshantering betalas också per kund. Exakta priser går vi igenom under ett gratis strategisamtal."
+        },
+        {
+          q: "Vilka kanaler marknadsför ni oss i?",
+          a: "I era egna kanaler på Instagram, TikTok och Facebook, och i vår studiokatalog där kunder söker studio efter stil och stad. Alla förfrågningar samlas hos er."
+        },
+        {
+          q: "Hur snabbt kan vi komma igång?",
+          a: "Uppstart sker normalt inom en vecka efter att ni godkänt upplägget. Vi sätter upp er studiosida och startar rätt kanaler."
+        },
+        {
+          q: "Är vi bundna till ett avtal?",
+          a: "Nej. Det finns ingen bindningstid, och ni kan avsluta månad för månad. Ni äger alltid er data, era bilder och era sociala medier-kanaler."
+        }
+      ],
+      ctaTitle: "Redo att få fler bokningar?",
+      ctaText:
+        "Boka ett gratis strategisamtal på 20 minuter. Vi går igenom era mål, vilka kunder ni vill nå och vilket upplägg som passar er bäst.",
+      trust: ["Gratis strategisamtal", "Ingen bindningstid", "Uppstart inom 1 vecka", "Ni äger alltid er data"]
+    }
   },
 
   notFound: {

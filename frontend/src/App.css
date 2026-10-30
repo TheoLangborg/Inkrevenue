@@ -4176,6 +4176,28 @@ h1 {
   color: #fff;
 }
 
+/* "Läs också" längst ner på landningssidorna (SeoLandingPage). */
+.landing-related {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: 8px 20px;
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line, rgba(16, 35, 63, 0.12));
+}
+
+.landing-related__title {
+  margin: 0;
+  font-weight: 700;
+}
+
+.landing-related a {
+  color: var(--accent);
+  font-weight: 600;
+}
+
 .footer__discovery {
   display: flex;
   gap: 32px;
@@ -6587,7 +6609,7 @@ main:has(> .crm-offer) + .site-operator-note {
   margin: 0 calc(var(--s) * 0.2);
 }
 
-.crm-topbar h1 {
+.crm-topbar__title {
   font-size: calc(var(--s) * 1.5) !important;
   font-weight: 600;
   letter-spacing: -0.02em;

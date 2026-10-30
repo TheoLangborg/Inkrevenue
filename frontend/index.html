@@ -52,18 +52,18 @@
     <meta name="description" content="Ink Revenue hjälper tatueringsstudior i Sverige att fylla kalendern med bokade kunder via skräddarsydd marknadsföring. Betala bara för resultat." />
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
     <meta name="author" content="Ink Revenue" />
-    <link rel="canonical" href="https://inkrevenue.online/" />
-    <link rel="alternate" href="https://inkrevenue.online/" hreflang="sv-SE" />
+    <link rel="canonical" href="https://www.inkrevenue.online/" />
+    <link rel="alternate" href="https://www.inkrevenue.online/" hreflang="sv-SE" />
     <meta name="theme-color" content="#10233f" />
 
     <!-- Open Graph -->
     <meta property="og:locale"      content="sv_SE" />
     <meta property="og:site_name"   content="Ink Revenue" />
     <meta property="og:type"        content="website" />
-    <meta property="og:url"         content="https://inkrevenue.online/" />
+    <meta property="og:url"         content="https://www.inkrevenue.online/" />
     <meta property="og:title"       content="Ink Revenue — Fler kunder till din tatueringsstudio" />
     <meta property="og:description" content="Vi hjälper tatueringsstudior att fylla kalendern med bokade kunder. Betala bara när vi levererar resultat — inga dolda avgifter." />
-    <meta property="og:image"        content="https://inkrevenue.online/og-image.png" />
+    <meta property="og:image"        content="https://www.inkrevenue.online/og-image.png" />
     <meta property="og:image:type"   content="image/png" />
     <meta property="og:image:width"  content="1200" />
     <meta property="og:image:height" content="630" />
@@ -73,18 +73,24 @@
     <meta name="twitter:card"        content="summary_large_image" />
     <meta name="twitter:title"       content="Ink Revenue — Fler kunder till din tatueringsstudio" />
     <meta name="twitter:description" content="Vi hjälper tatueringsstudior att fylla kalendern med bokade kunder. Betala bara när vi levererar." />
-    <meta name="twitter:image"       content="https://inkrevenue.online/og-image.png" />
+    <meta name="twitter:image"       content="https://www.inkrevenue.online/og-image.png" />
 
-    <!-- JSON-LD: Organization + WebSite + Service + FAQPage + Sitelinks Searchbox -->
+    <!-- JSON-LD: Organization + WebSite. Gäller varje sida. Sidornas egna
+         scheman (startsidans tjänst och frågor, FAQ-sidan, studiosidorna,
+         katalogen) läggs in av sidorna själva via useJsonLd, och prerender.mjs
+         skriver in dem i den statiska HTML:en. Adressen speglar
+         src/data/siteOperator.js och ska stämma exakt med Google-profilen. -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@graph": [
         {
           "@type": "Organization",
-          "@id": "https://inkrevenue.online/#organization",
+          "@id": "https://www.inkrevenue.online/#organization",
           "name": "Ink Revenue",
+          "alternateName": "InkRevenue",
           "legalName": "Theo Langborg",
+          "founder": { "@type": "Person", "name": "Theo Langborg" },
           "address": {
             "@type": "PostalAddress",
             "streetAddress": "Lämmenäs 104",
@@ -92,21 +98,26 @@
             "addressLocality": "Finspång",
             "addressCountry": "SE"
           },
-          "url": "https://inkrevenue.online/",
+          "url": "https://www.inkrevenue.online/",
           "logo": {
             "@type": "ImageObject",
-            "url": "https://inkrevenue.online/ink-revenue-logo.svg",
-            "width": 200,
-            "height": 60
+            "url": "https://www.inkrevenue.online/web-app-manifest-512x512.png",
+            "width": 512,
+            "height": 512
           },
-          "description": "Ink Revenue tar hand om hela marknadsföringen för tatueringsstudior i Sverige — annonser, innehåll och kundförfrågningar — så ni kan fokusera på konsten.",
+          "image": "https://www.inkrevenue.online/og-image.png",
+          "email": "info@inkrevenue.online",
+          "telephone": "+46732009483",
+          "description": "Ink Revenue tar hand om hela marknadsföringen för tatueringsstudior i Sverige — annonser, innehåll och kundförfrågningar — och ger studion ett bokningssystem med egen studiosida.",
           "areaServed": { "@type": "Country", "name": "Sverige" },
+          "knowsAbout": ["Marknadsföring för tatueringsstudior", "Bokningssystem för tatuerare", "Tatueringsstudior"],
           "knowsLanguage": ["sv", "en"],
           "contactPoint": {
             "@type": "ContactPoint",
             "telephone": "+46732009483",
             "email": "info@inkrevenue.online",
             "contactType": "customer support",
+            "areaServed": "SE",
             "availableLanguage": ["Swedish", "English"]
           },
           "sameAs": [
@@ -116,90 +127,12 @@
         },
         {
           "@type": "WebSite",
-          "@id": "https://inkrevenue.online/#website",
-          "url": "https://inkrevenue.online/",
+          "@id": "https://www.inkrevenue.online/#website",
+          "url": "https://www.inkrevenue.online/",
           "name": "Ink Revenue",
-          "publisher": { "@id": "https://inkrevenue.online/#organization" },
-          "inLanguage": "sv-SE",
-          "potentialAction": {
-            "@type": "SearchAction",
-            "target": {
-              "@type": "EntryPoint",
-              "urlTemplate": "https://inkrevenue.online/studios?search={search_term_string}"
-            },
-            "query-input": "required name=search_term_string"
-          }
-        },
-        {
-          "@type": "Service",
-          "@id": "https://inkrevenue.online/#service",
-          "name": "Managed marknadsföring för tatueringsstudior",
-          "serviceType": "Marknadsföring för tatueringsstudior",
-          "provider": { "@id": "https://inkrevenue.online/#organization" },
-          "areaServed": { "@type": "Country", "name": "Sverige" },
-          "description": "Ink Revenue sköter er marknadsföring, era annonser och era kundförfrågningar — ni fokuserar på tatueringarna. Ingen bindningstid, uppstart inom 1 vecka.",
-          "offers": {
-            "@type": "Offer",
-            "priceCurrency": "SEK",
-            "availability": "https://schema.org/InStock",
-            "priceSpecification": {
-              "@type": "UnitPriceSpecification",
-              "description": "Månadsabonnemang — ingen bindningstid, avsluta när ni vill"
-            }
-          }
-        },
-        {
-          "@type": "FAQPage",
-          "mainEntity": [
-            {
-              "@type": "Question",
-              "name": "Behöver vi sköta något själva?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "Nej. Ni godkänner material och svarar på våra frågor — det är allt. Vi sköter annonser, innehåll, kundkontakt och uppföljning. Ju mer ni berättar om er stil, desto bättre blir resultatet."
-              }
-            },
-            {
-              "@type": "Question",
-              "name": "Hur snabbt ser vi resultat?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "De flesta studios ser de första förfrågningarna inom 1–2 veckor efter uppstart. Volym och kvalitet ökar löpande de första 60–90 dagarna allteftersom vi optimerar era kanaler."
-              }
-            },
-            {
-              "@type": "Question",
-              "name": "Vad är skillnaden mot att sköta Instagram eller Google själv?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "Att göra det själv tar tid och ger ofta ojämna resultat. Vi är specialiserade på tatueringsbranschen och vet vad som fungerar — ni får en hel marknadsföringsavdelning till en bråkdel av kostnaden."
-              }
-            },
-            {
-              "@type": "Question",
-              "name": "Hur ser vår studio-sida ut?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "Varje studio får en skräddarsydd sida med er logotyp, galleri, stil-taggar, om-oss-text och ett anpassat förfrågningsformulär. Kunder kan filtrera på stil, stad och känsla — och skicka en förfrågan med sin idé och budget direkt."
-              }
-            },
-            {
-              "@type": "Question",
-              "name": "Vad händer om vi vill avsluta?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "Ni kan avsluta månad för månad utan förklaring. Ni äger alltid er data, era bilder och era sociala medier-kanaler. Vi hjälper till med överlämning om ni önskar."
-              }
-            },
-            {
-              "@type": "Question",
-              "name": "Fungerar det för soloartister också?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "Absolut. Ink Revenue passar lika bra för soloartister som för studios med flera konstnärer. Vi anpassar upplägg och budget efter er situation."
-              }
-            }
-          ]
+          "alternateName": "InkRevenue",
+          "publisher": { "@id": "https://www.inkrevenue.online/#organization" },
+          "inLanguage": ["sv-SE", "en"]
         }
       ]
     }

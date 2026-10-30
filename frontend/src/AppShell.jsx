@@ -15,6 +15,7 @@ import { SlotOfferPage } from "./pages/SlotOfferPage";
 import { PaymentLinkPage } from "./pages/PaymentLinkPage";
 import { ReminderStopPage } from "./pages/ReminderStopPage";
 import { TrialPage } from "./pages/TrialPage";
+import { LANDING_PAGES, SeoLandingPage } from "./pages/SeoLandingPage";
 import { studioRegistry } from "./pages/studios";
 import { ThemedStudioPage } from "./pages/studios/ThemedStudioPage";
 import { useSiteLocation } from "./utils/siteRouter";
@@ -24,6 +25,11 @@ import { useBookingFormAutoScroll } from "./utils/useBookingFormAutoScroll";
 import { LanguageProvider } from "./i18n/LanguageContext";
 import { splitLanguageFromPath } from "./i18n/config";
 
+// ⚠️ En ny rutt måste också in på ett av två ställen, annars svarar Vercel med
+// status 404 (sidan ritas ändå, men Google indexerar den inte):
+//  - fast adress (/priser): ROUTES i prerender.mjs, som prerendrar den och
+//    lägger den i sitemapen
+//  - adress med variabel del (/tid/:token): rewrites i vercel.json → /app.html
 function getPageFromPath(pathname) {
   if (pathname === "/") {
     return {
@@ -53,6 +59,14 @@ function getPageFromPath(pathname) {
       currentPath: pathname,
       element: <TrialPage />,
       hideHeader: true
+    };
+  }
+
+  // Landningssidor för sökord (bokningssystem, marknadsföring).
+  if (LANDING_PAGES[pathname]) {
+    return {
+      currentPath: pathname,
+      element: <SeoLandingPage path={pathname} />
     };
   }
 

@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { buildPageTitle, useJsonLd, usePageMetadata } from "../utils/pageMetadata";
+import { buildStudioJsonLd } from "../utils/studioSchema";
 import { SiteLink } from "../utils/siteRouter";
-import { getPublicStudioBySlug, getPublicStudios } from "../services/publicSiteApi";
+import { getPublicStudios } from "../services/publicSiteApi";
+import { usePublicStudio } from "../utils/publicStudio";
 import { StudioLeadFormEnhanced } from "../components/StudioLeadFormEnhanced";
 import { PublicStudioCard } from "../components/PublicStudioCard";
 import { RollingGallery } from "../components/RollingGallery";
@@ -9,6 +11,7 @@ import { ArtistShowcase } from "../components/ArtistShowcase";
 import { StudioImage } from "../components/StudioImage";
 import { buildShowcaseArtists, shouldShowArtistShowcase } from "../utils/artistShowcase";
 import { getStudioTags } from "../utils/studioTags";
+import { TEST_STUDIO_SLUGS } from "../utils/studioOrder";
 import { studioRegistry } from "./studios";
 import { studioImages } from "./studios/studioImages";
 import { useLanguage } from "../i18n/LanguageContext";
@@ -65,9 +68,13 @@ export function StudioProfilePage({
   allowPreviewSubmit = false
 }) {
   const { t, language } = useLanguage();
-  const [studio, setStudio] = useState(studioOverride);
-  const [loading, setLoading] = useState(!studioOverride);
-  const [error, setError] = useState("");
+  // En förhandsvisning (studioOverride) hämtar inget; annars byggets data
+  // direkt och en ny hämtning i bakgrunden (se usePublicStudio).
+  const fetched = usePublicStudio(slug, { skip: Boolean(studioOverride) });
+  const studio = studioOverride || fetched.studio;
+  const loading = studioOverride ? false : fetched.loading;
+  const error = studioOverride ? "" : fetched.error?.message || "";
+  const loadFailed = !studioOverride && Boolean(fetched.error);
   const [allStudios, setAllStudios] = useState([]);
   // "Boka hos …" i tatuerarsektionen → formuläret, och formulärets val tillbaka
   // hit så att rätt kort är markerat. Samma par i ThemedStudioPage.
@@ -75,41 +82,6 @@ export function StudioProfilePage({
   const [selectedArtistId, setSelectedArtistId] = useState("");
   const showcaseArtists = useMemo(() => buildShowcaseArtists(studio?.artistOptions), [studio]);
 
-  useEffect(() => {
-    if (studioOverride) {
-      setStudio(studioOverride);
-      setLoading(false);
-      setError("");
-      return undefined;
-    }
-
-    let active = true;
-
-    setLoading(true);
-    setError("");
-
-    getPublicStudioBySlug(slug)
-      .then((response) => {
-        if (active) {
-          setStudio(response);
-        }
-      })
-      .catch((nextError) => {
-        if (active) {
-          setError(nextError.message);
-          setStudio(null);
-        }
-      })
-      .finally(() => {
-        if (active) {
-          setLoading(false);
-        }
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [slug, studioOverride]);
 
   useEffect(() => {
     if (previewMode) return;
@@ -256,12 +228,12 @@ export function StudioProfilePage({
       return buildPageTitle(`${studio.name}${suffix ? ` ${suffix}` : ""}`);
     }
 
-    if (error) {
+    if (loadFailed) {
       return buildPageTitle(t("studio.metaErrorTitle"));
     }
 
     return buildPageTitle(t("studio.metaFallbackTitle"));
-  }, [error, studio, studioTags, t]);
+  }, [loadFailed, studio, studioTags, t]);
   const pageDescription = useMemo(() => {
     if (!studio) {
       return t("studio.metaDescriptionFallback");
@@ -299,57 +271,15 @@ export function StudioProfilePage({
     description: pageDescription,
     image: studio?.heroImageUrl || studio?.logoUrl || "/ink-revenue-logo.svg",
     path: pagePath,
-    noIndex: previewMode
+    // En studio som inte finns (eller är dold) ska inte indexeras som en
+    // tom sida, och inte heller InkRevenues teststudio.
+    noIndex: previewMode || loadFailed || TEST_STUDIO_SLUGS.includes(slug)
   });
 
-  const studioJsonLd = useMemo(() => {
-    if (!studio || previewMode) return null;
-
-    const resolvedSlug = studio.slug || slug;
-    const languagePrefix = language === "sv" ? "" : `/${language}`;
-    const studioUrl = `https://inkrevenue.online${languagePrefix}/studio/${encodeURIComponent(resolvedSlug)}`;
-    const tags = [...new Set(getStudioTags(studio))];
-    const images = Array.isArray(studio.publicProfile?.galleryImageUrls)
-      ? studio.publicProfile.galleryImageUrls.filter(Boolean)
-      : [];
-
-    const schema = {
-      "@context": "https://schema.org",
-      "@type": "TattooShop",
-      "@id": studioUrl,
-      "name": studio.name,
-      "url": studioUrl,
-      "description": studio.publicProfile?.intro || studio.description || undefined,
-      "address": studio.city
-        ? { "@type": "PostalAddress", "addressLocality": studio.city, "addressCountry": "SE" }
-        : undefined,
-      "image": studio.heroImageUrl || studio.logoUrl || undefined,
-      "logo": studio.logoUrl || undefined,
-      "hasMap": studio.city
-        ? `https://www.google.com/maps/search/${encodeURIComponent(t("studio.mapsQuery", { name: studio.name, city: studio.city }))}`
-        : undefined,
-      "knowsAbout": tags.length ? tags : undefined,
-      "inLanguage": language === "sv" ? "sv-SE" : "en",
-      "potentialAction": {
-        "@type": "ReserveAction",
-        "target": { "@type": "EntryPoint", "urlTemplate": `${studioUrl}#studio-form` },
-        "result": { "@type": "Reservation", "name": t("studio.reserveActionName") }
-      }
-    };
-
-    if (images.length) {
-      schema.photo = images.map((url) => ({
-        "@type": "ImageObject",
-        "url": url,
-        "contentUrl": url,
-        "description": t("studio.photoDescription", { name: studio.name })
-      }));
-    }
-
-    Object.keys(schema).forEach((key) => schema[key] === undefined && delete schema[key]);
-
-    return schema;
-  }, [previewMode, slug, studio, language, t]);
+  const studioJsonLd = useMemo(
+    () => (previewMode ? null : buildStudioJsonLd({ studio, slug, language, t })),
+    [previewMode, slug, studio, language, t]
+  );
 
   useJsonLd(studioJsonLd);
 

@@ -38,6 +38,12 @@ export function SiteFooter() {
 
         <nav className="footer__discovery" aria-label={t("footer.discoveryLabel")}>
           <div className="footer__discovery-col">
+            <p className="footer__discovery-heading">{t("footer.forStudios")}</p>
+            <SiteLink href="/bokningssystem-for-tatuerare">{t("footer.bookingSystem")}</SiteLink>
+            <SiteLink href="/marknadsforing-for-tatueringsstudior">{t("footer.marketing")}</SiteLink>
+            <SiteLink href="/testa-gratis">{t("footer.trial")}</SiteLink>
+          </div>
+          <div className="footer__discovery-col">
             <p className="footer__discovery-heading">{t("footer.cities")}</p>
             {FOOTER_CITIES.map((city) => (
               <SiteLink key={city} href={`/studios?city=${encodeURIComponent(city)}`}>

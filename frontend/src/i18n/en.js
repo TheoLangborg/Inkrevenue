@@ -45,6 +45,10 @@ export const en = {
     aboutSite: "About this site",
     terms: "Terms of use",
     discoveryLabel: "Explore tattoos",
+    forStudios: "For studio owners",
+    bookingSystem: "Booking system for tattoo artists",
+    marketing: "Marketing for studios",
+    trial: "Try free for 30 days",
     cities: "Cities",
     styles: "Styles",
     cityLink: "Tattoos in {{city}}",
@@ -60,6 +64,8 @@ export const en = {
 
   home: {
     metaTitle: "More clients for your tattoo studio",
+    schemaServiceName: "Marketing and booking system for tattoo studios",
+    schemaServiceType: "Marketing for tattoo studios",
     metaDescription:
       "Ink Revenue handles your entire marketing — ads, content and client enquiries from start to finish. You focus on the art. We fill the calendar.",
     heroTitleLine1: "More bookings. Less admin.",
@@ -149,6 +155,7 @@ export const en = {
     plan2Model: "% per client generated",
     plan2Text:
       "We run your marketing on social media and ads. You pay a share per client we generate — no fixed monthly fee.",
+    plan2Link: "How we run the marketing",
     plan3Title: "Booking plan",
     plan3Model: "Monthly subscription",
     plan3Text:
@@ -431,6 +438,8 @@ export const en = {
   // Ghost Ink's own studio page, pages/studios/GhostInkPage.jsx.
   ghostInk: {
     metaTitle: "{{artist}} – tattoo artist at {{studio}}, {{city}}",
+    // The job title in the page's structured data (schema.org Person.jobTitle).
+    schemaJobTitle: "Tattoo artist",
     metaDescription:
       "Book a tattoo or a consultation with {{artist}} at {{studio}} in {{city}}. Send your enquiry with a reference image. You must be 18 or older.",
     // The line under the name in the hero. The studio is a line, not the heading.
@@ -532,7 +541,7 @@ export const en = {
   trial: {
     metaTitle: "Try free for 30 days",
     metaDescription:
-      "Create an account and try Ink Revenue free for 30 days — no card needed. Your own studio page, smarter booking enquiries and everything in one place. No lock-in.",
+      "Try Ink Revenue free for 30 days — no card needed. Your own studio page, smarter booking enquiries and everything in one place. No lock-in.",
     eyebrow: "For tattoo studios & artists",
     title: "Try free for 30 days",
     lead: "Your own studio page, booking enquiries with idea, placement and budget already filled in — and everything gathered in your own login. Create the account in a few minutes.",
@@ -577,6 +586,201 @@ export const en = {
     altText:
       "Ads, content and follow-up on every enquiry — fully managed by us. Book a free strategy call and we'll go through what suits your studio best.",
     altCta: "Book a free strategy call"
+  },
+
+  // The landing pages in pages/SeoLandingPage.jsx. See the note in sv.js.
+  landing: {
+    relatedTitle: "Read more",
+    relatedBookingSystem: "Booking system for tattoo artists",
+    relatedMarketing: "Marketing for tattoo studios",
+    relatedStudios: "Find tattoo studios",
+    relatedFaq: "Frequently asked questions about Ink Revenue",
+
+    bookingSystem: {
+      metaTitle: "Booking system for tattoo artists – try it free",
+      metaDescription:
+        "Booking requests with idea, placement, budget and reference images filled in. Studio page, inbox and bookings in one place. Try it free for 30 days.",
+      breadcrumb: "Booking system for tattoo artists",
+      eyebrow: "Booking system for tattoo artists",
+      title: "A booking system built for tattoo artists and tattoo studios",
+      lead: "A tattoo starts with an idea, not with a service picked from a list. With Ink Revenue the client sends the idea, placement, size, budget and reference images in one request — and you have everything in your own login.",
+      ctaPrimary: "Try it free for 30 days",
+      ctaSecondary: "Book a free strategy call",
+      introTitle: "Why an ordinary booking system falls short for tattoos",
+      introParagraphs: [
+        "Most booking systems assume the client picks a service with a fixed duration and a fixed price, like a haircut. A tattoo rarely works that way. Size, placement, level of detail and whether it is a cover-up decide how long it takes and what it costs. That is why almost every booking starts with a conversation.",
+        "That conversation usually happens in DMs, spread across Instagram, Facebook and text messages. It takes time, and requests get forgotten. Ink Revenue gathers it in a form that asks the right questions from the start, so you can assess the job and reply with a quote straight away."
+      ],
+      featuresEyebrow: "What's included",
+      featuresTitle: "Everything you need to take bookings",
+      features: [
+        {
+          title: "Requests with substance",
+          text: "The client describes the idea, style, placement, size and budget and attaches up to five reference images. No back-and-forth in DMs, and you can reply with a quote straight away."
+        },
+        {
+          title: "Your own studio page",
+          text: "Logo, gallery, styles and an about text on a page listed in our studio directory, where clients search for studios by style and city. Link it in your Instagram bio."
+        },
+        {
+          title: "Everything in one place",
+          text: "Requests, bookings, waiting list and statistics in your own login. No spreadsheets and no missed messages."
+        },
+        {
+          title: "The client picks the artist",
+          text: "If there are several of you in the studio, each artist is shown with name and portfolio, and the client can choose who to book."
+        },
+        {
+          title: "Built for mobile",
+          text: "Most clients arrive from Instagram and TikTok on their phones. The studio page and the form are made to be filled in there."
+        },
+        {
+          title: "You own your data",
+          text: "No lock-in period. Your clients, images and requests are always yours, and you can cancel whenever you like."
+        }
+      ],
+      stepsEyebrow: "How to get started",
+      stepsTitle: "From account to requests in three steps",
+      steps: [
+        {
+          title: "Create your account",
+          text: "Register the studio in a couple of minutes. No card and no sales calls — try it at your own pace."
+        },
+        {
+          title: "Set up your page",
+          text: "Upload your logo and gallery, choose your styles and switch on the booking form."
+        },
+        {
+          title: "Receive requests",
+          text: "Share your page in your bio and let clients get in touch. Everything lands in your inbox."
+        }
+      ],
+      fitTitle: "For solo artists and studios with several artists",
+      fitParagraphs: [
+        "The booking system suits a solo artist just as well as a studio with several artists. The solo artist gets a simple page to link to and no longer has to keep track of requests in DMs. A studio with several artists gets every request in one place and can let the client choose an artist right in the form.",
+        "If you would rather have someone else handle the marketing too, we can take care of it: ads, content and follow-up on every request. The booking system is then part of the package."
+      ],
+      faqTitle: "Frequently asked questions about the booking system",
+      faq: [
+        {
+          q: "What does the booking system cost?",
+          a: "The booking plan is a monthly subscription with no lock-in period. You first try it free for 30 days without a card, and the trial does not turn into a subscription automatically. We go through exact prices in a free strategy call."
+        },
+        {
+          q: "Can clients book straight from Instagram?",
+          a: "Yes. You put the link to your studio page in your bio, and the client fills in the form on their phone. The request lands in your Ink Revenue inbox."
+        },
+        {
+          q: "Does it work if I tattoo on my own?",
+          a: "Yes. Ink Revenue suits solo artists just as well as studios with several artists. You get the same studio page, the same form and the same login."
+        },
+        {
+          q: "How quickly can we get started?",
+          a: "Creating the account takes a few minutes. Then you upload your logo and gallery, choose your styles and switch on the form, and clients can start sending requests."
+        },
+        {
+          q: "What happens to our data if we stop?",
+          a: "You can cancel whenever you like, with no lock-in period. You always own your data and your images."
+        }
+      ],
+      ctaTitle: "Try the booking system for free",
+      ctaText:
+        "30 days is plenty to set up your page and get a feel for the flow. You never enter a card, and if you want to continue you choose a plan yourself.",
+      trust: ["30 days free", "No card needed", "No lock-in period", "You always own your data"]
+    },
+
+    marketing: {
+      metaTitle: "Marketing for tattoo studios",
+      metaDescription:
+        "We run the marketing for tattoo studios: ads, social media content and follow-up on every enquiry. No lock-in period.",
+      breadcrumb: "Marketing for tattoo studios",
+      eyebrow: "Marketing for tattoo studios",
+      title: "Marketing for tattoo studios, fully handled by us",
+      lead: "Ink Revenue takes care of ads, content and client enquiries for tattoo studios across Sweden. You approve the material, we do the rest, and you see every enquiry and booking in your own login.",
+      ctaPrimary: "Book a free strategy call",
+      ctaSecondary: "Try the booking system for free",
+      introTitle: "You want to tattoo, not write ad copy",
+      introParagraphs: [
+        "Most tattoo artists want to spend their time on the art, not on ads, posts and algorithms. Yet a lot depends on how the studio shows up on Instagram, TikTok, Facebook and Google, and on how quickly someone replies when a client gets in touch. Many studios lose clients because they are hard to find or reply too slowly.",
+        "That is where we come in. We specialise in the tattoo industry and handle the whole chain, from the post or ad that sparks interest to the follow-up on the enquiry. You don't need to learn a single marketing tool."
+      ],
+      featuresEyebrow: "What we do",
+      featuresTitle: "A whole marketing department for your studio",
+      features: [
+        {
+          title: "Social media ads",
+          text: "We set up and run your ads and keep track of what brings in enquiries, so the budget goes where it makes a difference."
+        },
+        {
+          title: "Content in your channels",
+          text: "We create posts for Instagram, TikTok and Facebook based on your images and your style. You approve before anything is published."
+        },
+        {
+          title: "Follow-up on every enquiry",
+          text: "All enquiries are gathered in one place. We reply, follow up and book clients in, so no one is left without an answer."
+        },
+        {
+          title: "A studio page that sells",
+          text: "Your page highlights style, gallery and feel, so the right clients recognise themselves straight away and send a well-thought-out enquiry."
+        },
+        {
+          title: "Visibility in the studio directory",
+          text: "You are listed in our directory, where clients filter by style and city and send an enquiry directly through your studio page."
+        },
+        {
+          title: "Real-time statistics",
+          text: "Log in and see every enquiry, booking and your statistics. No guessing about what the marketing delivers."
+        }
+      ],
+      stepsEyebrow: "Get started",
+      stepsTitle: "How it works",
+      steps: [
+        {
+          title: "Book a strategy call",
+          text: "We get to know your studio, your goals and the clients you want to reach. The call is free and without obligation."
+        },
+        {
+          title: "We set everything up",
+          text: "We build your studio page, optimise your profile and start the right channels. You approve, we run it."
+        },
+        {
+          title: "The enquiries come in",
+          text: "You see enquiries, bookings and statistics in your login. We handle the follow-up, you tattoo."
+        }
+      ],
+      fitTitle: "Pay per client, not per month",
+      fitParagraphs: [
+        "The marketing plan costs a share per client we bring in, with no fixed monthly fee. If you want everything in one, the combo package covers marketing, the studio page and booking management, also paid per client. We go through exact prices in the strategy call.",
+        "The setup suits both solo artists and studios with several artists, and we adapt it to your situation. If you would rather run the marketing yourselves, you can start with just the booking system and try it free for 30 days."
+      ],
+      faqTitle: "Frequently asked questions about the marketing",
+      faq: [
+        {
+          q: "Do we need to handle anything ourselves?",
+          a: "No. You approve material and answer our questions. We handle ads, content, client contact and follow-up. The more you tell us about your style, the better the result."
+        },
+        {
+          q: "What does the marketing cost?",
+          a: "The marketing plan costs a share per client we bring in, with no fixed monthly fee. The combo package with studio page and booking management is also paid per client. We go through exact prices in a free strategy call."
+        },
+        {
+          q: "Which channels do you market us in?",
+          a: "In your own channels on Instagram, TikTok and Facebook, and in our studio directory where clients search for studios by style and city. All enquiries are gathered with you."
+        },
+        {
+          q: "How quickly can we get started?",
+          a: "We normally start within a week of you approving the plan. We set up your studio page and start the right channels."
+        },
+        {
+          q: "Are we tied to a contract?",
+          a: "No. There is no lock-in period, and you can cancel month by month. You always own your data, your images and your social media channels."
+        }
+      ],
+      ctaTitle: "Ready for more bookings?",
+      ctaText:
+        "Book a free 20-minute strategy call. We go through your goals, the clients you want to reach and which setup suits you best.",
+      trust: ["Free strategy call", "No lock-in period", "Up and running within 1 week", "You always own your data"]
+    }
   },
 
   notFound: {

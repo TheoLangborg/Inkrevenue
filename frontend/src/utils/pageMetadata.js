@@ -3,23 +3,24 @@ import { useLanguage } from "../i18n/LanguageContext";
 import { DEFAULT_LANGUAGE, HTML_LANG, LANGUAGES, OG_LOCALES, buildLanguagePath } from "../i18n/config";
 
 const BRAND_NAME = "Ink Revenue";
-const SITE_URL = "https://inkrevenue.online";
+// Sajten bor på www (apex 308:ar hit). Canonical, hreflang, sitemap och schema
+// måste peka på www, annars pekar de på en omdirigering. Speglas i prerender.mjs
+// och index.html.
+export const SITE_URL = "https://www.inkrevenue.online";
 const DEFAULT_IMAGE_PATH = "/og-image.png";
 
+// Alltid mot SITE_URL, inte window.location: en förhandsdeploy eller localhost
+// ska peka canonical på produktionsadressen.
 function toAbsoluteUrl(value) {
   if (!value) {
     return "";
-  }
-
-  if (typeof window === "undefined") {
-    return value;
   }
 
   if (/^(https?:|data:)/i.test(value)) {
     return value;
   }
 
-  return new URL(value, window.location.origin).toString();
+  return new URL(value, SITE_URL).toString();
 }
 
 function upsertMeta(attribute, key, content) {
@@ -91,8 +92,27 @@ function upsertAlternateLinks(entries) {
   });
 }
 
+/**
+ * Prerenderingen (entry-server.jsx) lägger ett tomt objekt här och läser sedan
+ * sidans titel, beskrivning, robots-direktiv och schema, så att den statiska
+ * HTML:en får sidans egna taggar på sidans språk. Länkförhandsvisare kör inte
+ * JavaScript och såg annars startsidans svenska taggar även på /en. I
+ * webbläsaren finns inget objekt.
+ */
+export const ServerMetadataContext = createContext(null);
+
+/**
+ * Strukturerad data för sidan. Under prerenderingen samlas schemat in i
+ * ServerMetadataContext och skrivs in i den statiska HTML:en (märkt
+ * data-prerendered, som main.jsx tar bort innan appen ritar sina egna).
+ */
 export function useJsonLd(schema) {
   const scriptRef = useRef(null);
+  const serverMetadata = useContext(ServerMetadataContext);
+
+  if (serverMetadata && schema) {
+    serverMetadata.jsonLd = [...(serverMetadata.jsonLd || []), schema];
+  }
 
   useEffect(() => {
     if (typeof document === "undefined") return;
@@ -123,14 +143,6 @@ export function buildPageTitle(title) {
   return title ? `${title} | ${BRAND_NAME}` : BRAND_NAME;
 }
 
-/**
- * Prerenderingen (entry-server.jsx) lägger ett tomt objekt här och läser sedan
- * sidans titel och beskrivning, så att den statiska HTML:en får sidans egna
- * taggar på sidans språk. Länkförhandsvisare kör inte JavaScript och såg annars
- * startsidans svenska taggar även på /en. I webbläsaren finns inget objekt.
- */
-export const ServerMetadataContext = createContext(null);
-
 export function usePageMetadata({
   title,
   description = "",
@@ -145,6 +157,7 @@ export function usePageMetadata({
   if (serverMetadata) {
     serverMetadata.title = title || BRAND_NAME;
     serverMetadata.description = String(description || "").trim();
+    serverMetadata.noIndex = noIndex;
   }
 
   useEffect(() => {
@@ -155,7 +168,9 @@ export function usePageMetadata({
     // path skickas alltid språkfritt ("/studios") — prefixet läggs på här så
     // att canonical och hreflang pekar på rätt språkversion.
     const localizedPath = path ? buildLanguagePath(path, language) : "";
-    const canonicalUrl = localizedPath ? toAbsoluteUrl(localizedPath) : window.location.href;
+    const canonicalUrl = localizedPath
+      ? toAbsoluteUrl(localizedPath)
+      : toAbsoluteUrl(`${window.location.pathname}${window.location.search}`);
     const imageUrl = toAbsoluteUrl(image || DEFAULT_IMAGE_PATH);
     const resolvedTitle = title || BRAND_NAME;
     const resolvedDescription = String(description || "").trim();

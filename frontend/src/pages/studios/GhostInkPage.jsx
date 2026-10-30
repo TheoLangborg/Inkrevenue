@@ -1,7 +1,8 @@
 import { useEffect, useId, useMemo, useState } from "react";
-import { buildPageTitle, usePageMetadata } from "../../utils/pageMetadata";
+import { buildPageTitle, useJsonLd, usePageMetadata } from "../../utils/pageMetadata";
 import { SiteLink } from "../../utils/siteRouter";
-import { getPublicStudioBySlug } from "../../services/publicSiteApi";
+import { usePublicStudio } from "../../utils/publicStudio";
+import { buildStudioJsonLd } from "../../utils/studioSchema";
 import { StudioLeadFormEnhanced } from "../../components/StudioLeadFormEnhanced";
 import { RollingGallery } from "../../components/RollingGallery";
 import { StudioImage } from "../../components/StudioImage";
@@ -269,31 +270,8 @@ function GhostSmoke() {
 }
 
 export function GhostInkPage({ slug }) {
-  const { t } = useLanguage();
-  const [studio, setStudio] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState(null);
-
-  useEffect(() => {
-    let active = true;
-    setLoading(true);
-    setLoadError(null);
-    getPublicStudioBySlug(slug)
-      .then((data) => {
-        if (active) setStudio(data);
-      })
-      .catch((error) => {
-        if (!active) return;
-        setStudio(null);
-        setLoadError(error);
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
-    return () => {
-      active = false;
-    };
-  }, [slug]);
+  const { t, language } = useLanguage();
+  const { studio, loading, error: loadError } = usePublicStudio(slug);
 
   // Lokalt (vite dev) visas sidan ändå när CRM:et inte lämnar ut studion, så att
   // den går att bygga vidare på medan kontot är dolt. import.meta.env.DEV är
@@ -356,6 +334,39 @@ export function GhostInkPage({ slug }) {
     path: `/studio/${slug}`,
     noIndex: !studio
   });
+
+  // Hampus står som tatueraren på studion, med gatuadressen. Kartlänken är
+  // adressen (se mapUrl ovan), aldrig studionamnet.
+  const studioJsonLd = useMemo(
+    () =>
+      buildStudioJsonLd({
+        studio,
+        slug,
+        language,
+        t,
+        extra: {
+          name: studioName,
+          description: t("ghostInk.metaDescription", { artist: ARTIST.name, studio: studioName, street: STUDIO.street, city }),
+          address: {
+            "@type": "PostalAddress",
+            streetAddress: STUDIO.street,
+            addressLocality: city,
+            addressCountry: "SE"
+          },
+          hasMap: mapUrl,
+          sameAs: [instagramUrl],
+          employee: {
+            "@type": "Person",
+            name: ARTIST.name,
+            jobTitle: t("ghostInk.schemaJobTitle"),
+            sameAs: [instagramUrl]
+          }
+        }
+      }),
+    [studio, slug, language, t, studioName, city, mapUrl, instagramUrl]
+  );
+
+  useJsonLd(studioJsonLd);
 
   // Laddning och fel: exakt samma markup som StudioProfilePage, inuti samma ram.
   if (loading || (!studio && !isDevPreview)) {

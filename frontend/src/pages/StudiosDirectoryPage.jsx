@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { PublicStudioCard } from "../components/PublicStudioCard";
 import { CustomSelect } from "../components/CustomSelect";
 import { getPublicStudios } from "../services/publicSiteApi";
-import { buildPageTitle, useJsonLd, usePageMetadata } from "../utils/pageMetadata";
+import { SITE_URL, buildPageTitle, useJsonLd, usePageMetadata } from "../utils/pageMetadata";
 import { getStudioTags } from "../utils/studioTags";
 import { studioRegistry } from "./studios";
 import { useLanguage } from "../i18n/LanguageContext";
@@ -54,12 +54,6 @@ export function StudiosDirectoryPage() {
     const qs = params.toString();
     return qs ? `/studios?${qs}` : "/studios";
   }, [filters.city, filters.style]);
-
-  usePageMetadata({
-    title: metaTitle,
-    description: metaDescription,
-    path: metaPath
-  });
 
   useEffect(() => {
     let active = true;
@@ -142,6 +136,18 @@ export function StudiosDirectoryPage() {
     });
   }, [filters, studios]);
 
+  // En filtrerad vy utan studior (t.ex. en stad där ingen studio finns än) är en
+  // tom sida för Google. Den indexeras inte förrän det finns något att visa.
+  const emptyFilteredView =
+    Boolean(filters.city || filters.style) && !loading && !error && filteredStudios.length === 0;
+
+  usePageMetadata({
+    title: metaTitle,
+    description: metaDescription,
+    path: metaPath,
+    noIndex: emptyFilteredView
+  });
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams();
@@ -164,11 +170,11 @@ export function StudiosDirectoryPage() {
       "itemListElement": filteredStudios.slice(0, 50).map((studio, index) => ({
         "@type": "ListItem",
         "position": index + 1,
-        "url": `https://inkrevenue.online/studio/${encodeURIComponent(studio.slug)}`,
+        "url": `${SITE_URL}${localizePath(`/studio/${encodeURIComponent(studio.slug)}`)}`,
         "name": studio.name
       }))
     };
-  }, [filteredStudios, metaDescription, t]);
+  }, [filteredStudios, localizePath, metaDescription, t]);
 
   useJsonLd(itemListJsonLd);
 

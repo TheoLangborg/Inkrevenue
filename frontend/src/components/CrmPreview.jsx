@@ -629,7 +629,8 @@ export function CrmPreview() {
                     <p className="crm-topbar__crumbs">
                       {screen.group} <span>/</span> {screen.tab}
                     </p>
-                    <h1>{heading.title}</h1>
+                    {/* Inte en h1: sidan har redan sin rubrik, och förhandsvisningen är en bild av CRM:et. */}
+                    <p className="crm-topbar__title">{heading.title}</p>
                     <p className="crm-topbar__subtitle">{heading.subtitle}</p>
                   </div>
                   <div className="crm-topbar__right">

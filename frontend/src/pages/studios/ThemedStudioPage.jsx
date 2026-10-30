@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
-import { buildPageTitle, usePageMetadata } from "../../utils/pageMetadata";
-import { getPublicStudioBySlug } from "../../services/publicSiteApi";
+import { useMemo, useState } from "react";
+import { buildPageTitle, useJsonLd, usePageMetadata } from "../../utils/pageMetadata";
+import { usePublicStudio } from "../../utils/publicStudio";
+import { buildStudioJsonLd } from "../../utils/studioSchema";
 import { StudioLeadFormEnhanced } from "../../components/StudioLeadFormEnhanced";
 import { RollingGallery } from "../../components/RollingGallery";
 import { ArtistShowcase } from "../../components/ArtistShowcase";
@@ -61,22 +62,10 @@ function buildDefaultSteps(t) {
 }
 
 export function ThemedStudioPage({ slug, theme: themePartial = {} }) {
-  const { t: translate } = useLanguage();
-  const [studio, setStudio] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const { t: translate, language } = useLanguage();
+  const { studio, loading, error } = usePublicStudio(slug);
 
   const t = useMemo(() => resolveTheme(themePartial), [themePartial]);
-
-  useEffect(() => {
-    let active = true;
-    setLoading(true);
-    getPublicStudioBySlug(slug)
-      .then((data) => { if (active) setStudio(data); })
-      .catch((err) => { if (active) setError(err.message); })
-      .finally(() => { if (active) setLoading(false); });
-    return () => { active = false; };
-  }, [slug]);
 
   const profile = studio?.publicProfile || {};
   const headingImageUrl = String(profile.headingImageUrl || "").trim();
@@ -103,10 +92,30 @@ export function ThemedStudioPage({ slug, theme: themePartial = {} }) {
 
   usePageMetadata({
     title: pageTitle,
-    description: profile.headline || profile.cardSummary || profile.intro || studio?.description || "",
+    // Tomma fält i CRM:et ger en genererad rad i stället för startsidans text.
+    description:
+      profile.headline ||
+      profile.cardSummary ||
+      profile.intro ||
+      studio?.description ||
+      (studio
+        ? translate("studio.metaDescriptionGenerated", {
+            name: studio.name,
+            city: studio.city ? translate("studio.metaCityPart", { city: studio.city }) : "",
+            styles: tags.length ? translate("studio.metaStylePart", { styles: tags.slice(0, 3).join(", ") }) : ""
+          })
+        : ""),
     image: studio?.heroImageUrl || studio?.logoUrl || "/ink-revenue-logo.svg",
     path: `/studio/${slug}`,
+    noIndex: Boolean(error),
   });
+
+  const studioJsonLd = useMemo(
+    () => buildStudioJsonLd({ studio, slug, language, t: translate }),
+    [studio, slug, language, translate]
+  );
+
+  useJsonLd(studioJsonLd);
 
   if (loading) {
     return (

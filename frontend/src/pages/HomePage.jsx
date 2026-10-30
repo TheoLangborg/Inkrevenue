@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CrmPreview } from "../components/CrmPreview";
 import { HomeHeroVisual } from "../components/HomeHeroVisual";
 import { PublicStudioCard } from "../components/PublicStudioCard";
 import { StrategyCallForm } from "../components/StrategyCallForm";
 import { getPublicStudios } from "../services/publicSiteApi";
-import { buildPageTitle, usePageMetadata } from "../utils/pageMetadata";
+import { SITE_URL, buildPageTitle, useJsonLd, usePageMetadata } from "../utils/pageMetadata";
 import { SiteLink } from "../utils/siteRouter";
 import { useLanguage } from "../i18n/LanguageContext";
 
@@ -43,6 +43,36 @@ export function HomePage() {
     description: t("home.metaDescription"),
     path: "/"
   });
+
+  // Tjänsten och de synliga frågorna nedan, på sidans språk. Låg tidigare i
+  // index.html och följde då med till varje sida (även /en och studiosidorna).
+  const homeJsonLd = useMemo(
+    () => ({
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Service",
+          "@id": `${SITE_URL}/#service`,
+          "name": t("home.schemaServiceName"),
+          "serviceType": t("home.schemaServiceType"),
+          "description": t("home.metaDescription"),
+          "provider": { "@id": `${SITE_URL}/#organization` },
+          "areaServed": { "@type": "Country", "name": "Sverige" }
+        },
+        {
+          "@type": "FAQPage",
+          "mainEntity": faqItems.map(({ q, a }) => ({
+            "@type": "Question",
+            "name": q,
+            "acceptedAnswer": { "@type": "Answer", "text": a }
+          }))
+        }
+      ]
+    }),
+    [faqItems, t]
+  );
+
+  useJsonLd(homeJsonLd);
 
   useEffect(() => {
     let active = true;
@@ -349,6 +379,12 @@ export function HomePage() {
               <h3>{t("home.plan2Title")}</h3>
               <p className="card__price-model">{t("home.plan2Model")}</p>
               <p>{t("home.plan2Text")}</p>
+              <SiteLink className="card__link" href="/marknadsforing-for-tatueringsstudior">
+                {t("home.plan2Link")}
+                <svg className="btn__icon" viewBox="0 0 20 20" aria-hidden="true">
+                  <path d="M4 10h12M10 5l5 5-5 5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </SiteLink>
             </div>
             <div className="card" data-reveal="up" data-reveal-delay="3">
               <h3>{t("home.plan3Title")}</h3>

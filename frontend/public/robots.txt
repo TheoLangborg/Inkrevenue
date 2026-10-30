@@ -1,7 +1,16 @@
 User-agent: *
 Allow: /
 Disallow: /studio-crm-preview
-Disallow: /studio-preview/
+Disallow: /studio-preview
+Disallow: /en/studio-crm-preview
+Disallow: /en/studio-preview
+# Personliga länkar från SMS och mejl (erbjudna tider, betalningar, påminnelser).
+Disallow: /tid/
+Disallow: /betala/
+Disallow: /paminnelser/
+Disallow: /en/tid/
+Disallow: /en/betala/
+Disallow: /en/paminnelser/
 
 User-agent: GPTBot
 Disallow: /
@@ -9,4 +18,4 @@ Disallow: /
 User-agent: Google-Extended
 Disallow: /
 
-Sitemap: https://inkrevenue.online/sitemap.xml
+Sitemap: https://www.inkrevenue.online/sitemap.xml

@@ -259,7 +259,9 @@ export function SlotOfferPage({ token }) {
 
   usePageMetadata({
     title: buildPageTitle(t("slotOffer.metaTitle")),
-    description: t("slotOffer.metaDescription")
+    description: t("slotOffer.metaDescription"),
+    // Personlig länk från ett sms, som betallänken.
+    noIndex: true
   });
 
   const load = useCallback(async () => {

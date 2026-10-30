@@ -47,8 +47,16 @@
       "destination": "https://inkrevenue-production.up.railway.app/api/:path*"
     },
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "source": "/:lang(en)?/:page(studio|tid|betala|studio-preview)/:rest*",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/:lang(en)?/paminnelser/stopp/:rest*",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/:lang(en)?/studio-crm-preview",
+      "destination": "/app.html"
     }
   ]
 }
