@@ -941,6 +941,8 @@ export const en = {
     imageListLabel: "Attached images",
     imagePreviewAlt: "Preview of reference image {{index}}",
     imageRemoveNumbered: "Remove image {{index}}",
+    imageViewNumbered: "View image {{index}} full size",
+    imageViewClose: "Close image",
     imagesAttached: "{{count}} of {{max}} images attached",
     // Trying the design on the body (TryOnLauncher), only for studios in TRYON_STUDIO_SLUGS.
     tryOnButton: "Try the design on your body",

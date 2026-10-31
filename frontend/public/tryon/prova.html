@@ -111,7 +111,7 @@
 
       <section class="sheet" id="sheetMotif" aria-labelledby="hMotif" hidden>
         <div class="sheet-head">
-          <h2 id="hMotif">Byt motiv</h2>
+          <h2 id="hMotif">Motiv</h2>
           <button class="pill small" type="button" data-close>Klar</button>
         </div>
         <div class="sheet-body">
@@ -122,7 +122,7 @@
               <span>Lägg till</span>
             </label>
           </div>
-          <p class="sheet-note">Tryck på ett motiv för att byta till det, eller lägg till ett nytt.</p>
+          <p class="sheet-note">Alla motiv syns på fotot. Tryck på ett för att flytta och justera det, eller lägg till ett till.</p>
         </div>
       </section>
 
@@ -193,10 +193,10 @@
 
       <div class="dock-stack" id="placeTools" data-for="place" hidden>
         <nav class="tools" aria-label="Verktyg">
-          <!-- Byt motiv och Byt foto visar en liten bild av det som byts, så att det syns vilken knapp som gör vad. -->
+          <!-- Motiv och Byt foto visar en liten bild av det valda motivet och fotot, så att det syns vilken knapp som gör vad. -->
           <button class="tool" type="button" id="tMotif" aria-pressed="false">
-            <span class="tool-pic" aria-hidden="true"><img id="motifPic" alt=""></span>
-            <span>Byt motiv</span>
+            <span class="tool-pic add" aria-hidden="true"><img id="motifPic" alt=""></span>
+            <span>Motiv</span>
           </button>
           <button class="tool" type="button" id="tPhoto" aria-pressed="false">
             <span class="tool-pic" aria-hidden="true"><img id="photoPic" alt=""></span>
@@ -251,6 +251,17 @@
 </div>
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<!-- Bara inbäddad i förfrågan: krysset frågar först om det finns en bild som inte är lagd i förfrågan. -->
+<dialog class="ask" id="askClose" aria-labelledby="askTitle" aria-describedby="askText">
+  <h2 id="askTitle">Lägga till bilden i förfrågan?</h2>
+  <p id="askText">Studion ser bara provningen om du lägger till den. Det du har skrivit i förfrågan finns kvar.</p>
+  <div class="ask-actions">
+    <button class="big-btn primary" type="button" id="askSend">Lägg till i förfrågan</button>
+    <button class="big-btn" type="button" id="askDiscard">Stäng utan att lägga till</button>
+    <button class="text-btn" type="button" id="askStay">Fortsätt prova</button>
+  </div>
+</dialog>
 
 <noscript><p class="noscript">Prova din tatuering kräver JavaScript.</p></noscript>
 <script src="engine.js" defer></script>

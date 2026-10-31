@@ -29,6 +29,7 @@ import { CampaignBanner } from "./CampaignBanner";
 import { LeadSentScreen } from "./LeadSentScreen";
 import { ConsultationFirstModal } from "./ConsultationFirstModal";
 import { TryOnLauncher } from "./TryOnLauncher";
+import { ImageLightbox } from "./ImageLightbox";
 import { hasTryOn } from "../utils/tryOn";
 import { sv } from "../i18n/sv";
 import { translateOptionLabel } from "../i18n/optionLabels";
@@ -498,6 +499,10 @@ export function StudioLeadFormEnhanced({
   // Kundens bilder, färdigbehandlade i den ordning de valdes (högst
   // MAX_INSPIRATION_IMAGES). Varje post har ett eget id för listnyckeln.
   const [inspirationImages, setInspirationImages] = useState([]);
+  // Bilden som visas i full storlek (ImageLightbox). Försvinner bilden ur listan
+  // stängs vyn av sig själv.
+  const [viewedImageId, setViewedImageId] = useState(null);
+  const viewedImage = inspirationImages.find((image) => image.id === viewedImageId) || null;
   // null, eller { current, total } medan bilderna bearbetas en i taget.
   const [imageProcessing, setImageProcessing] = useState(null);
   // Ett meddelande per bild som inte gick att använda. Övriga bilder läggs till
@@ -1865,11 +1870,18 @@ export function StudioLeadFormEnhanced({
                 <ul className="upload-previews" aria-label={t("leadForm.imageListLabel")}>
                   {inspirationImages.map((image, index) => (
                     <li key={image.id} className="upload-preview upload-preview--thumb">
-                      <img
-                        src={image.previewUrl}
-                        alt={t("leadForm.imagePreviewAlt", { index: index + 1 })}
-                        title={image.fileName}
-                      />
+                      <button
+                        className="upload-preview__open"
+                        type="button"
+                        onClick={() => setViewedImageId(image.id)}
+                        aria-label={t("leadForm.imageViewNumbered", { index: index + 1 })}
+                      >
+                        <img
+                          src={image.previewUrl}
+                          alt={t("leadForm.imagePreviewAlt", { index: index + 1 })}
+                          title={image.fileName}
+                        />
+                      </button>
                       <button
                         className="upload-preview__remove"
                         type="button"
@@ -1889,6 +1901,15 @@ export function StudioLeadFormEnhanced({
                 </p>
               </>
             ) : null}
+            <ImageLightbox
+              image={viewedImage}
+              label={
+                viewedImage
+                  ? t("leadForm.imagePreviewAlt", { index: inspirationImages.indexOf(viewedImage) + 1 })
+                  : ""
+              }
+              onClose={() => setViewedImageId(null)}
+            />
           </div>
 
           <div className="form-step-nav">

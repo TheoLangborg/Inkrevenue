@@ -29,8 +29,7 @@
     screen: 'start',
     body: null, // { raw, fixed, canvas, view }: fixed är fotot med rättat ljus, canvas det som visas, view kopian på skärmen
     autoLight: true,
-    motifs: [], mi: -1,
-    pl: { ...PL0 },
+    motifs: [], mi: -1, // alla tatueringar syns på fotot, var och en med sin placering (m.pl); mi är den valda
     sheet: null, // adjust | motif | photo | advanced
     tab: 'erase', // verktyget när tatueringen visas för sig: ring | erase | crop | white
     view: 'checker',
@@ -41,6 +40,11 @@
     zoom: false,
   };
   const motif = () => S.motifs[S.mi];
+  // S.pl är den valda tatueringens placering. Utan tatuering är den en kopia, så att PL0 aldrig ändras.
+  Object.defineProperty(S, 'pl', {
+    get: () => (motif() ? motif().pl : { ...PL0 }),
+    set: (pl) => { if (motif()) motif().pl = pl; },
+  });
   const EDIT_TITLES = { ring: 'Ringa in', erase: 'Sudda', crop: 'Beskär', white: 'Vitt bläck' };
   // Ett foto av en tatuering på hud, eller ett foto med mer än motivet, ger ingen varning: då öppnas Ringa in direkt.
   const MOTIF_WARNINGS = {
@@ -243,6 +247,7 @@
           m.fromForm = fromForm;
           m.o = E.autoPrepare(m); // pappret, skuggor, rensning, svarta linjer och tomma kanter ställs in automatiskt
           m.auto = { ...m.o }; // det automatiska, som Återställ tar tillbaka
+          m.pl = { ...PL0 }; // tills alla är inlästa och får sin plats, se fitMotif
           cleanThumb(m); // rensar nu, medan spinnern syns, i stället för vid första ritningen
           S.motifs = [...S.motifs, m]; // en ny lista, eftersom ångra sparar den gamla
           if (m.warning === 'skin') skinAt = S.motifs.length - 1;
@@ -254,9 +259,11 @@
     });
     if (S.motifs.length === before) return;
     remember(was);
+    const added = S.motifs.slice(before);
+    added.forEach((m, i) => { m.cell = cellOf(i, added.length); fitMotif(m); });
     S.mi = skinAt >= 0 ? skinAt : S.motifs.length - 1;
     S.selected = true; // ramen visar direkt att hörnen går att dra i
-    fitMotif();
+    syncAdjust();
     renderTray();
     syncAdvanced();
     changed();
@@ -267,17 +274,33 @@
     showCoach();
   }
 
-  /* Ny tatuering: mitt i bilden, högst 40 procent av bildens bredd och höjd. */
-  function fitMotif() {
-    const m = motif();
+  /*
+   * Ny tatuering: mitt i bilden, högst 40 procent av bildens bredd och höjd. Läggs flera in på en gång, som
+   * motiven från förfrågan, får de var sin ruta i ett rutnät, så att alla syns. Rutnätet är på höjden när
+   * fotot är det, eftersom en arm då oftast går uppifrån och ner.
+   */
+  function cellOf(i, n) {
     const b = S.body;
+    const k = Math.ceil(Math.sqrt(n));
+    const cols = b && b.canvas.height > b.canvas.width ? Math.ceil(n / k) : k;
+    const rows = Math.ceil(n / cols);
+    const w = 0.9 / cols;
+    const h = 0.8 / rows;
+    return { x: 0.05 + w * ((i % cols) + 0.5), y: 0.1 + h * (Math.floor(i / cols) + 0.5), w, h };
+  }
+
+  /* Placeringen när tatueringen lades in, i sin ruta. Nollställ och en ny inringning tar tillbaka den. */
+  function fitMotif(m = motif()) {
+    if (!m) return;
+    const b = S.body;
+    const c = m.cell || cellOf(0, 1);
     let scale = PL0.scale;
-    if (m && b) {
+    if (b) {
       const aspect = m.src.height / m.src.width;
-      scale = Math.min(0.4, (0.4 * b.canvas.height) / (b.canvas.width * aspect));
+      scale = Math.min(0.4, 0.85 * c.w, (Math.min(0.4, 0.85 * c.h) * b.canvas.height) / (b.canvas.width * aspect));
     }
-    S.pl = { ...PL0, scale: clamp(scale, 0.05, 1) };
-    syncAdjust();
+    m.pl = { ...PL0, x: c.x, y: c.y, scale: clamp(scale, 0.05, 1) };
+    if (m === motif()) syncAdjust();
   }
 
   /* ================================================================ rita */
@@ -317,15 +340,41 @@
   }
 
   /*
-   * Fotot med tatueringen. live (se S.live): medan något dras hoppar ritningen över hudens struktur, och medan
-   * tatueringen rör sig läggs den på som en färdig bild. Allt ritas i full kvalitet när fingret släpper.
+   * Fotot med alla tatueringar. live (se S.live): medan något dras hoppar ritningen över hudens struktur för den
+   * valda tatueringen, och medan den rör sig läggs den på som en färdig bild. De andra ändras inte under tiden,
+   * så de ritas en gång i full kvalitet tillsammans med fotot (backdrop). Allt ritas i full kvalitet när fingret släpper.
    */
   function drawComposite(c2d, live, photo = S.body.canvas) {
     const { canvas } = S.body;
     c2d.imageSmoothingQuality = 'high';
+    const under = live && S.motifs.length > 1 ? backdrop(photo) : null;
+    c2d.drawImage(under || photo, 0, 0);
+    S.motifs.forEach((m, i) => {
+      const fast = !!live && i === S.mi;
+      if (under && !fast) return;
+      E.drawMotif(c2d, m, m.o, m.pl, canvas.width, canvas.height, { multiply: true, skin: canvas, fast, moving: fast && live === 'move' });
+    });
+  }
+
+  let back = null; // { photo, mi, motifs, canvas }: fotot med alla tatueringar utom den valda
+  function backdrop(photo) {
+    if (back && back.photo === photo && back.mi === S.mi && back.motifs === S.motifs) return back.canvas;
+    dropBackdrop();
+    const { width, height } = S.body.canvas;
+    const canvas = E.newCanvas(width, height);
+    const c2d = canvas.getContext('2d');
+    if (!c2d) return null; // då ritas alla som vanligt, bara långsammare
+    c2d.imageSmoothingQuality = 'high';
     c2d.drawImage(photo, 0, 0);
-    const m = motif();
-    if (m) E.drawMotif(c2d, m, m.o, S.pl, canvas.width, canvas.height, { multiply: true, skin: canvas, fast: !!live, moving: live === 'move' });
+    S.motifs.forEach((m, i) => {
+      if (i !== S.mi) E.drawMotif(c2d, m, m.o, m.pl, width, height, { multiply: true, skin: S.body.canvas });
+    });
+    back = { photo, mi: S.mi, motifs: S.motifs, canvas };
+    return canvas;
+  }
+  function dropBackdrop() {
+    if (back) E.release(back.canvas);
+    back = null;
   }
 
   /* Snabb ritning medan något dras: 'move', 'still' eller false. När det släpps ritas allt i full kvalitet. */
@@ -334,6 +383,7 @@
     clearTimeout(liveTimer);
     if (S.live === mode) return;
     S.live = mode;
+    if (!mode) dropBackdrop();
     requestRender();
   }
 
@@ -423,36 +473,39 @@
   const SEND_TEXT = {
     1: 'Hej! Så här vill jag ha tatueringen.',
     2: 'Hej! Så här vill jag ha tatueringen. Första bilden visar placering och storlek, den andra är originalet av motivet.',
+    3: 'Hej! Så här vill jag ha tatueringarna. Första bilden visar placering och storlek, de andra är originalen av motiven.',
   };
 
   /*
-   * Skicka till tatueraren: bilden med tatueringen på kroppen och originalet av motivet som kunden lade in.
-   * Bilden visar placering och storlek, och originalet visar designen i full upplösning, utan rensning och hud.
+   * Skicka till tatueraren: bilden med tatueringarna på kroppen och originalen av motiven som kunden lade in.
+   * Bilden visar placering och storlek, och originalen visar designen i full upplösning, utan rensning och hud.
    * Delningsarket öppnas, och kunden väljer själv hur och till vem (meddelande, Instagram, mejl). Tar appen inte
-   * emot två bilder skickas bara den första. Utan delningsark laddas båda ner.
+   * emot flera bilder skickas bara den första. Utan delningsark laddas alla ner.
    */
   async function send() {
-    const m = motif();
-    if (!S.body || !m) return;
+    if (!S.body || !motif()) return;
     const file = await currentFile();
     if (!file) return;
+    const originals = S.motifs.filter((m) => m.file && !m.fromForm).map((m) => m.file);
     if (host) {
       // I studions förfrågan läggs bilderna i formuläret som inspirationsbilder och följer med när kunden skickar.
-      host.postMessage({ type: 'tryon:send', files: m.file && !m.fromForm ? [file, m.file] : [file] }, location.origin);
+      sent = snapshot();
+      host.postMessage({ type: 'tryon:send', files: [file, ...originals] }, location.origin);
       return;
     }
-    const tries = m.file ? [[file, m.file], [file]] : [[file]];
+    const tries = originals.length ? [[file, ...originals], [file]] : [[file]];
     for (const files of tries) {
       if (!navigator.canShare || !navigator.canShare({ files })) continue;
       try {
-        await navigator.share({ files, text: SEND_TEXT[files.length] });
+        await navigator.share({ files, text: SEND_TEXT[Math.min(files.length, 3)] });
         return;
       } catch (err) {
         if (err && err.name === 'AbortError') return;
       }
     }
     tries[0].forEach(download);
-    toast(tries[0].length > 1 ? 'Bilden och originalet är nedladdade. Skicka dem till tatueraren.' : 'Bilden är nedladdad. Skicka den till tatueraren.', 6000);
+    const n = tries[0].length;
+    toast(n > 1 ? `Bilden och ${n > 2 ? 'originalen' : 'originalet'} är nedladdade. Skicka dem till tatueraren.` : 'Bilden är nedladdad. Skicka den till tatueraren.', 6000);
   }
 
   /*
@@ -465,6 +518,21 @@
     if (e.source !== host || e.origin !== location.origin) return;
     const d = e.data || {};
     if (d.type === 'tryon:motifs' && Array.isArray(d.files)) preset = d.files.filter((f) => f instanceof Blob);
+  }
+
+  /*
+   * Krysset tar tillbaka formuläret, som står kvar bakom provningen precis som kunden lämnade det. Finns det en
+   * bild som inte är lagd i förfrågan frågar det först, så att provningen inte försvinner av misstag.
+   */
+  let sent = null; // läget när bilderna senast lades i förfrågan
+  const askClose = $('#askClose');
+  function closeToForm() {
+    const unsent = S.body && motif() && !(sent && samePicture(sent, snapshot()));
+    if (unsent && typeof askClose.showModal === 'function') {
+      askClose.showModal();
+      return;
+    }
+    host.postMessage({ type: 'tryon:close' }, location.origin);
   }
 
   /* ================================================================ placera: dra, nyp, vrid och ramen */
@@ -484,18 +552,25 @@
   /* Rakt, på sidan eller upp och ner: vridningen fastnar där när den är nära, så att det är lätt att få den rak. */
   const snapRot = (d) => [-180, -90, 0, 90, 180].find((t) => Math.abs(d - t) < 4) ?? d;
 
-  /* Är punkten p (0 till 1 i bilden) på tatueringen? Med lite marginal, så att en smal tatuering går att träffa. */
-  function onMotif(p, r) {
-    const m = motif();
+  /* Är punkten p (0 till 1 i bilden) på tatueringen m? Med lite marginal, så att en smal tatuering går att träffa. */
+  function onMotif(m, p, r) {
     if (!m) return false;
-    const w = S.pl.scale * r.width;
+    const { pl } = m;
+    const w = pl.scale * r.width;
     const h = (w * m.src.height) / m.src.width;
-    const a = (-S.pl.rot * Math.PI) / 180;
-    const dx = (p.x - S.pl.x) * r.width;
-    const dy = (p.y - S.pl.y) * r.height;
+    const a = (-pl.rot * Math.PI) / 180;
+    const dx = (p.x - pl.x) * r.width;
+    const dy = (p.y - pl.y) * r.height;
     const lx = dx * Math.cos(a) - dy * Math.sin(a);
     const ly = dx * Math.sin(a) + dy * Math.cos(a);
     return Math.abs(lx) <= w / 2 + 14 && Math.abs(ly) <= h / 2 + 14;
+  }
+
+  /* Tatueringen under punkten: den valda om den träffas, annars den som ligger överst. -1 om ingen. */
+  function motifAt(p, r) {
+    if (onMotif(motif(), p, r)) return S.mi;
+    for (let i = S.motifs.length - 1; i >= 0; i--) if (onMotif(S.motifs[i], p, r)) return i;
+    return -1;
   }
 
   function startGesture(rect, srect) {
@@ -550,6 +625,9 @@
     const rect = gesture ? gesture.rect : cv.getBoundingClientRect();
     const srect = gesture ? gesture.srect : stage.getBoundingClientRect();
     if (!pointers.size) {
+      // Fingret på en annan tatuering väljer den, så att det är den som flyttas. Bredvid alla flyttas den valda.
+      const hit = motifAt(norm(e, rect), rect);
+      if (hit >= 0 && hit !== S.mi) chooseMotif(hit);
       begin();
       tap = { x: e.clientX, y: e.clientY };
     } else {
@@ -573,7 +651,7 @@
     if (!pointers.delete(e.pointerId)) return;
     if (pointers.size) { startGesture(gesture.rect, gesture.srect); return; }
     // En tryckning på tatueringen visar ramen, en tryckning bredvid tar bort den, så att bilden syns ren.
-    if (tap && e.type === 'pointerup') S.selected = onMotif(norm(e, gesture.rect), gesture.rect);
+    if (tap && e.type === 'pointerup') S.selected = onMotif(motif(), norm(e, gesture.rect), gesture.rect);
     tap = null;
     gesture = null;
     setLive(false);
@@ -718,7 +796,7 @@
       img.src = m.cleanThumb || m.thumb;
       img.alt = '';
       pick.append(img);
-      pick.addEventListener('click', () => act(() => chooseMotif(i)));
+      pick.addEventListener('click', () => chooseMotif(i));
       const x = document.createElement('button');
       x.type = 'button';
       x.className = 'x';
@@ -745,12 +823,13 @@
     }
   }
 
+  /* Väljer vilken tatuering verktygen gäller. Alla syns redan, så bilden ändras inte, och det är inget steg att ångra. */
   function chooseMotif(i) {
     S.mi = i;
     S.selected = true;
     renderTray();
+    syncAdjust();
     syncAdvanced();
-    changed();
     placeSel();
   }
 
@@ -781,15 +860,17 @@
 
   function snapshot() {
     return {
-      body: S.body, autoLight: S.autoLight, mi: S.mi, pl: { ...S.pl }, motifs: S.motifs,
-      states: S.motifs.map((m) => ({ o: { ...m.o }, auto: m.auto, rev: m.rev, eraseRev: m.eraseRev, content: E.motifState(m) })),
+      body: S.body, autoLight: S.autoLight, mi: S.mi, motifs: S.motifs,
+      states: S.motifs.map((m) => ({ o: { ...m.o }, auto: m.auto, pl: { ...m.pl }, rev: m.rev, eraseRev: m.eraseRev, content: E.motifState(m) })),
     };
   }
 
-  const signature = (s) => JSON.stringify([s.autoLight, s.mi, s.pl, s.states.map((x) => [x.o, x.rev, x.eraseRev])]);
-  function same(a, b) {
-    return a.body === b.body && a.motifs.length === b.motifs.length && a.motifs.every((m, i) => m === b.motifs[i]) && signature(a) === signature(b);
+  /* Samma bild: samma foto och samma tatueringar, inställda och placerade likadant. same kräver också samma val. */
+  const picture = (s) => JSON.stringify([s.autoLight, s.states.map((x) => [x.o, x.pl, x.rev, x.eraseRev])]);
+  function samePicture(a, b) {
+    return a.body === b.body && a.motifs.length === b.motifs.length && a.motifs.every((m, i) => m === b.motifs[i]) && picture(a) === picture(b);
   }
+  const same = (a, b) => a.mi === b.mi && samePicture(a, b);
 
   function remember(s = snapshot()) {
     past.push(s);
@@ -830,10 +911,11 @@
       if (content) E.restoreMotif(m, was.content);
       m.o = { ...was.o };
       m.auto = was.auto;
+      m.pl = { ...was.pl };
       if (content || settings) cleanThumb(m); // miniatyren visar rensningen, så den ritas om även när bara reglagen ändrats
     });
     S.mi = s.mi;
-    S.pl = { ...s.pl };
+    dropBackdrop();
     const screen = motif() ? 'place' : 'needMotif';
     if (S.screen !== screen) setScreen(screen);
     renderTray();
@@ -1254,6 +1336,7 @@
 
   // Ctrl+Z ångrar och Ctrl+Y gör om (Cmd+Z och Cmd+Shift+Z på Mac), som pilarna. Esc lämnar helskärmen.
   window.addEventListener('keydown', (e) => {
+    if (askClose.open) return; // frågan vid krysset sköter sina egna tangenter
     const key = e.key.toLowerCase();
     if ((e.ctrlKey || e.metaKey) && !e.altKey && (key === 'z' || key === 'y')) {
       const b = $(key === 'y' || e.shiftKey ? '#btnRedo' : '#btnUndo');
@@ -1276,7 +1359,10 @@
   // Inbäddad i förfrågan: krysset tar tillbaka formuläret, och Skicka heter det den gör där.
   if (host) {
     $('#btnClose').hidden = false;
-    $('#btnClose').addEventListener('click', () => host.postMessage({ type: 'tryon:close' }, location.origin));
+    $('#btnClose').addEventListener('click', closeToForm);
+    $('#askSend').addEventListener('click', () => { askClose.close(); send(); });
+    $('#askDiscard').addEventListener('click', () => { askClose.close(); host.postMessage({ type: 'tryon:close' }, location.origin); });
+    $('#askStay').addEventListener('click', () => askClose.close());
     $('#privacyNote').textContent = 'Bilden stannar i din telefon tills du lägger den i förfrågan till studion.';
     $('#btnSend span').textContent = 'Lägg till i förfrågan';
     window.addEventListener('message', onHostMessage);

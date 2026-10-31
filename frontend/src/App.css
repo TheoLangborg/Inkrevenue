@@ -3129,11 +3129,18 @@ h1 {
   font-size: 0.92rem;
 }
 
+/* Iframen får inga safe-area-marginaler (sidan har viewport-fit=cover), så de
+   läggs här, annars hamnar provningens kryss under statusraden. Övre kanten har
+   samma färg som provningens rubrik och nedre som verktygen. TryOnLauncher
+   flyttar rutan till den yta som syns. */
 .tryon-overlay {
   position: fixed;
   inset: 0;
   z-index: 1100;
-  background: var(--ink-900);
+  box-sizing: border-box;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+    env(safe-area-inset-left);
+  background: linear-gradient(var(--ink-900) 50%, var(--ink-700) 50%);
 }
 
 .tryon-overlay[hidden] {
@@ -3194,6 +3201,86 @@ h1 {
 
 .upload-preview__remove:hover {
   background: rgba(10, 18, 32, 0.9);
+}
+
+/* Miniatyren är en knapp som öppnar bilden i full storlek (ImageLightbox). */
+.upload-preview__open {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+}
+
+.upload-preview__open:focus-visible {
+  outline: 2px solid var(--ink-400);
+  outline-offset: -2px;
+}
+
+.image-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: grid;
+  place-items: center;
+  padding: calc(env(safe-area-inset-top) + 64px) calc(env(safe-area-inset-right) + 12px)
+    calc(env(safe-area-inset-bottom) + 24px) calc(env(safe-area-inset-left) + 12px);
+  background: rgba(6, 12, 22, 0.97);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  animation: image-lightbox-fade 0.18s var(--ease-out-quart) both;
+}
+
+.image-lightbox__img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 6px;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.5);
+  cursor: default;
+}
+
+.image-lightbox__close {
+  position: absolute;
+  top: calc(env(safe-area-inset-top) + 12px);
+  right: calc(env(safe-area-inset-right) + 12px);
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  background: rgba(10, 18, 32, 0.72);
+  color: #fff;
+  cursor: pointer;
+}
+
+.image-lightbox__close svg {
+  width: 22px;
+  height: 22px;
+}
+
+.image-lightbox__close:hover {
+  background: rgba(23, 53, 95, 0.92);
+}
+
+.image-lightbox__close:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+@keyframes image-lightbox-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .image-lightbox {
+    animation: none;
+  }
 }
 
 .upload-preview__remove:focus-visible {

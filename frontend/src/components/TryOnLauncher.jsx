@@ -28,6 +28,7 @@ export function TryOnLauncher({ images, disabled, onImages }) {
   const [mounted, setMounted] = useState(false);
   const [open, setOpen] = useState(false);
   const frameRef = useRef(null);
+  const overlayRef = useRef(null);
   const buttonRef = useRef(null);
   const latest = useRef({ images, onImages });
   latest.current = { images, onImages };
@@ -69,6 +70,32 @@ export function TryOnLauncher({ images, disabled, onImages }) {
     };
   }, [open]);
 
+  // Rutan följer den yta som syns. I iOS Safari kan den ligga förskjuten mot
+  // position: fixed, till exempel när tangentbordet just har stängts efter att
+  // kunden skrev i formuläret. Då hamnade provningens kryss under statusraden,
+  // där tryck inte går fram.
+  useEffect(() => {
+    const overlay = overlayRef.current;
+    const viewport = window.visualViewport;
+    if (!open || !overlay || !viewport) return undefined;
+    function fit() {
+      Object.assign(overlay.style, {
+        top: `${viewport.offsetTop}px`,
+        left: `${viewport.offsetLeft}px`,
+        width: `${viewport.width}px`,
+        height: `${viewport.height}px`
+      });
+    }
+    fit();
+    viewport.addEventListener("resize", fit);
+    viewport.addEventListener("scroll", fit);
+    return () => {
+      viewport.removeEventListener("resize", fit);
+      viewport.removeEventListener("scroll", fit);
+      Object.assign(overlay.style, { top: "", left: "", width: "", height: "" });
+    };
+  }, [open]);
+
   return (
     <>
       {/* aria-disabled i stället för disabled: medan bilderna bearbetas efter en provning ska fokus kunna ligga kvar på knappen. */}
@@ -91,7 +118,7 @@ export function TryOnLauncher({ images, disabled, onImages }) {
       </button>
       {mounted && typeof document !== "undefined"
         ? createPortal(
-            <div className="tryon-overlay" role="dialog" aria-modal="true" aria-label={t("leadForm.tryOnTitle")} hidden={!open}>
+            <div ref={overlayRef} className="tryon-overlay" role="dialog" aria-modal="true" aria-label={t("leadForm.tryOnTitle")} hidden={!open}>
               <iframe ref={frameRef} className="tryon-overlay__frame" src={TRYON_URL} title={t("leadForm.tryOnTitle")} />
             </div>,
             document.body

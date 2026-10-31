@@ -962,6 +962,8 @@ export const sv = {
     imageListLabel: "Bifogade bilder",
     imagePreviewAlt: "Förhandsvisning av inspirationsbild {{index}}",
     imageRemoveNumbered: "Ta bort bild {{index}}",
+    imageViewNumbered: "Visa bild {{index}} i full storlek",
+    imageViewClose: "Stäng bilden",
     imagesAttached: "{{count}} av {{max}} bilder bifogade",
     // Provningen på kroppen (TryOnLauncher), bara hos studior i TRYON_STUDIO_SLUGS.
     tryOnButton: "Prova motivet på kroppen",
