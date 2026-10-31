@@ -955,7 +955,12 @@
       wrap.append(pick, x);
       tray.insertBefore(wrap, add);
     });
-    add.classList.toggle('full', S.motifs.length >= MOTIFS_MAX);
+    // Vid max försvinner Lägg till, och texten under säger varför.
+    const full = S.motifs.length >= MOTIFS_MAX;
+    add.hidden = full;
+    $('#motifNote').textContent = full
+      ? `Du har ${MOTIFS_MAX} motiv, det är max. Ta bort ett med krysset för att lägga till ett annat.`
+      : `Alla motiv syns på fotot. Tryck på ett för att flytta och justera det, eller lägg till ett till, upp till ${MOTIFS_MAX}.`;
     syncPics();
   }
 
@@ -1366,12 +1371,6 @@
   }
   // Varje knapp som väljer en bild har en egen filväljare inuti sig: data-pick säger om det är fotot eller motiv.
   $$('input[data-pick]').forEach((input) => pickFile(input, (files) => (input.dataset.pick === 'motif' ? addMotifs(files) : setBody(files[0]))));
-  // Med fem motiv öppnas ingen filväljare, och kunden får veta varför.
-  $$('input[data-pick="motif"]').forEach((input) => input.addEventListener('click', (e) => {
-    if (S.motifs.length < MOTIFS_MAX) return;
-    e.preventDefault();
-    toast(fullText(), 5000);
-  }));
 
   // Släppa filer på datorn: första gången blir det fotot, sedan tatueringar.
   const hasFiles = (e) => [...((e.dataTransfer && e.dataTransfer.types) || [])].includes('Files');
