@@ -22,6 +22,11 @@
   const HISTORY_MAX = 40;
   const TAP_PX = 6; // en tryckning som rör sig mer än så här är ett drag
   const ZOOM_MAX = 5;
+  const MOTIFS_MAX = 5; // som bilderna i förfrågan
+  const FILE_MB_MAX = 20; // samma gräns per bild som förfrågan har
+  const FULL_BOX = { x0: 0, y0: 0, x1: 1, y1: 1 };
+  const SEL_PAD = 6; // luft mellan motivet och ramen, i skärmens pixlar
+  const SEL_MIN = 44; // så att krysset och handtaget inte hamnar på varandra
   // Inbäddad i studions förfrågan på inkrevenue (en iframe med ?inbaddad): Skicka lägger bilderna i formuläret.
   const host = new URLSearchParams(location.search).has('inbaddad') && window.parent !== window ? window.parent : null;
 
@@ -230,10 +235,22 @@
     b.view = view;
   }
 
-  /* fromForm: motiven kom från förfrågan, så deras original skickas inte tillbaka dit en gång till. */
+  /*
+   * fromForm: motiven kom från förfrågan, så deras original skickas inte tillbaka dit en gång till.
+   * Högst MOTIFS_MAX motiv och FILE_MB_MAX per bild. Det som inte får plats läggs inte in, och toasten säger varför.
+   */
   async function addMotifs(fileList, fromForm = false) {
-    const files = [...fileList].filter(isImage);
-    if (!files.length) { toast('Det där ser inte ut som en bild.'); return; }
+    const images = [...fileList].filter(isImage);
+    if (!images.length) { toast('Det där ser inte ut som en bild.'); return; }
+    const big = images.filter((f) => f.size > FILE_MB_MAX * 1024 * 1024);
+    const fits = images.filter((f) => !big.includes(f));
+    const files = fits.slice(0, Math.max(0, MOTIFS_MAX - S.motifs.length));
+    const notes = [];
+    if (big.length === 1) notes.push(`${big[0].name} är för stor (${Math.round(big[0].size / 1024 / 1024)} MB). Högst ${FILE_MB_MAX} MB per bild.`);
+    else if (big.length) notes.push(`${big.length} bilder är större än ${FILE_MB_MAX} MB och lades inte in.`);
+    if (files.length < fits.length) notes.push(fullText());
+    if (notes.length) toast(notes.join(' '), 7000);
+    if (!files.length) return;
     const before = S.motifs.length;
     const was = snapshot();
     let warning = '';
@@ -245,6 +262,7 @@
           const m = E.newMotif(f.name, await E.fileToCanvas(f, MOTIF_MAX));
           m.file = f; // originalet i full upplösning, som skickas med till tatueraren
           m.fromForm = fromForm;
+          m.print = fingerprint(m.photo); // så att samma bild bara skickas en gång, se originals
           m.o = E.autoPrepare(m); // pappret, skuggor, rensning, svarta linjer och tomma kanter ställs in automatiskt
           m.auto = { ...m.o }; // det automatiska, som Återställ tar tillbaka
           m.pl = { ...PL0 }; // tills alla är inlästa och får sin plats, se fitMotif
@@ -470,6 +488,49 @@
     toast('Bilden är sparad.');
   }
 
+  /*
+   * Ett fingeravtryck av bilden som den laddades in: 24 x 24 i gråskala, och formen. Samma bild ger samma avtryck
+   * även när den är omsparad eller förminskad, som bilderna från förfrågan. Två foton av samma ark, tagna
+   * var för sig, skiljer sig mer än så och räknas som olika.
+   */
+  const PRINT = 24;
+  function fingerprint(c) {
+    const p = E.newCanvas(PRINT, PRINT);
+    const x = p.getContext('2d', { willReadFrequently: true });
+    if (!x) return null;
+    x.imageSmoothingQuality = 'high';
+    x.drawImage(c, 0, 0, PRINT, PRINT);
+    const d = x.getImageData(0, 0, PRINT, PRINT).data;
+    E.release(p);
+    const gray = new Uint8Array(PRINT * PRINT);
+    for (let i = 0; i < gray.length; i++) gray[i] = d[i * 4] * 0.299 + d[i * 4 + 1] * 0.587 + d[i * 4 + 2] * 0.114;
+    return { aspect: c.width / c.height, gray };
+  }
+
+  function sameImage(a, b) {
+    if (!a || !b || Math.abs(a.aspect - b.aspect) > 0.02 * a.aspect) return false;
+    let diff = 0;
+    for (let i = 0; i < a.gray.length; i++) diff += Math.abs(a.gray[i] - b.gray[i]);
+    return diff / a.gray.length < 4;
+  }
+
+  /*
+   * Originalen som skickas med: ett per bild. Har kunden lagt in samma bild flera gånger, till exempel för att
+   * sudda fram olika motiv ur samma ark, räcker det med en. Bilder som redan finns i förfrågan skickas inte.
+   */
+  function uniqueOriginals() {
+    const seen = S.motifs.filter((m) => m.fromForm).map((m) => m.print);
+    const files = [];
+    for (const m of S.motifs) {
+      if (!m.file || m.fromForm || seen.some((p) => sameImage(p, m.print))) continue;
+      seen.push(m.print);
+      files.push(m.file);
+    }
+    return files;
+  }
+
+  const fullText = () => `Du kan ha högst ${MOTIFS_MAX} motiv. Ta bort ett för att lägga till ett annat.`;
+
   const SEND_TEXT = {
     1: 'Hej! Så här vill jag ha tatueringen.',
     2: 'Hej! Så här vill jag ha tatueringen. Första bilden visar placering och storlek, den andra är originalet av motivet.',
@@ -486,7 +547,7 @@
     if (!S.body || !motif()) return;
     const file = await currentFile();
     if (!file) return;
-    const originals = S.motifs.filter((m) => m.file && !m.fromForm).map((m) => m.file);
+    const originals = uniqueOriginals();
     if (host) {
       // I studions förfrågan läggs bilderna i formuläret som inspirationsbilder och följer med när kunden skickar.
       sent = snapshot();
@@ -552,18 +613,36 @@
   /* Rakt, på sidan eller upp och ner: vridningen fastnar där när den är nära, så att det är lätt att få den rak. */
   const snapRot = (d) => [-180, -90, 0, 90, 180].find((t) => Math.abs(d - t) < 4) ?? d;
 
+  /*
+   * Den synliga delen av motivet m på skärmen (m.box): mitten, bredd och höjd i pixlar inom r (canvasens läge).
+   * Motivet vrids och speglas runt hela bildens mitt, som när det ritas, så rutans mitt följer med.
+   */
+  function boxOn(m, r) {
+    const { pl } = m;
+    const b = m.box || FULL_BOX;
+    const w = pl.scale * r.width;
+    const h = (w * m.src.height) / m.src.width;
+    const ox = ((b.x0 + b.x1) / 2 - 0.5) * w * (pl.flip ? -1 : 1);
+    const oy = ((b.y0 + b.y1) / 2 - 0.5) * h;
+    const a = (pl.rot * Math.PI) / 180;
+    return {
+      cx: pl.x * r.width + ox * Math.cos(a) - oy * Math.sin(a),
+      cy: pl.y * r.height + ox * Math.sin(a) + oy * Math.cos(a),
+      w: (b.x1 - b.x0) * w,
+      h: (b.y1 - b.y0) * h,
+    };
+  }
+
   /* Är punkten p (0 till 1 i bilden) på tatueringen m? Med lite marginal, så att en smal tatuering går att träffa. */
   function onMotif(m, p, r) {
     if (!m) return false;
-    const { pl } = m;
-    const w = pl.scale * r.width;
-    const h = (w * m.src.height) / m.src.width;
-    const a = (-pl.rot * Math.PI) / 180;
-    const dx = (p.x - pl.x) * r.width;
-    const dy = (p.y - pl.y) * r.height;
+    const g = boxOn(m, r);
+    const a = (-m.pl.rot * Math.PI) / 180;
+    const dx = p.x * r.width - g.cx;
+    const dy = p.y * r.height - g.cy;
     const lx = dx * Math.cos(a) - dy * Math.sin(a);
     const ly = dx * Math.sin(a) + dy * Math.cos(a);
-    return Math.abs(lx) <= w / 2 + 14 && Math.abs(ly) <= h / 2 + 14;
+    return Math.abs(lx) <= Math.max(g.w, SEL_MIN) / 2 + 14 && Math.abs(ly) <= Math.max(g.h, SEL_MIN) / 2 + 14;
   }
 
   /* Tatueringen under punkten: den valda om den träffas, annars den som ligger överst. -1 om ingen. */
@@ -662,7 +741,10 @@
   stage.addEventListener('pointercancel', endPointer);
   stage.addEventListener('contextmenu', (e) => { if (S.screen !== 'start') e.preventDefault(); });
 
-  // Handtaget i hörnet: dra ut eller in för storleken, runt för att vrida. Räknas från tatueringens mitt.
+  /*
+   * Handtaget i hörnet: dra ut eller in för storleken, runt för att vrida. Räknas från mitten av det som syns
+   * (ramens mitt), som står still, så att ramen följer fingret även när motivet inte sitter mitt i sin bild.
+   */
   const handle = $('#selHandle');
   handle.addEventListener('pointerdown', (e) => {
     if (gesture || S.screen !== 'place' || !motif()) return;
@@ -671,10 +753,13 @@
     hideCoach();
     begin();
     const rect = cv.getBoundingClientRect();
-    const cx = rect.left + S.pl.x * rect.width;
-    const cy = rect.top + S.pl.y * rect.height;
+    const box = boxOn(motif(), rect);
+    const cx = rect.left + box.cx;
+    const cy = rect.top + box.cy;
     gesture = {
       type: 'handle', id: e.pointerId, rect, srect: stage.getBoundingClientRect(), cx, cy,
+      // motivets mitt sett från ramens mitt, i skärmens pixlar
+      px: rect.left + S.pl.x * rect.width - cx, py: rect.top + S.pl.y * rect.height - cy,
       d0: Math.hypot(e.clientX - cx, e.clientY - cy) || 1, a0: Math.atan2(e.clientY - cy, e.clientX - cx), s0: S.pl.scale, r0: S.pl.rot,
     };
   });
@@ -683,6 +768,10 @@
     const g = gesture;
     S.pl.scale = clamp(g.s0 * (Math.hypot(e.clientX - g.cx, e.clientY - g.cy) / g.d0), 0.03, 1);
     S.pl.rot = snapRot(normDeg(g.r0 + ((Math.atan2(e.clientY - g.cy, e.clientX - g.cx) - g.a0) * 180) / Math.PI));
+    const k = S.pl.scale / g.s0;
+    const a = ((S.pl.rot - g.r0) * Math.PI) / 180;
+    S.pl.x = (g.cx - g.rect.left + k * (g.px * Math.cos(a) - g.py * Math.sin(a))) / g.rect.width;
+    S.pl.y = (g.cy - g.rect.top + k * (g.px * Math.sin(a) + g.py * Math.cos(a))) / g.rect.height;
     moved();
   });
   const handleUp = (e) => {
@@ -708,11 +797,13 @@
     if (!show) return;
     r = r || cv.getBoundingClientRect();
     s = s || stage.getBoundingClientRect();
-    const w = S.pl.scale * r.width;
-    const h = (w * m.src.height) / m.src.width;
+    // Ramen sluter tätt kring det som syns av motivet, inte kring hela bilden det kom från.
+    const g = boxOn(m, r);
+    const w = Math.max(g.w + 2 * SEL_PAD, SEL_MIN);
+    const h = Math.max(g.h + 2 * SEL_PAD, SEL_MIN);
     sel.style.width = `${w}px`;
     sel.style.height = `${h}px`;
-    sel.style.transform = `translate(${r.left - s.left + S.pl.x * r.width - w / 2}px, ${r.top - s.top + S.pl.y * r.height - h / 2}px) rotate(${S.pl.rot}deg)`;
+    sel.style.transform = `translate(${r.left - s.left + g.cx - w / 2}px, ${r.top - s.top + g.cy - h / 2}px) rotate(${S.pl.rot}deg)`;
     sel.style.setProperty('--unrot', `${-S.pl.rot}deg`);
   }
   /* Spara-ikonen i bildens nedre högra hörn, ovanpå bilden men inte med i den sparade bilden. */
@@ -777,9 +868,65 @@
 
   /* ================================================================ Motiv-arket */
 
-  /* Miniatyren visar tatueringen som den blir, utan papper. */
+  /*
+   * Miniatyren visar tatueringen som den blir, utan papper. Samtidigt räknas den synliga delen ut, för ramen,
+   * och miniatyren visar bara den, så att två motiv ur samma ark går att skilja åt.
+   */
   function cleanThumb(m) {
-    m.cleanThumb = E.thumbOf(E.buildClean(m, m.o).art, 128, true);
+    const { art } = E.buildClean(m, m.o);
+    m.box = inkBox(art);
+    const b = m.box;
+    const sx = Math.floor(b.x0 * art.width);
+    const sy = Math.floor(b.y0 * art.height);
+    const sw = Math.ceil(b.x1 * art.width) - sx;
+    const sh = Math.ceil(b.y1 * art.height) - sy;
+    const part = sw < art.width || sh < art.height ? E.newCanvas(sw, sh) : null;
+    const x = part && part.getContext('2d');
+    if (x) x.drawImage(art, sx, sy, sw, sh, 0, 0, sw, sh);
+    m.cleanThumb = E.thumbOf(x ? part : art, 128, true);
+    if (part) E.release(part);
+  }
+
+  /*
+   * Den del av motivet där det syns något, i andelar av motivet: { x0, y0, x1, y1 }. Ramen och träffytan följer
+   * den, så att ett motiv där det mesta är bortsuddat inte tar plats för de andra. Bläcket läggs på med multiply,
+   * så det som syns är täckningen gånger hur mörk färgen är; pappersvitt utan rensning räknas alltså inte.
+   * Räknas på en förminskad kopia, och ett dammkorn långt ut (en promille av bläcket) får hamna utanför.
+   */
+  const BOX_SIZE = 256;
+  function inkBox(art) {
+    const k = Math.min(1, BOX_SIZE / Math.max(art.width, art.height));
+    const w = Math.max(1, Math.round(art.width * k));
+    const h = Math.max(1, Math.round(art.height * k));
+    const c = E.newCanvas(w, h);
+    const x = c.getContext('2d', { willReadFrequently: true });
+    if (!x) return FULL_BOX;
+    x.drawImage(art, 0, 0, w, h);
+    const d = x.getImageData(0, 0, w, h).data;
+    E.release(c);
+    const cols = new Float64Array(w);
+    const rows = new Float64Array(h);
+    let total = 0;
+    for (let y = 0, i = 0; y < h; y++) {
+      for (let xx = 0; xx < w; xx++, i += 4) {
+        const v = d[i + 3] * (255 - Math.min(d[i], d[i + 1], d[i + 2]));
+        if (v < 255 * 16) continue; // knappt synligt
+        cols[xx] += v;
+        rows[y] += v;
+        total += v;
+      }
+    }
+    if (!total) return FULL_BOX;
+    const span = (sums) => {
+      let a = 0;
+      for (let acc = 0; a < sums.length - 1; a++) if ((acc += sums[a]) > total * 0.001) break;
+      let b = sums.length - 1;
+      for (let acc = 0; b > a; b--) if ((acc += sums[b]) > total * 0.001) break;
+      return [a / sums.length, (b + 1) / sums.length];
+    };
+    const [x0, x1] = span(cols);
+    const [y0, y1] = span(rows);
+    return { x0, y0, x1, y1 };
   }
 
   function renderTray() {
@@ -808,6 +955,7 @@
       wrap.append(pick, x);
       tray.insertBefore(wrap, add);
     });
+    add.classList.toggle('full', S.motifs.length >= MOTIFS_MAX);
     syncPics();
   }
 
@@ -1218,6 +1366,12 @@
   }
   // Varje knapp som väljer en bild har en egen filväljare inuti sig: data-pick säger om det är fotot eller motiv.
   $$('input[data-pick]').forEach((input) => pickFile(input, (files) => (input.dataset.pick === 'motif' ? addMotifs(files) : setBody(files[0]))));
+  // Med fem motiv öppnas ingen filväljare, och kunden får veta varför.
+  $$('input[data-pick="motif"]').forEach((input) => input.addEventListener('click', (e) => {
+    if (S.motifs.length < MOTIFS_MAX) return;
+    e.preventDefault();
+    toast(fullText(), 5000);
+  }));
 
   // Släppa filer på datorn: första gången blir det fotot, sedan tatueringar.
   const hasFiles = (e) => [...((e.dataTransfer && e.dataTransfer.types) || [])].includes('Files');
