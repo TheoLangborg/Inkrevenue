@@ -112,31 +112,24 @@ button, label { touch-action: manipulation; }
 .start .tip { margin-top: 18px; font-size: 13.5px; }
 
 /* Exempelbilden: foto, motiv och resultat. Krymper på låga skärmar så att knapparna syns utan att rulla. */
-.start-shot img {
+.start-shot {
   display: block; width: 100%; max-width: 100%; height: auto; margin: 0 auto; border-radius: var(--r-md);
   width: clamp(240px, (100dvh - 470px) * 1170 / 850, 100%); aspect-ratio: 1170 / 850;
 }
-/* Datorbilden (16:9) bara när skärmen är både bred och hög; på en låg skärm blir texten i den för liten, då tar mobilbilden över */
+/* Dator: samma bild, större, och texten och knapparna i mitten under den */
 @media (min-width: 700px) {
   .start-inner { max-width: 760px; }
   .start-copy { max-width: 420px; margin: 0 auto; }
+  .start-shot { width: clamp(320px, (100dvh - 470px) * 1170 / 850, 100%); }
 }
-@media (min-width: 700px) and (min-height: 521px) {
-  .start-shot img { width: clamp(320px, (100dvh - 470px) * 16 / 9, 100%); aspect-ratio: 16 / 9; }
-}
-/* Bred skärm eller telefon på tvären: bilden till vänster, texten och knapparna till höger */
-@media (min-width: 1000px), (orientation: landscape) and (max-height: 520px) {
-  .start { --copy-w: 380px; --gap: 56px; padding: 16px 24px; }
-  .start-inner { display: grid; grid-template-columns: auto var(--copy-w); gap: var(--gap); align-items: center; width: auto; max-width: none; text-align: left; }
-  .start-copy { max-width: none; margin: 0; }
-  .start h2 { margin-top: 0; }
-  .start-shot img { width: min(100vw - var(--copy-w) - var(--gap) - 80px, (100dvh - 130px) * 16 / 9, 1200px); }
-}
+/* Telefon på tvären: bilden till vänster, texten och knapparna till höger */
 @media (orientation: landscape) and (max-height: 520px) {
-  .start { --copy-w: min(340px, 42vw); --gap: 24px; }
-  .start h2 { font-size: 26px; }
+  .start { --copy-w: min(340px, 42vw); --gap: 24px; padding: 16px 24px; }
+  .start-inner { display: grid; grid-template-columns: auto var(--copy-w); gap: var(--gap); align-items: center; width: auto; max-width: none; }
+  .start-copy { max-width: none; margin: 0; }
+  .start h2 { margin-top: 0; font-size: 26px; }
   .start-actions { margin-top: 18px; }
-  .start-shot img { width: min(100vw - var(--copy-w) - var(--gap) - 80px, (100dvh - 130px) * 1170 / 850); }
+  .start-shot { width: min(100vw - var(--copy-w) - var(--gap) - 80px, (100dvh - 130px) * 1170 / 850); }
 }
 
 .swatches { position: absolute; top: 14px; right: max(16px, env(safe-area-inset-right)); display: flex; gap: 10px; }
