@@ -108,9 +108,10 @@ button, label { touch-action: manipulation; }
  * object-fit beskär bilderna till kolumnerna, och object-position håller huvudet i bild.
  */
 .start { grid-area: 1 / 1; align-self: stretch; justify-self: stretch; position: relative; display: grid; place-items: center; overflow: hidden; }
-.start-demo { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
+/* Bara dekor: bilderna går inte att dra iväg (till exempel in bland förfrågans inspirationsbilder) eller spara med långtryck */
+.start-demo { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; pointer-events: none; }
 .start-demo figure { position: relative; min-height: 0; margin: 0; }
-.start-demo img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 0; }
+.start-demo img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 0; -webkit-user-drag: none; }
 .start-demo figcaption {
   position: absolute; top: 16px; left: 0; right: 0; z-index: 1; padding: 0 4px; /* över toningen nedtill */
   font-size: clamp(13px, 3.6vw, 16px); font-weight: 650; line-height: 1.2; text-align: center; white-space: nowrap;
