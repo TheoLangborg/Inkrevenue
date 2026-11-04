@@ -1,0 +1,18 @@
+{
+  "studio": "alla",
+  "motiv": [],
+  "kroppar": [
+    {
+      "namn": "Underarm",
+      "fil": "kroppar/underarm.jpg",
+      "liten": "kroppar/underarm-liten.jpg",
+      "kalla": "Underarm.png",
+      "plats": {
+        "x": 0.48,
+        "y": 0.5,
+        "rot": -35,
+        "scale": 0.26
+      }
+    }
+  ]
+}

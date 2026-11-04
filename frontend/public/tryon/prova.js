@@ -8,7 +8,8 @@
    */
 
   let E = window.TryonEngine; // kan saknas om engine.js inte kom fram, se ensureEngine
-  const $ = (sel, root = document) => root.querySelector(sel);
+  const T = window.TryonText.t; // texterna på kundens språk, se prova-text.js. Samma objekt även när språket byts.
+  const $ =(sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
   const normDeg = (d) => ((((d + 180) % 360) + 360) % 360) - 180;
@@ -29,13 +30,20 @@
   const SEL_MIN = 44; // så att krysset och handtaget inte hamnar på varandra
   // Inbäddad i studions förfrågan på inkrevenue (en iframe med ?inbaddad): Skicka lägger bilderna i formuläret.
   const host = new URLSearchParams(location.search).has('inbaddad') && window.parent !== window ? window.parent : null;
+  // Stegen som studion ser antalet av i CRM:et (tryon:event): opened, photo, motif, added. Vart och ett en gång.
+  const reported = new Set();
+  const report = (event) => {
+    if (!host || reported.has(event)) return;
+    reported.add(event);
+    host.postMessage({ type: 'tryon:event', event }, location.origin);
+  };
 
   const S = {
     screen: 'start',
     body: null, // { raw, fixed, canvas, view }: fixed är fotot med rättat ljus, canvas det som visas, view kopian på skärmen
     autoLight: true,
     motifs: [], mi: -1, // alla tatueringar syns på fotot, var och en med sin placering (m.pl); mi är den valda
-    sheet: null, // adjust | motif | photo | advanced
+    sheet: null, // adjust | motif | photo
     tab: 'erase', // verktyget när tatueringen visas för sig: ring | erase | crop | white
     view: 'checker',
     brush: 4, // procent av tatueringens längsta sida
@@ -50,11 +58,8 @@
     get: () => (motif() ? motif().pl : { ...PL0 }),
     set: (pl) => { if (motif()) motif().pl = pl; },
   });
-  const EDIT_TITLES = { ring: 'Ringa in', erase: 'Sudda', crop: 'Beskär', white: 'Vitt bläck' };
   // Ett foto av en tatuering på hud, eller ett foto med mer än motivet, ger ingen varning: då öppnas Ringa in direkt.
-  const MOTIF_WARNINGS = {
-    empty: 'Hittade ingen tatuering i bilden. Prova en tydligare bild med tatueringen mot vit bakgrund.',
-  };
+  const motifWarning = (w) => (w === 'empty' ? T.warnEmpty : '');
 
   const app = $('#app');
   const stage = $('#stage');
@@ -78,7 +83,7 @@
     $$('[data-for]').forEach((n) => { n.hidden = !n.dataset.for.split(' ').includes(name); });
     if (name !== 'place') { hideCoach(); setZoom(false); }
     openSheet(null);
-    $('#topTitle').textContent = name === 'edit' ? EDIT_TITLES[S.tab] : 'Prova din tatuering';
+    $('#topTitle').textContent = name === 'edit' ? T.editTitles[S.tab] : T.title;
     if (name === 'edit') syncEdit();
     syncUndo();
     placeSel();
@@ -95,18 +100,22 @@
     $('#sheetAdjust').hidden = S.sheet !== 'adjust';
     $('#sheetMotif').hidden = S.sheet !== 'motif';
     $('#sheetPhoto').hidden = S.sheet !== 'photo';
-    $('#sheetAdvanced').hidden = S.sheet !== 'advanced';
+    app.toggleAttribute('data-sheet', !!S.sheet); // på startskärmen syns dockan bara med ett ark, se prova.css
     $('#placeTools').hidden = S.screen !== 'place' || !!S.sheet;
+    $('#needTools').hidden = S.screen !== 'needMotif' || !!S.sheet;
+    $('#hPhoto').textContent = S.body ? T.changePhoto : T.choosePhoto;
+    $('#photoNote').hidden = !motif();
     $('#tAdjust').setAttribute('aria-pressed', String(S.sheet === 'adjust'));
     $('#tMotif').setAttribute('aria-pressed', String(S.sheet === 'motif'));
     $('#tPhoto').setAttribute('aria-pressed', String(S.sheet === 'photo'));
     if (S.sheet) hideCoach();
-    if (S.sheet === 'advanced') syncAdvanced();
+    if (S.sheet === 'adjust') syncSettings();
+    syncFocus(S.screen === 'place'); // Justera förstorar bilden runt tatueringen
   }
 
   /*
    * Visar tatueringen för sig, med ett verktyg: Sudda från verktygsraden, Ringa in, Beskär och Vitt bläck från
-   * Avancerat. Ringa in visar först fotot som det laddades in, och efter inringningen resultatet.
+   * Justera. Ringa in visar först fotot som det laddades in, och efter inringningen resultatet.
    * Allt som görs här blir ett enda steg att ångra när kunden trycker Klar.
    */
   function openEdit(tab) {
@@ -147,28 +156,30 @@
     }
   }
 
-  async function setBody(file) {
+  /* plats: var ett nytt motiv hamnar på ett exempelfoto, se placeOf. */
+  async function setBody(file, plats = null) {
     if (!file) return;
-    if (!isImage(file)) { toast('Det där ser inte ut som en bild.'); return; }
+    if (!isImage(file)) { toast(T.notImage); return; }
     let body;
     try {
-      body = await busy('Läser fotot', async () => {
+      body = await busy(T.readingPhoto, async () => {
         await ensureEngine();
         const raw = await E.fileToCanvas(file, BODY_MAX, true, BODY_MIN);
         const fixed = E.autoExposure(raw); // null om ljuset redan är okej
-        const b = { raw, fixed };
+        const b = { raw, fixed, plats };
         useLight(b);
         E.skinDetail(b.canvas); // hudens struktur räknas nu, medan spinnern syns, i stället för vid första ritningen
         return b;
       });
     } catch (err) {
-      toast(`Fotot gick inte att läsa (${whyNot(err)}). Prova igen, eller välj fotot från bilderna.`, 9000);
+      toast(T.photoFailed(whyNot(err)), 9000);
       return;
     }
     // Ett nytt foto går inte att ångra. Det gamla släpps direkt, så att telefonen inte får slut på minne för
     // bilder, och det som redan gjorts med tatueringen går fortfarande att ångra och göra om, på det nya fotot.
     const old = S.body;
     S.body = body;
+    report('photo');
     for (const s of [...past, ...future]) s.body = body;
     if (pending) pending.body = body;
     if (old) [old.raw, old.fixed, old.view].forEach((c) => E.release(c));
@@ -186,10 +197,10 @@
   /* Kort varför en bild inte gick att läsa, så att det går att felsöka från telefonen. */
   function whyNot(err) {
     const msg = String((err && err.message) || err || '');
-    if (msg === 'decode') return 'bildformatet går inte att läsa här';
-    if (msg === 'canvas') return 'telefonens minne för bilder tog slut';
-    if (msg === 'engine') return 'bildmotorn kom inte fram, ladda om sidan';
-    if (msg.startsWith('engine: ')) return `bildmotorn startade inte: ${msg.slice(8, 120)}`;
+    if (msg === 'decode') return T.whyDecode;
+    if (msg === 'canvas') return T.whyCanvas;
+    if (msg === 'engine') return T.whyEngine;
+    if (msg.startsWith('engine: ')) return T.whyEngineBroken(msg.slice(8, 120));
     return `${(err && err.name) || 'Error'}: ${msg.slice(0, 90)}`;
   }
 
@@ -200,17 +211,17 @@
    */
   let engineError = '';
   window.addEventListener('error', (ev) => {
-    if (String(ev.filename || '').includes('/engine.js')) engineError = `${ev.message} (rad ${ev.lineno})`;
+    if (String(ev.filename || '').includes('/engine.js')) engineError = `${ev.message} (${T.line} ${ev.lineno})`;
   });
   function ensureEngine() {
     if (E) return Promise.resolve();
     return new Promise((resolve, reject) => {
       const s = document.createElement('script');
-      s.src = `/engine.js?igen=${Date.now()}`;
+      s.src = `engine.js?igen=${Date.now()}`; // relativt, så att det fungerar även under /tryon/ på inkrevenue
       s.onload = () => {
         E = window.TryonEngine;
         if (E) resolve();
-        else reject(new Error(`engine: ${engineError || 'okänt fel'}`));
+        else reject(new Error(`engine: ${engineError || T.unknownError}`));
       };
       s.onerror = () => reject(new Error('engine'));
       document.head.append(s);
@@ -237,17 +248,18 @@
 
   /*
    * fromForm: motiven kom från förfrågan, så deras original skickas inte tillbaka dit en gång till.
+   * keepSheet: motivet valdes bland studions motiv, och Motiv-arket står kvar så att kunden kan välja fler.
    * Högst MOTIFS_MAX motiv och FILE_MB_MAX per bild. Det som inte får plats läggs inte in, och toasten säger varför.
    */
-  async function addMotifs(fileList, fromForm = false) {
+  async function addMotifs(fileList, fromForm = false, keepSheet = false) {
     const images = [...fileList].filter(isImage);
-    if (!images.length) { toast('Det där ser inte ut som en bild.'); return; }
+    if (!images.length) { toast(T.notImage); return; }
     const big = images.filter((f) => f.size > FILE_MB_MAX * 1024 * 1024);
     const fits = images.filter((f) => !big.includes(f));
     const files = fits.slice(0, Math.max(0, MOTIFS_MAX - S.motifs.length));
     const notes = [];
-    if (big.length === 1) notes.push(`${big[0].name} är för stor (${Math.round(big[0].size / 1024 / 1024)} MB). Högst ${FILE_MB_MAX} MB per bild.`);
-    else if (big.length) notes.push(`${big.length} bilder är större än ${FILE_MB_MAX} MB och lades inte in.`);
+    if (big.length === 1) notes.push(T.tooBig(big[0].name, Math.round(big[0].size / 1024 / 1024), FILE_MB_MAX));
+    else if (big.length) notes.push(T.manyTooBig(big.length, FILE_MB_MAX));
     if (files.length < fits.length) notes.push(fullText());
     if (notes.length) toast(notes.join(' '), 7000);
     if (!files.length) return;
@@ -255,12 +267,14 @@
     const was = snapshot();
     let warning = '';
     let skinAt = -1;
-    await busy('Läser tatueringen', async () => {
+    await busy(T.readingMotif, async () => {
       for (const f of files) {
         try {
           await ensureEngine();
           const m = E.newMotif(f.name, await E.fileToCanvas(f, MOTIF_MAX));
           m.file = f; // originalet i full upplösning, som skickas med till tatueraren
+          // Studions motiv har genomskinlig bakgrund. Till tatueraren skickas det på vitt, så att svart bläck syns i alla appar.
+          if (libFiles.has(f)) m.file = (await onWhite(m.photo, f.name.replace(/\.png$/i, '.jpg'))) || f;
           m.fromForm = fromForm;
           m.print = fingerprint(m.photo); // så att samma bild bara skickas en gång, se originals
           m.o = E.autoPrepare(m); // pappret, skuggor, rensning, svarta linjer och tomma kanter ställs in automatiskt
@@ -271,11 +285,12 @@
           if (m.warning === 'skin') skinAt = S.motifs.length - 1;
           else warning = m.warning || warning;
         } catch (err) {
-          toast(`Kunde inte läsa ${f.name} (${whyNot(err)}). Prova att spara den som JPG eller PNG.`, 9000);
+          toast(T.motifFailed(f.name, whyNot(err)), 9000);
         }
       }
     });
     if (S.motifs.length === before) return;
+    report('motif');
     remember(was);
     const added = S.motifs.slice(before);
     added.forEach((m, i) => { m.cell = cellOf(i, added.length); fitMotif(m); });
@@ -283,22 +298,29 @@
     S.selected = true; // ramen visar direkt att hörnen går att dra i
     syncAdjust();
     renderTray();
-    syncAdvanced();
+    syncSettings();
     changed();
     // Ett foto av en tatuering på hud, eller ett rörigt foto, går inte att rensa automatiskt. Kunden ringar in tatueringen direkt.
     if (skinAt >= 0) { openEdit('ring'); return; }
-    if (warning) toast(MOTIF_WARNINGS[warning], 7000);
+    if (warning) toast(motifWarning(warning), 7000);
+    // Valt bland studions motiv: motivet syns på fotot ovanför arket, och arket står kvar (eller öppnas, från raden
+    // i dockan) så att kunden kan prova fler. Tipset om att dra och nypa väntar tills arket är stängt.
+    if (keepSheet && S.screen === 'place' && S.sheet === 'motif') { placeSel(); placeSaveBtn(); return; }
     if (S.screen === 'needMotif' || S.screen === 'place') setScreen('place');
-    showCoach();
+    if (keepSheet && S.screen === 'place') openSheet('motif');
+    else showCoach();
   }
 
   /*
    * Ny tatuering: mitt i bilden, högst 40 procent av bildens bredd och höjd. Läggs flera in på en gång, som
    * motiven från förfrågan, får de var sin ruta i ett rutnät, så att alla syns. Rutnätet är på höjden när
-   * fotot är det, eftersom en arm då oftast går uppifrån och ner.
+   * fotot är det, eftersom en arm då oftast går uppifrån och ner. Ett ensamt motiv på ett exempelfoto hamnar
+   * där fotot säger (b.plats), till exempel mitt på armen och vridet längs den.
    */
   function cellOf(i, n) {
     const b = S.body;
+    const p = b && b.plats;
+    if (p && n === 1) return { x: p.x, y: p.y, w: 0.9, h: 0.8, rot: p.rot, max: p.scale };
     const k = Math.ceil(Math.sqrt(n));
     const cols = b && b.canvas.height > b.canvas.width ? Math.ceil(n / k) : k;
     const rows = Math.ceil(n / cols);
@@ -315,10 +337,160 @@
     let scale = PL0.scale;
     if (b) {
       const aspect = m.src.height / m.src.width;
-      scale = Math.min(0.4, 0.85 * c.w, (Math.min(0.4, 0.85 * c.h) * b.canvas.height) / (b.canvas.width * aspect));
+      scale = Math.min(c.max || 0.4, 0.85 * c.w, (Math.min(0.4, 0.85 * c.h) * b.canvas.height) / (b.canvas.width * aspect));
     }
-    m.pl = { ...PL0, x: c.x, y: c.y, scale: clamp(scale, 0.05, 1) };
+    m.pl = { ...PL0, x: c.x, y: c.y, rot: c.rot || 0, scale: clamp(scale, 0.05, 1) };
     if (m === motif()) syncAdjust();
+  }
+
+  /* ================================================================ förinställda bilder */
+
+  /*
+   * Studions motiv och exempelfoton att prova på, för den som inte har ett eget motiv eller ett foto till hands.
+   * De ligger i forval/ bredvid kundvyn: forval/alla/ gäller alla studior och forval/<studio>/ studion i adressen
+   * (?studio=<slug>). Varje mapp har en lista, forval.json. Motiven är redan rensade (PNG med genomskinlig
+   * bakgrund), så de går samma väg som kundens egna bilder men utan papper att ta bort. Filerna görs med
+   * npm run motiv och npm run kroppar i labbet (forval.js). Utan lista syns bara kundens egna bilder.
+   */
+  const STUDIO = (() => {
+    const s = new URLSearchParams(location.search).get('studio');
+    return s && s !== 'alla' && /^[a-z0-9][a-z0-9-]{0,99}$/.test(s) ? s : null;
+  })();
+  const LIB_FILE = { motiv: /^motiv\/[a-z0-9][a-z0-9-]{0,80}\.png$/, kroppar: /^kroppar\/[a-z0-9][a-z0-9-]{0,80}\.jpg$/ };
+  const LIB_THUMB = /^(motiv|kroppar)\/[a-z0-9][a-z0-9-]{0,80}\.jpg$/;
+  const lib = { motiv: [], kroppar: [] }; // { namn, url, liten, plats }
+  const libFiles = new WeakSet(); // filerna som hämtats ur listan, se addMotifs
+
+  async function loadLibrary() {
+    const dirs = STUDIO ? [STUDIO, 'alla'] : ['alla'];
+    const lists = await Promise.all(dirs.map(async (dir) => {
+      try {
+        const res = await fetch(`forval/${dir}/forval.json`, { cache: 'no-cache' });
+        return res.ok ? { dir, list: await res.json() } : null;
+      } catch {
+        return null; // ingen lista, eller en webbsida i stället för en lista
+      }
+    }));
+    for (const { dir, list } of lists.filter((l) => l && l.list && typeof l.list === 'object')) {
+      for (const kind of ['motiv', 'kroppar']) {
+        for (const it of Array.isArray(list[kind]) ? list[kind] : []) {
+          if (!it || !LIB_FILE[kind].test(it.fil) || !LIB_THUMB.test(it.liten)) continue;
+          lib[kind].push({ namn: String(it.namn || '').slice(0, 60), url: `forval/${dir}/${it.fil}`, liten: `forval/${dir}/${it.liten}`, plats: placeOf(it.plats) });
+        }
+      }
+    }
+    renderLibrary();
+  }
+
+  /* Var ett nytt motiv hamnar på ett exempelfoto, till exempel längs armen: { x, y, rot, scale }, andelar och grader. */
+  function placeOf(p) {
+    const ok = (v, lo, hi) => typeof v === 'number' && v >= lo && v <= hi;
+    if (!p || !ok(p.x, 0, 1) || !ok(p.y, 0, 1)) return null;
+    return { x: p.x, y: p.y, rot: ok(p.rot, -180, 180) ? p.rot : 0, scale: ok(p.scale, 0.03, 1) ? p.scale : 0.4 };
+  }
+
+  function renderLibrary() {
+    const bodies = lib.kroppar;
+    $('#btnSampleBody').hidden = !bodies.length;
+    if (bodies.length) $('#sampleBodyPic').src = bodies[0].liten;
+    // Med exempelfoton öppnar Byt foto arket, där de finns bredvid Ta foto och Välj bild.
+    $('#needPhotoFile').hidden = !!bodies.length;
+    $('#needPhotoSheet').hidden = !bodies.length;
+    fillLib($('#libBody'), $('#libBodyList'), bodies, true, pickBody);
+    fillLib($('#libMotif'), $('#libMotifList'), lib.motiv, false, pickMotif);
+    fillLib($('#libNeed'), $('#libNeedList'), lib.motiv, false, pickMotif);
+    syncStrip();
+  }
+
+  /*
+   * Raden med studions motiv rullar i sidled: med fingret, med reglaget under den, eller med hjulet på datorn.
+   * Reglaget följer raden och syns bara när alla motiv inte får plats.
+   */
+  const strip = $('#libNeedList');
+  const stripSlider = $('#libNeedSlider');
+  function syncStrip() {
+    const room = strip.scrollWidth - strip.clientWidth;
+    stripSlider.hidden = room <= 1;
+    if (room > 1) stripSlider.value = String(Math.round((strip.scrollLeft / room) * 1000));
+  }
+  strip.addEventListener('scroll', syncStrip, { passive: true });
+  stripSlider.addEventListener('input', () => {
+    strip.scrollLeft = (Number(stripSlider.value) / 1000) * (strip.scrollWidth - strip.clientWidth);
+  });
+  strip.addEventListener('wheel', (e) => {
+    if (Math.abs(e.deltaY) <= Math.abs(e.deltaX) || strip.scrollWidth <= strip.clientWidth) return;
+    e.preventDefault();
+    strip.scrollLeft += e.deltaY;
+  }, { passive: false });
+  new ResizeObserver(syncStrip).observe(strip); // raden får sin bredd först när dockan visar den
+
+  /* Rutor med en liten bild. Exempelfotona har namnet under, motiven bara bilden (namnet läses upp). */
+  function fillLib(section, list, items, captions, pick) {
+    section.hidden = !items.length;
+    list.replaceChildren(...items.map((it, i) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = captions ? 'lib-tile photo' : 'lib-tile';
+      b.title = it.namn;
+      b.setAttribute('aria-label', it.namn || `${captions ? T.samplePhoto : T.motif} ${i + 1}`);
+      const img = document.createElement('img');
+      img.src = it.liten;
+      img.alt = '';
+      img.loading = 'lazy';
+      img.decoding = 'async';
+      img.draggable = false;
+      b.append(img);
+      if (captions && it.namn) {
+        const s = document.createElement('span');
+        s.textContent = it.namn;
+        s.setAttribute('aria-hidden', 'true');
+        b.append(s);
+      }
+      b.addEventListener('click', () => pick(it));
+      return b;
+    }));
+  }
+
+  /* Hämtar bilden som en fil, så att den går samma väg som en bild som kunden väljer själv. */
+  async function fetchLib(it, text) {
+    try {
+      return await busy(text, async () => {
+        const res = await fetch(it.url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const blob = await res.blob();
+        const ext = it.url.slice(it.url.lastIndexOf('.'));
+        return new File([blob], `${it.namn || T.image}${ext}`, { type: ext === '.png' ? 'image/png' : 'image/jpeg' });
+      });
+    } catch (err) {
+      toast(T.fetchFailed(whyNot(err)), 7000);
+      return null;
+    }
+  }
+
+  async function pickBody(it) {
+    const file = await fetchLib(it, T.fetchingPhoto);
+    if (file) setBody(file, it.plats);
+  }
+
+  async function pickMotif(it) {
+    if (S.motifs.length >= MOTIFS_MAX) { toast(fullText(), 7000); return; }
+    const file = await fetchLib(it, T.fetchingMotif);
+    if (!file) return;
+    libFiles.add(file);
+    addMotifs([file], false, true);
+  }
+
+  /* Motivet på vitt, som JPEG. null om det inte gick, då skickas det som det är. */
+  async function onWhite(c, name) {
+    const w = E.newCanvas(c.width, c.height);
+    const x = w.getContext('2d');
+    if (!x) return null;
+    x.fillStyle = '#fff';
+    x.fillRect(0, 0, w.width, w.height);
+    x.drawImage(c, 0, 0);
+    const blob = await new Promise((r) => w.toBlob(r, 'image/jpeg', 0.92));
+    E.release(w);
+    return blob ? new File([blob], name, { type: 'image/jpeg' }) : null;
   }
 
   /* ================================================================ rita */
@@ -422,7 +594,7 @@
   function fileName() {
     const d = new Date();
     const pad = (n) => String(n).padStart(2, '0');
-    return `tatuering-${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}.jpg`;
+    return `${T.fileBase}-${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}.jpg`;
   }
 
   /* Bilden som sparas. Visar skärmen redan den färdiga bilden används den, annars ritas den på nytt. */
@@ -466,7 +638,7 @@
     try {
       return await makeFile();
     } catch {
-      toast('Kunde inte skapa bilden. Försök igen.');
+      toast(T.makeFailed);
       return null;
     }
   }
@@ -485,7 +657,7 @@
       }
     }
     download(file);
-    toast('Bilden är sparad.');
+    toast(T.saved);
   }
 
   /*
@@ -529,13 +701,7 @@
     return files;
   }
 
-  const fullText = () => `Du kan ha högst ${MOTIFS_MAX} motiv. Ta bort ett för att lägga till ett annat.`;
-
-  const SEND_TEXT = {
-    1: 'Hej! Så här vill jag ha tatueringen.',
-    2: 'Hej! Så här vill jag ha tatueringen. Första bilden visar placering och storlek, den andra är originalet av motivet.',
-    3: 'Hej! Så här vill jag ha tatueringarna. Första bilden visar placering och storlek, de andra är originalen av motiven.',
-  };
+  const fullText = () => T.full(MOTIFS_MAX);
 
   /*
    * Skicka till tatueraren: bilden med tatueringarna på kroppen och originalen av motiven som kunden lade in.
@@ -552,21 +718,21 @@
       // I studions förfrågan läggs bilderna i formuläret som inspirationsbilder och följer med när kunden skickar.
       sent = snapshot();
       host.postMessage({ type: 'tryon:send', files: [file, ...originals] }, location.origin);
+      report('added');
       return;
     }
     const tries = originals.length ? [[file, ...originals], [file]] : [[file]];
     for (const files of tries) {
       if (!navigator.canShare || !navigator.canShare({ files })) continue;
       try {
-        await navigator.share({ files, text: SEND_TEXT[Math.min(files.length, 3)] });
+        await navigator.share({ files, text: T.sendText[Math.min(files.length, 3)] }); // efter antalet bilder: 1, 2 eller fler
         return;
       } catch (err) {
         if (err && err.name === 'AbortError') return;
       }
     }
     tries[0].forEach(download);
-    const n = tries[0].length;
-    toast(n > 1 ? `Bilden och ${n > 2 ? 'originalen' : 'originalet'} är nedladdade. Skicka dem till tatueraren.` : 'Bilden är nedladdad. Skicka den till tatueraren.', 6000);
+    toast(T.downloaded(tries[0].length), 6000);
   }
 
   /*
@@ -696,7 +862,7 @@
 
   stage.addEventListener('pointerdown', (e) => {
     if (e.target.closest('button, label, input, .sel-handle')) return;
-    if (S.zoom) { zoomDown(e); return; }
+    if (S.zoom || focusOn) { zoomDown(e); return; }
     if (S.screen === 'edit') { editDown(e); return; }
     if (S.screen !== 'place' || !motif() || (gesture && gesture.type === 'handle')) return;
     hideCoach();
@@ -716,7 +882,7 @@
     startGesture(rect, srect);
   });
   stage.addEventListener('pointermove', (e) => {
-    if (S.zoom) { zoomMove(e); return; }
+    if (S.zoom || focusOn) { zoomMove(e); return; }
     if (S.screen === 'edit') { editMove(e); return; }
     if (!pointers.has(e.pointerId)) return;
     if (tap && Math.hypot(e.clientX - tap.x, e.clientY - tap.y) <= TAP_PX) return; // än så länge en tryckning
@@ -725,7 +891,7 @@
     updateGesture();
   });
   const endPointer = (e) => {
-    if (S.zoom) { zoomUp(e); return; }
+    if (S.zoom || focusOn) { zoomUp(e); return; }
     if (S.screen === 'edit') { editUp(e, e.type === 'pointerup'); return; }
     if (!pointers.delete(e.pointerId)) return;
     if (pointers.size) { startGesture(gesture.rect, gesture.srect); return; }
@@ -810,7 +976,7 @@
   const saveBtn = $('#btnSaveImg');
   const SAVE_INSET = 10;
   function placeSaveBtn() {
-    const show = S.screen === 'place' && !!motif() && !!S.body && !S.zoom;
+    const show = S.screen === 'place' && !!motif() && !!S.body && !S.zoom && !focusOn; // i fokus kan hörnet ligga utanför ytan
     saveBtn.hidden = !show;
     if (!show) return;
     const r = cv.getBoundingClientRect();
@@ -823,6 +989,8 @@
   // Bilden ändrar storlek när fotot byts, ett ark öppnas eller telefonen vrids.
   const resized = new ResizeObserver(() => {
     if (S.zoom) { zv = { z: 1, x: 0, y: 0 }; applyZoom(); } // telefonen vreds: börja om från hela bilden
+    else if (focusOn) syncFocus(false); // tatueringen hålls mitt i bild
+    if (gliding) return;
     placeSel();
     placeSaveBtn();
   });
@@ -840,7 +1008,16 @@
       requestRender();
       return;
     }
-    if (S.screen !== 'place' || !motif() || S.zoom) return;
+    if (S.zoom || focusOn) {
+      // Helskärm och fokus: hjulet förstorar bilden där pekaren står, inte tatueringen.
+      e.preventDefault();
+      endGlide();
+      zoomAt(zv.z * Math.exp(-dy * 0.0015), e.clientX, e.clientY);
+      applyZoom();
+      viewMoved();
+      return;
+    }
+    if (S.screen !== 'place' || !motif()) return;
     e.preventDefault();
     begin();
     if (e.shiftKey || e.altKey) S.pl.rot = normDeg(S.pl.rot - Math.sign(dy) * 2);
@@ -850,19 +1027,14 @@
     wheelTimer = setTimeout(() => { setLive(false); commit(); placeSel(); }, 250);
   }, { passive: false });
 
-  /* ================================================================ Justera-arket */
+  /* ================================================================ placeringen: färgstyrkan och Spegla */
 
+  /* Storlek och vridning har inga reglage: de görs med fingrarna, handtaget eller hjulet på bilden. */
   function syncAdjust() {
     const p = S.pl;
-    const size = Math.round(p.scale * 100);
-    const rot = Math.round(p.rot);
     const op = Math.round(p.opacity * 100);
-    $('#rngScale').value = size;
-    $('#rngRot').value = rot;
     $('#rngOp').value = op;
-    $('#outScale').textContent = `${size} %`;
-    $('#outRot').textContent = `${rot}°`;
-    $('#outOp').textContent = `${op} %`;
+    $('#outOp').textContent = T.percent(op);
     $('#tFlip').setAttribute('aria-pressed', String(p.flip));
   }
 
@@ -938,7 +1110,7 @@
       pick.type = 'button';
       pick.className = 'pick';
       pick.setAttribute('aria-pressed', String(i === S.mi));
-      pick.setAttribute('aria-label', `Tatuering ${i + 1}`);
+      pick.setAttribute('aria-label', T.tattooN(i + 1));
       const img = document.createElement('img');
       img.src = m.cleanThumb || m.thumb;
       img.alt = '';
@@ -948,7 +1120,7 @@
       x.type = 'button';
       x.className = 'x';
       x.textContent = '×';
-      x.setAttribute('aria-label', `Ta bort tatuering ${i + 1}`);
+      x.setAttribute('aria-label', T.removeTattooN(i + 1));
       x.addEventListener('click', () => act(() => removeMotif(i)));
       const wrap = document.createElement('div');
       wrap.className = 'thumb';
@@ -958,9 +1130,7 @@
     // Vid max försvinner Lägg till, och texten under säger varför.
     const full = S.motifs.length >= MOTIFS_MAX;
     add.hidden = full;
-    $('#motifNote').textContent = full
-      ? `Du har ${MOTIFS_MAX} motiv, det är max. Ta bort ett med krysset för att lägga till ett annat.`
-      : `Alla motiv syns på fotot. Tryck på ett för att flytta och justera det, eller lägg till ett till, upp till ${MOTIFS_MAX}.`;
+    $('#motifNote').textContent = full ? T.trayFull(MOTIFS_MAX) : T.trayNote(MOTIFS_MAX);
     syncPics();
   }
 
@@ -982,7 +1152,7 @@
     S.selected = true;
     renderTray();
     syncAdjust();
-    syncAdvanced();
+    syncSettings();
     placeSel();
   }
 
@@ -992,7 +1162,7 @@
     else if (i < S.mi || S.mi >= S.motifs.length) S.mi -= 1;
     S.selected = false;
     renderTray();
-    syncAdvanced();
+    syncSettings();
     if (!motif()) setScreen('needMotif');
     changed();
     placeSel();
@@ -1073,7 +1243,7 @@
     if (S.screen !== screen) setScreen(screen);
     renderTray();
     syncAdjust();
-    syncAdvanced();
+    syncSettings();
     syncUndo();
     changed();
     placeSel();
@@ -1111,19 +1281,19 @@
     const xs = pts.map((p) => p.x);
     const ys = pts.map((p) => p.y);
     if (Math.max(...xs) - Math.min(...xs) < long * 0.04 || Math.max(...ys) - Math.min(...ys) < long * 0.04) {
-      toast('Dra med fingret runt hela tatueringen.');
+      toast(T.ringTooSmall);
       return;
     }
-    const o = await busy('Plockar ut tatueringen', async () => E.ringMotif(m, pts));
+    const o = await busy(T.ringing, async () => E.ringMotif(m, pts));
     if (!o) return;
     m.o = o;
     m.auto = { ...o };
     cleanThumb(m);
     renderTray();
-    syncAdvanced();
+    syncSettings();
     fitMotif();
     changed();
-    if (m.warning === 'empty') { toast('Hittade ingen tatuering innanför ringen. Försök igen.'); return; }
+    if (m.warning === 'empty') { toast(T.ringEmpty); return; }
     ringResult = true;
     syncEdit();
   }
@@ -1197,8 +1367,8 @@
 
   function tapWhite(m, pt) {
     const res = E.toggleWhite(m, pt, m.o);
-    if (res === 'none') toast('Tryck på en vit yta inuti tatueringen.');
-    else if (res === 'edge') toast('Det där är bakgrunden. Bara vita ytor som tatueringen omsluter kan bli vitt bläck.');
+    if (res === 'none') toast(T.whiteNone);
+    else if (res === 'edge') toast(T.whiteEdge);
     else motifEdited();
   }
 
@@ -1214,13 +1384,11 @@
     $$('.tab-body').forEach((n) => { n.hidden = n.dataset.tab !== S.tab; });
     $$('.swatch').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.view === S.view)));
     $('.swatches').hidden = ringing(); // bakgrunden gäller tatueringen, inte fotot
-    $('#ringHint').textContent = ringResult
-      ? 'Så här blir tatueringen. Blev något fel kan du ringa in igen eller sudda bort rester.'
-      : 'Dra med fingret runt tatueringen. Allt utanför tas bort.';
+    $('#ringHint').textContent = ringResult ? T.ringDone : T.ringHint;
     $('#ringActions').hidden = !ringResult;
     syncUndo();
     $('#rngBrush').value = S.brush;
-    $('#outBrush').textContent = `${String(S.brush).replace('.', ',')} %`;
+    $('#outBrush').textContent = T.percent(S.brush);
   }
 
   /* ================================================================ helskärm: bara bilden */
@@ -1244,6 +1412,8 @@
     zoomGesture = null;
     zv = { z: 1, x: 0, y: 0 };
     applyZoom();
+    focusOn = false; // helskärmen börjar på hela bilden, och efteråt förstoras den runt tatueringen igen om arket är öppet
+    if (!on) syncFocus(false);
     if (on) hideCoach();
     placeSel();
     placeSaveBtn();
@@ -1271,6 +1441,94 @@
     zv.y = py - by - zv.z * qy;
   }
 
+  /*
+   * Fokus på tatueringen: medan Justera är öppet förstoras bilden runt den valda tatueringen, så att det syns vad
+   * som ändras. Fingrarna förstorar och flyttar då bilden som i helskärmen (hjulet på datorn), och reglagen i
+   * arket ändrar tatueringen. Klar tar tillbaka hela bilden. Samma förstoring som helskärmen (zv).
+   */
+  const FOCUS_SHEETS = ['adjust'];
+  const FOCUS_ROOM = 1.6; // tatueringen tar ungefär 1 / 1,6 av ytan
+  const FOCUS_MAX = 3;
+  let focusOn = false; // bilden är förstorad runt tatueringen
+  let focusTouched = false; // kunden har själv förstorat eller flyttat bilden sedan dess
+  let gliding = 0; // medan bilden glider in eller ut står ramen still, och ritas på plats efteråt
+
+  const viewing = () => S.screen === 'place' && FOCUS_SHEETS.includes(S.sheet) && !!motif() && !!S.body && !S.zoom;
+
+  /* När ett ark öppnas eller stängs, och när ytan ändrar storlek. animate: glid in eller ut. */
+  function syncFocus(animate) {
+    const want = viewing();
+    if (want !== focusOn) {
+      focusOn = want;
+      focusTouched = false;
+      zv = want ? focusView() : { z: 1, x: 0, y: 0 };
+      glide(animate);
+    } else if (want && !focusTouched) {
+      zv = focusView(); // ytan ändrade storlek: tatueringen hålls mitt i bild
+      applyZoom();
+    } else if (want) {
+      applyZoom(); // kundens egen förstoring, bara hållen inom kanterna
+    }
+    if (!gliding) { placeSel(); placeSaveBtn(); }
+  }
+
+  /* Tillbaka till tatueringen, efter Nollställ som flyttar den. */
+  function refocus() {
+    if (!focusOn) return;
+    focusTouched = false;
+    zv = focusView();
+    glide(true);
+  }
+
+  /* Förstoringen som visar den valda tatueringen mitt i ytan, med luft runt om. */
+  function focusView() {
+    const m = motif();
+    const sw = stage.clientWidth;
+    const sh = stage.clientHeight;
+    const g = boxOn(m, { width: cv.offsetWidth, height: cv.offsetHeight });
+    const a = (m.pl.rot * Math.PI) / 180;
+    const bw = Math.abs(g.w * Math.cos(a)) + Math.abs(g.h * Math.sin(a)) || 1;
+    const bh = Math.abs(g.w * Math.sin(a)) + Math.abs(g.h * Math.cos(a)) || 1;
+    const z = clamp(Math.min(sw / (bw * FOCUS_ROOM), sh / (bh * FOCUS_ROOM)), 1, FOCUS_MAX);
+    return { z, x: sw / 2 - cv.offsetLeft - z * g.cx, y: sh / 2 - cv.offsetTop - z * g.cy };
+  }
+
+  /*
+   * Ramen ritas på plats när bilden har glidit klart (transitionend), inte efter en fast tid: går glidningen
+   * långsammare blev ramen annars stående mitt i rörelsen. Reservtiden gäller när ingen glidning startar
+   * (samma vy som förut). glideId gör att ett gammalt transitionend inte avslutar en nyare glidning.
+   */
+  let glideId = 0;
+  function glide(animate) {
+    endGlide();
+    const smooth = animate && !matchMedia('(prefers-reduced-motion: reduce)').matches;
+    cv.classList.toggle('glide', smooth);
+    applyZoom();
+    if (!smooth) return;
+    sel.hidden = true;
+    saveBtn.hidden = true;
+    const id = ++glideId;
+    const done = () => { if (id === glideId) endGlide(); };
+    cv.addEventListener('transitionend', done, { once: true });
+    gliding = setTimeout(done, 600);
+  }
+  /* Avslutar glidningen direkt (bilden hoppar till målet) och ritar ramen och ikonen. */
+  function endGlide() {
+    if (!gliding) return;
+    clearTimeout(gliding);
+    gliding = 0;
+    cv.classList.remove('glide');
+    placeSel();
+    placeSaveBtn();
+  }
+
+  /* Kunden förstorade eller flyttade bilden i fokus: den vyn behålls, och ramen följer med. */
+  function viewMoved() {
+    if (!focusOn) return;
+    focusTouched = true;
+    placeSel();
+  }
+
   function zoomStart() {
     const pts = [...zoomPointers.values()];
     const [a, b] = pts;
@@ -1280,6 +1538,7 @@
   }
 
   function zoomDown(e) {
+    endGlide(); // ett finger mitt i glidningen tar över därifrån
     stage.setPointerCapture(e.pointerId);
     zoomPointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     zoomStart();
@@ -1289,6 +1548,7 @@
       if (zv.z > 1) zv = { z: 1, x: 0, y: 0 };
       else zoomAt(2.5, e.clientX, e.clientY);
       applyZoom();
+      viewMoved();
       lastTap = null;
       zoomStart();
       return;
@@ -1308,10 +1568,12 @@
       zv.x += mx - g.mx;
       zv.y += my - g.my;
       applyZoom();
+      viewMoved();
     } else if (!b && g.px !== undefined && zv.z > 1) {
       zv.x = g.from.x + (a.x - g.px);
       zv.y = g.from.y + (a.y - g.py);
       applyZoom();
+      viewMoved();
     }
   }
 
@@ -1321,9 +1583,9 @@
     else zoomGesture = null;
   }
 
-  /* ================================================================ Avancerat */
+  /* ================================================================ Justera: färgerna och rensningen */
 
-  function syncAdvanced() {
+  function syncSettings() {
     const m = motif();
     if (!m) return;
     $('#swClean').checked = m.o.clean;
@@ -1356,7 +1618,7 @@
   /* Rensningen ändrad: bilden ritas om direkt, miniatyren när reglaget släpps. */
   function paperChanged(done) {
     if (done) { cleanThumb(motif()); renderTray(); }
-    syncAdvanced();
+    syncSettings();
     changed();
   }
 
@@ -1385,10 +1647,12 @@
 
   $('#tMotif').addEventListener('click', () => openSheet('motif'));
   $('#tPhoto').addEventListener('click', () => openSheet('photo'));
+  $('#needPhotoSheet').addEventListener('click', () => openSheet('photo'));
+  // Ett exempelfoto läggs in direkt. Finns flera väljer kunden i arket.
+  $('#btnSampleBody').addEventListener('click', () => (lib.kroppar.length === 1 ? pickBody(lib.kroppar[0]) : openSheet('photo')));
   $('#tAdjust').addEventListener('click', () => openSheet('adjust'));
   $('#tFlip').addEventListener('click', () => act(() => { S.pl.flip = !S.pl.flip; syncAdjust(); changed(); }));
   $('#tClean').addEventListener('click', () => openEdit('erase'));
-  $('#tAdvanced').addEventListener('click', () => openSheet('advanced'));
   $$('[data-close]').forEach((b) => b.addEventListener('click', () => openSheet(null)));
   $('#btnZoom').addEventListener('click', () => setZoom(true));
   $('#btnZoomClose').addEventListener('click', () => setZoom(false));
@@ -1417,8 +1681,6 @@
       commit();
     });
   }
-  slider($('#rngScale'), 'move', (v) => { S.pl.scale = v / 100; syncAdjust(); changed(); placeSel(); });
-  slider($('#rngRot'), 'move', (v) => { S.pl.rot = v; syncAdjust(); changed(); placeSel(); });
   slider($('#rngOp'), 'still', (v) => { S.pl.opacity = v / 100; syncAdjust(); changed(); });
   slider($('#rngCut'), 'still', (v) => { motif().o.cut = v; paperChanged(false); }, () => paperChanged(true));
   // Nollställ i Justera: placeringen och färgerna, som när tatueringen lades in.
@@ -1428,6 +1690,7 @@
     if (m && m.auto && (m.o.gray || m.o.black !== m.auto.black)) setInk(false, true);
     changed();
     placeSel();
+    refocus(); // tatueringen flyttade sig: bilden följer med
   }));
   $$('input[name="ink"]').forEach((r) => r.addEventListener('change', () => { if (motif()) act(() => setInk(r.value === 'gray')); }));
 
@@ -1438,7 +1701,7 @@
     setScreen('place');
     changed();
     commit(); // allt som gjordes i verktyget blir ett steg att ångra
-    if (m && m.warning === 'skin') toast('Tatueringen är inte inringad, så det runt omkring följer med. Ringa in finns under Avancerat.', 6000);
+    if (m && m.warning === 'skin') toast(T.notRinged, 6000);
     else showCoach();
   });
   $('#btnUndo').addEventListener('click', () => {
@@ -1473,7 +1736,7 @@
     const auto = m.auto || m.o;
     const settings = JSON.stringify(m.o) !== JSON.stringify(auto) || S.pl.opacity !== PL0.opacity || !S.autoLight;
     if (!E.reset(m) && !settings) {
-      toast('Inget att återställa. Tatueringen är som den ställdes in automatiskt.');
+      toast(T.nothingToReset);
       return;
     }
     m.o = { ...auto };
@@ -1483,7 +1746,7 @@
     syncPics();
     syncAdjust();
     paperChanged(true);
-    toast('Tatueringen är återställd.');
+    toast(T.resetDone);
   }
   $('#btnResetMotif').addEventListener('click', () => { if (motif()) act(resetMotif); });
 
@@ -1504,25 +1767,59 @@
     const m = motif();
     if (!m) return;
     const found = E.findWhite(m, m.o);
-    if (!found) { toast('Hittade inga små vita ytor inuti tatueringen.'); return; }
+    if (!found) { toast(T.noWhite); return; }
     motifEdited();
-    toast(`${found === 1 ? 'En vit yta' : `${found} vita ytor`} blev vitt bläck. Tryck på en yta för att ändra.`);
+    toast(T.whiteFound(found));
   });
 
-  // Inbäddad i förfrågan: krysset tar tillbaka formuläret, och Skicka heter det den gör där.
+  // Inbäddad i förfrågan: Skicka heter det den gör där, och texten om bilden säger vart den går.
+  function hostTexts() {
+    $('#privacyNote').textContent = T.privacyForm;
+    $('#btnSend span').textContent = T.addToForm;
+  }
+
+  /*
+   * SV och EN uppe till höger på startskärmen, som på inkrevenue. prova-text.js byter texterna i prova.html, och
+   * här skrivs det om som prova.js har skrivit: rubrikerna, texterna under arken, reglagens värden och rutornas
+   * namn. Byts språket på plats (setLang), så skrivs allt om oavsett läge. Inbäddad följer kundvyn sidans språk,
+   * så där finns ingen växlare.
+   */
+  const langSwitch = $('#langSwitch');
+  function syncLang() {
+    $$('button', langSwitch).forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.lang === window.TryonText.lang)));
+  }
+  function relabel() {
+    $('#topTitle').textContent = S.screen === 'edit' ? T.editTitles[S.tab] : T.title;
+    $('#hPhoto').textContent = S.body ? T.changePhoto : T.choosePhoto;
+    $('#toast').hidden = true; // står på det gamla språket
+    if (host) hostTexts();
+    syncLang();
+    syncAdjust();
+    if (S.screen === 'edit') syncEdit(); // annars visar den verktygens delar utanför verktyget
+    if (S.motifs.length) renderTray(); // utan motiv står texten under arket i prova.html
+    renderLibrary();
+  }
+  $$('button', langSwitch).forEach((b) => b.addEventListener('click', () => window.TryonText.setLang(b.dataset.lang)));
+  window.TryonText.onChange(relabel);
+  syncLang();
+
+  // Inbäddad i förfrågan: krysset tar tillbaka formuläret.
   if (host) {
     $('#btnClose').hidden = false;
     $('#btnClose').addEventListener('click', closeToForm);
     $('#askSend').addEventListener('click', () => { askClose.close(); send(); });
     $('#askDiscard').addEventListener('click', () => { askClose.close(); host.postMessage({ type: 'tryon:close' }, location.origin); });
     $('#askStay').addEventListener('click', () => askClose.close());
-    $('#privacyNote').textContent = 'Bilden stannar i din telefon tills du lägger den i förfrågan till studion.';
-    $('#btnSend span').textContent = 'Lägg till i förfrågan';
+    hostTexts();
     window.addEventListener('message', onHostMessage);
     host.postMessage({ type: 'tryon:ready' }, location.origin);
+    report('opened');
+  } else {
+    langSwitch.hidden = false;
   }
 
   syncAdjust();
   setScreen('start');
+  loadLibrary();
   if (!E) ensureEngine().catch(() => {}); // hämtas igen direkt, så att den finns när kunden har tagit fotot
 })();

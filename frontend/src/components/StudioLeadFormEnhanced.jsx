@@ -7,7 +7,8 @@ import { StudioImage } from "./StudioImage";
 import {
   createPublicStudioLead,
   createStudioPaymentIntent,
-  previewPublicStudioBooking
+  previewPublicStudioBooking,
+  recordTryOnEvent
 } from "../services/publicSiteApi";
 import { useAbandonedFormDraft } from "../hooks/useAbandonedFormDraft";
 import { getLeadSourceFromUrl, getTrackingPayload } from "../utils/tracking";
@@ -1288,6 +1289,8 @@ export function StudioLeadFormEnhanced({
       ...getTrackingPayload(),
       ...extraPayload
     });
+    // Förfrågan gick iväg med bilder från provningen: sista steget i provningens statistik.
+    if (inspirationImages.some((image) => image.source === "tryon")) recordTryOnEvent(studio.slug, "lead");
     const sent = buildSentRequest(
       formData,
       (extraPayload.inspirationImages ?? inspirationImages).length
@@ -1844,6 +1847,7 @@ export function StudioLeadFormEnhanced({
             </p>
             {hasTryOn(studio?.slug) ? (
               <TryOnLauncher
+                slug={studio?.slug}
                 images={inspirationImages}
                 disabled={Boolean(imageProcessing)}
                 onImages={(files) => addImageFiles(files, "tryon")}

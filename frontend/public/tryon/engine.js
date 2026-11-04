@@ -118,6 +118,233 @@ window.TryonEngine = (() => {
     return t.toDataURL('image/jpeg', 0.75);
   }
 
+  /* Motivet på vitt i en stående ruta, som studions motiv i kundvyn: så stort det får plats, med lite luft runt om. */
+  function tileOf(c, w = 300, h = 400) {
+    const t = newCanvas(w, h);
+    const x = t.getContext('2d');
+    x.fillStyle = '#fff';
+    x.fillRect(0, 0, w, h);
+    const s = Math.min(w / c.width, h / c.height) * 0.94;
+    x.imageSmoothingQuality = 'high';
+    x.drawImage(c, (w - c.width * s) / 2, (h - c.height * s) / 2, c.width * s, c.height * s);
+    return t;
+  }
+
+  /* Genomskinliga kanter bort, med luft kvar (pad, andel av längsta sidan). Är inget att klippa kommer c tillbaka. */
+  function trimAlpha(c, pad = 0.02) {
+    const W = c.width;
+    const H = c.height;
+    const { data } = c.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, W, H);
+    let x0 = W, y0 = H, x1 = -1, y1 = -1;
+    for (let y = 0; y < H; y++) {
+      for (let x = 0; x < W; x++) {
+        if (data[(y * W + x) * 4 + 3] <= 8) continue;
+        if (x < x0) x0 = x;
+        if (x > x1) x1 = x;
+        if (y < y0) y0 = y;
+        y1 = y;
+      }
+    }
+    if (x1 < 0) return c;
+    const p = Math.round(Math.max(x1 - x0, y1 - y0) * pad);
+    x0 = Math.max(0, x0 - p); y0 = Math.max(0, y0 - p);
+    x1 = Math.min(W - 1, x1 + p); y1 = Math.min(H - 1, y1 + p);
+    if (x0 === 0 && y0 === 0 && x1 === W - 1 && y1 === H - 1) return c;
+    const out = newCanvas(x1 - x0 + 1, y1 - y0 + 1);
+    out.getContext('2d').drawImage(c, x0, y0, out.width, out.height, 0, 0, out.width, out.height);
+    return out;
+  }
+
+  /*
+   * Ett ark med flera motiv (flash): delarna som står för sig med luft emellan, räknat i låg upplösning.
+   *  1. Delarna letas bara i det säkra bläcket: täckning över halva den 90:e percentilen (så att blyerts också
+   *     räknas), vidgat lite (SPLIT_GAP). Motiven på ett flash-ark står ofta tätt, och svagt pappersbrus mellan
+   *     dem band annars ihop hela arket.
+   *  2. Småbitar (fjäll, lågor, prickar) går till det närmaste stora motivet inom SPLIT_JOIN.
+   *  3. Allt bläck, också det svaga, hör till den närmaste delen inom SPLIT_JOIN. Det som ligger längre bort är brus.
+   * Varje del har en ruta { x, y, w, h } i c:s pixlar, ink (dess andel av bläcket), main (stor nog att vara ett eget
+   * motiv, inte en signatur, ett nummer eller ett hål i pappret) och cut(), som ger delen ensam, utan grannarnas
+   * bitar i rutan. Delarna kommer i läsordning. Om det är ett ark avgör isSheet. Motiv som rör vid varandra går
+   * inte att skilja så här: de får ringas in.
+   */
+  const SPLIT_RES = 480; // längsta sida i låg upplösning
+  const SPLIT_GAP = 0.004; // luft som fortfarande hör till samma del, andel av längsta sida
+  const SPLIT_JOIN = 0.03; // så nära en del hör småbitar och svagt bläck till den, andel av längsta sida
+  const SPLIT_MAIN = 0.04; // en del med minst så stor andel av bläcket är ett eget motiv
+  const SHEET_TOP = 0.8; // har en del mer än så av bläcket är det ett motiv med detaljer runt, inte ett ark
+
+  /* Ett ark: minst två delar som är egna motiv, och ingen som tar nästan allt bläck. */
+  function isSheet(parts) {
+    return parts.filter((p) => p.main).length >= 2 && Math.max(...parts.map((p) => p.ink)) <= SHEET_TOP;
+  }
+
+  function splitParts(c) {
+    const k = Math.min(1, SPLIT_RES / Math.max(c.width, c.height));
+    const W = Math.max(1, Math.round(c.width * k));
+    const H = Math.max(1, Math.round(c.height * k));
+    const s = newCanvas(W, H);
+    const sx = s.getContext('2d', { willReadFrequently: true });
+    sx.imageSmoothingQuality = 'high';
+    sx.drawImage(c, 0, 0, W, H);
+    const { data } = sx.getImageData(0, 0, W, H);
+    const N = W * H;
+    const long = Math.max(W, H);
+    const alpha = new Uint8Array(N);
+    const hist = new Uint32Array(256);
+    let any = 0;
+    for (let p = 0; p < N; p++) {
+      const a = data[p * 4 + 3];
+      alpha[p] = a;
+      if (a > 8) { hist[a]++; any++; }
+    }
+    if (!any) return [];
+    let seen = 0;
+    let p90 = 255;
+    for (let v = 255; v > 8; v--) {
+      seen += hist[v];
+      if (seen >= any * 0.1) { p90 = v; break; }
+    }
+    const strong = Math.max(40, p90 / 2);
+    const ink = new Uint8Array(N);
+    let total = 0;
+    for (let p = 0; p < N; p++) if (alpha[p] > strong) { ink[p] = 1; total++; }
+    if (!total) return [];
+
+    // 1. Vidga med en kvadrat på 2r+1, först längs raderna och sedan längs kolumnerna, med löpande summor.
+    const r = Math.max(1, Math.round(SPLIT_GAP * long));
+    const rows = new Uint8Array(N);
+    const grown = new Uint8Array(N);
+    const acc = new Int32Array(long + 1);
+    for (let y = 0; y < H; y++) {
+      for (let x = 0; x < W; x++) acc[x + 1] = acc[x] + ink[y * W + x];
+      for (let x = 0; x < W; x++) rows[y * W + x] = acc[Math.min(W, x + r + 1)] - acc[Math.max(0, x - r)] > 0 ? 1 : 0;
+    }
+    for (let x = 0; x < W; x++) {
+      for (let y = 0; y < H; y++) acc[y + 1] = acc[y] + rows[y * W + x];
+      for (let y = 0; y < H; y++) grown[y * W + x] = acc[Math.min(H, y + r + 1)] - acc[Math.max(0, y - r)] > 0 ? 1 : 0;
+    }
+    // Sammanhängande delar (åtta grannar) av det vidgade, med rutan och mängden räknad på det säkra bläcket.
+    const label = new Int32Array(N).fill(-1);
+    const stack = new Int32Array(N);
+    const comps = [];
+    for (let p0 = 0; p0 < N; p0++) {
+      if (!grown[p0] || label[p0] >= 0) continue;
+      const id = comps.length;
+      const comp = { x0: W, y0: H, x1: -1, y1: -1, n: 0 };
+      let top = 0;
+      stack[top++] = p0;
+      label[p0] = id;
+      while (top) {
+        const p = stack[--top];
+        const x = p % W;
+        const y = (p - x) / W;
+        if (ink[p]) {
+          comp.n++;
+          if (x < comp.x0) comp.x0 = x;
+          if (x > comp.x1) comp.x1 = x;
+          if (y < comp.y0) comp.y0 = y;
+          if (y > comp.y1) comp.y1 = y;
+        }
+        for (let dy = -1; dy <= 1; dy++) {
+          const yy = y + dy;
+          if (yy < 0 || yy >= H) continue;
+          for (let dx = -1; dx <= 1; dx++) {
+            const xx = x + dx;
+            if (xx < 0 || xx >= W) continue;
+            const q = yy * W + xx;
+            if (grown[q] && label[q] < 0) { label[q] = id; stack[top++] = q; }
+          }
+        }
+      }
+      comps.push(comp);
+    }
+
+    // 2. Småbitarna till det närmaste stora motivet. root[i] är den del som i hör till.
+    const root = comps.map((_, i) => i);
+    const find = (i) => { while (root[i] !== i) i = root[i] = root[root[i]]; return i; };
+    const big = comps.map((_, i) => i).filter((i) => comps[i].n / total >= SPLIT_MAIN);
+    for (let i = 0; i < comps.length; i++) {
+      const A = comps[i];
+      if (A.n / total >= SPLIT_MAIN) continue;
+      let best = -1;
+      let bestD = SPLIT_JOIN * long;
+      for (const j of big) {
+        const B = comps[j];
+        const d = Math.hypot(Math.max(0, B.x0 - A.x1, A.x0 - B.x1), Math.max(0, B.y0 - A.y1, A.y0 - B.y1));
+        if (d <= bestD) { bestD = d; best = j; }
+      }
+      if (best >= 0) { root[i] = best; comps[best].n += A.n; A.n = 0; }
+    }
+
+    // 3. Varje pixel hör till den närmaste delen inom SPLIT_JOIN: bredden först, från delarnas säkra bläck.
+    const D = Math.max(1, Math.round(SPLIT_JOIN * long));
+    const owner = new Int32Array(N).fill(-1);
+    const dist = new Uint16Array(N).fill(65535);
+    const queue = new Int32Array(N);
+    let qh = 0;
+    let qt = 0;
+    for (let p = 0; p < N; p++) if (ink[p]) { owner[p] = find(label[p]); dist[p] = 0; queue[qt++] = p; }
+    while (qh < qt) {
+      const p = queue[qh++];
+      const d = dist[p] + 1;
+      if (d > D) continue;
+      const x = p % W;
+      const y = (p - x) / W;
+      for (let dy = -1; dy <= 1; dy++) {
+        const yy = y + dy;
+        if (yy < 0 || yy >= H) continue;
+        for (let dx = -1; dx <= 1; dx++) {
+          const xx = x + dx;
+          if (xx < 0 || xx >= W) continue;
+          const q = yy * W + xx;
+          if (dist[q] > d) { dist[q] = d; owner[q] = owner[p]; queue[qt++] = q; }
+        }
+      }
+    }
+    // Rutan för varje del: allt dess bläck, också det svaga.
+    const boxes = new Map();
+    for (let p = 0; p < N; p++) {
+      if (owner[p] < 0 || alpha[p] <= 8) continue;
+      let b = boxes.get(owner[p]);
+      if (!b) boxes.set(owner[p], (b = { x0: W, y0: H, x1: -1, y1: -1 }));
+      const x = p % W;
+      const y = (p - x) / W;
+      if (x < b.x0) b.x0 = x;
+      if (x > b.x1) b.x1 = x;
+      if (y < b.y0) b.y0 = y;
+      if (y > b.y1) b.y1 = y;
+    }
+
+    const parts = [...boxes].map(([id, b]) => {
+      const ink = comps[id].n / total;
+      // Rutan i c:s pixlar: hela lågupplösta pixlar, plus lite luft.
+      const pad = Math.max(2, Math.round(Math.max(b.x1 - b.x0 + 1, b.y1 - b.y0 + 1) / k * 0.03));
+      const x = Math.max(0, Math.floor(b.x0 / k) - pad);
+      const y = Math.max(0, Math.floor(b.y0 / k) - pad);
+      const w = Math.min(c.width, Math.ceil((b.x1 + 1) / k) + pad) - x;
+      const h = Math.min(c.height, Math.ceil((b.y1 + 1) / k) + pad) - y;
+      const cut = () => {
+        // Bara det som hör till den här delen: grannarnas bläck i samma ruta hör till andra delar och tas bort.
+        const m = newCanvas(W, H);
+        const mx = m.getContext('2d');
+        const img = mx.createImageData(W, H);
+        for (let p = 0; p < N; p++) if (owner[p] === id) img.data[p * 4 + 3] = 255;
+        mx.putImageData(img, 0, 0);
+        const out = newCanvas(w, h);
+        const ox = out.getContext('2d');
+        ox.drawImage(c, x, y, w, h, 0, 0, w, h);
+        ox.globalCompositeOperation = 'destination-in';
+        ox.imageSmoothingQuality = 'high';
+        ox.drawImage(m, 0, 0, W, H, -x, -y, c.width, c.height);
+        return trimAlpha(out, 0.03);
+      };
+      return { x, y, w, h, ink, main: ink >= SPLIT_MAIN, cut, cy: (b.y0 + b.y1) / 2 / H, cx: (b.x0 + b.x1) / 2 / W };
+    });
+    // Läsordning: rader om en femtedel av höjden, vänster till höger i varje rad.
+    parts.sort((a, b) => Math.floor(a.cy * 5) - Math.floor(b.cy * 5) || a.cx - b.cx);
+    return parts.map(({ cx, cy, ...p }) => p);
+  }
+
   /*
    * photo är bilden som den laddades in, för Ringa in. orig är motivet efter automatiken. src är det beskurna,
    * erase det suddade och ink de vita ytor som är vitt bläck. shade är masken för hudstrukturen.
@@ -632,8 +859,10 @@ window.TryonEngine = (() => {
   /*
    * Behöver kunden ringa in motivet? Det gäller ett foto av en tatuering på hud och ett foto med mycket mer än
    * motivet. Ett ark är en stor jämn yta: papper har nästan samma ljushet överallt, medan hud är rundad och
-   * skuggad. På testbilderna låg papperet under 16 i standardavvikelse, och hud och foton över 18. Ser mitten
-   * ut som hud krävs ett jämnare ark (12), så att en slät fotobakgrund bakom en person inte tas för papper.
+   * skuggad. På testbilderna låg papperet under 16 i standardavvikelse, och hud och foton över 16 (en blå
+   * stencil på kallt belyst hud låg på 17). Ser mitten ut som hud krävs ett jämnare ark (12), så att en slät
+   * fotobakgrund bakom en person inte tas för papper, och arket ska ligga under mitten: ett papper bredvid
+   * armen är bakgrund. Ett ark är heller aldrig nästan svart, som studiornas svarta fotobakgrund.
    * Utan ark avgör huden, en ojämn yta med färg, eller många olika färger, som en vägg full av flash.
    * Huden ensam räcker inte: ett gammalt beige kort har samma färg som solbränd hud.
    */
@@ -650,10 +879,54 @@ window.TryonEngine = (() => {
       }
       const mean = s / area;
       const spread = Math.sqrt(Math.max(0, s2 / area - mean * mean));
-      if (area >= n * 0.15 && spread <= (skin ? 12 : 16)) return false;
-      if (skin || (spread > 18 && c / area >= 8)) return true;
+      const sheet = area >= n * 0.15 && spread <= (skin ? 12 : 16) && mean >= 60 && (!skin || midInHull(best, w, h) >= 0.5);
+      if (sheet) return false;
+      if (skin || (spread > 16 && c / area >= 8)) return true;
     } else if (skin) return true;
     return hueCount(lr) >= 3;
+  }
+
+  /*
+   * Hur stor del av bildens kant (de två yttersta pixlarna i låg upplösning) som är vit och färglös. Ritningar
+   * och scanner på vitt låg på 0,91 till 1, foton av hud och av ark på bord under 0,6.
+   */
+  function whiteRim(lr) {
+    const { w, h, L, C } = lr;
+    let rim = 0;
+    let white = 0;
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        if (x > 1 && y > 1 && x < w - 2 && y < h - 2) continue;
+        rim++;
+        const p = y * w + x;
+        if (L[p] >= 235 && C[p] <= 15) white++;
+      }
+    }
+    return white / rim;
+  }
+
+  /* Är ytan vit och färglös, som bakgrunden i en ritning på vitt? */
+  function isWhite(lr, region) {
+    if (!region) return false;
+    const { best, area } = region;
+    let s = 0;
+    let c = 0;
+    for (let p = 0; p < best.length; p++) if (best[p]) { s += lr.L[p]; c += lr.C[p]; }
+    return s / area >= 235 && c / area <= 15;
+  }
+
+  /* Hur stor del av bildens mitt (samma ruta som looksLikeSkin tittar på) som ligger innanför maskens hölje. */
+  function midInHull(mask, w, h) {
+    const span = hullRows(mask, w, h);
+    let all = 0;
+    let inside = 0;
+    for (let y = Math.floor(h * 0.3); y < h * 0.7; y++) {
+      for (let x = Math.floor(w * 0.3); x < w * 0.7; x++) {
+        all++;
+        if (inSpan(span, y * w + x, w)) inside++;
+      }
+    }
+    return inside / all;
   }
 
   /* Antal tydliga färgtoner i bilden: fack om 30 grader med minst 3 procent av bilden i mättade färger. */
@@ -724,9 +997,10 @@ window.TryonEngine = (() => {
   /*
    * Allt pappret omsluter (designen) räknas till pappret. Allt utanför, som bord, händer och böcker, byts mot
    * pappersfärg och beskärs bort. Returnerar true för ett foto av papper, och false för en scan som bara
-   * fått ramen bortplockad eller när inget papper hittades.
+   * fått ramen bortplockad eller när inget papper hittades. onWhite: bildens kant är vit (se whiteRim), så
+   * inget som når kanten är fingrar som håller i pappret, även om motivet är tonat i hudfärg.
    */
-  function isolatePaper(m, lr, region) {
+  function isolatePaper(m, lr, region, onWhite = false) {
     if (!region) return false;
     const { w, h, d } = lr;
     const n = w * h;
@@ -773,7 +1047,7 @@ window.TryonEngine = (() => {
           if (r >= 0 && r < n && outside[r] && !seen[r] && inSpan(span, r, w)) { seen[r] = 1; part.push(r); }
         }
       }
-      if (skin < part.length * 0.3 && deep >= part.length * 0.5) for (const p of part) outside[p] = 0;
+      if ((onWhite || skin < part.length * 0.3) && deep >= part.length * 0.5) for (const p of part) outside[p] = 0;
     }
     // Krymp pappret två pixlar mot bakgrunden, så att papperskanten och dess skugga också räknas bort.
     // Mot bildkanten krymps det inte, där finns ingen papperskant.
@@ -931,6 +1205,9 @@ window.TryonEngine = (() => {
     let paper = false;
     if (!m.hasAlpha) {
       let lr = lowRes(m.src);
+      // Vit kant runt hela bilden: en ritning eller scan på vitt, även när motivet är tonat i hudfärg och fyller
+      // bilden. Ett foto av hud eller av ett ark på ett bord har kroppen, bordet eller fingrar ute vid kanten.
+      const onWhite = whiteRim(lr) >= 0.9;
       let region = paperRegion(lr);
       const dark = m.inverted || looksLikeSkin(lr) ? null : lightOnDark(lr);
       if (dark) {
@@ -940,8 +1217,11 @@ window.TryonEngine = (() => {
         lr = lowRes(m.src);
         region = dark;
       }
-      if (needsRing(lr, region)) m.warning = 'skin';
-      else paper = isolatePaper(m, lr, region);
+      // Med vit kant och vitt papper är pappret själva bakgrunden ut till kanterna, så det finns inget bord att ta
+      // bort. Ett motiv som når både över- och underkanten delar annars den vita bakgrunden i två, och den ena
+      // halvan togs för arket och resten för bord.
+      if (!onWhite && needsRing(lr, region)) m.warning = 'skin';
+      else if (!(onWhite && isWhite(lr, region))) paper = isolatePaper(m, lr, region, onWhite);
     }
     const o = settingsFor(m, paper);
     if (!autoTrim(m, o) && !m.warning && !hasInk(m, o)) m.warning = 'empty';
@@ -952,7 +1232,8 @@ window.TryonEngine = (() => {
   /*
    * Vitt på svart, som krita på asfalt eller vit penna på svart papper. Det mörka underlaget söks som pappret,
    * fast från den mörkaste jämna punkten. Det ska vara stort, nå bildkanten (en mörk skuggning på vitt papper
-   * gör inte det), och det som ligger på det (innanför dess hölje) ska mest vara ljusare och täcka en mindre del.
+   * gör inte det), och det som ligger på det (innanför dess hölje) ska mest vara ljusare, täcka en mindre del
+   * och vara linjer, inte en stor tjock yta.
    */
   function lightOnDark(lr) {
     const { w, h, L } = lr;
@@ -977,15 +1258,27 @@ window.TryonEngine = (() => {
     }
     const span = hullRows(best, w, h);
     let light = 0;
+    let thick = 0;
     let dark = 0;
     let hull = 0;
+    const isLight = (p) => L[p] > mean + 40;
     for (let p = 0; p < n; p++) {
       if (!inSpan(span, p, w)) continue;
       hull++;
       if (best[p]) continue;
-      if (L[p] > mean + 40) light++;
-      else if (L[p] < mean - 40) dark++;
+      if (isLight(p)) {
+        light++;
+        // Tjockt: hela rutan på 5 x 5 runt pixeln är ljus. Krita och penna är smalare än så i låg upplösning.
+        const x = p % w;
+        const y = (p - x) / w;
+        let all = x >= 2 && y >= 2 && x < w - 2 && y < h - 2;
+        for (let dy = -2; all && dy <= 2; dy++) for (let dx = -2; all && dx <= 2; dx++) if (!isLight(p + dy * w + dx)) all = false;
+        if (all) thick++;
+      } else if (L[p] < mean - 40) dark++;
     }
+    // En arm som fotats mot svart bakgrund är också ljust på mörkt, men en stor tjock yta i stället för linjer.
+    // Krita på asfalt hade 18 procent tjockt, armarna på Royal Kaves portföljfoton 42 till 59 procent.
+    if (thick > light * 0.3) return null;
     // Ett svart ark på ett ljust bord når inte bildkanten, men fyller nästan hela sitt hölje, till skillnad
     // från en mörk skuggning med ljusa partier i. Linjerna och det de omsluter räknas till arket: bara det
     // som når höljets kant utan att korsa ytan räknas bort.
@@ -2068,7 +2361,7 @@ window.TryonEngine = (() => {
   }
 
   return {
-    newCanvas, fileToCanvas, thumbOf, newMotif, unevenLight, buildClean, skinDetail, autoPrepare, autoExposure,
+    newCanvas, fileToCanvas, thumbOf, tileOf, trimAlpha, splitParts, isSheet, newMotif, unevenLight, buildClean, skinDetail, autoPrepare, autoExposure,
     ringMotif, drawMotif, drawFrame, viewSize, drawMotifView, drawRingView,
     boxOf, pushUndo, undo, redo, reset, paintErase, applyCrop, toggleWhite, findWhite, motifState, restoreMotif, release,
   };

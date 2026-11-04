@@ -90,6 +90,29 @@ publicStudioRouter.post("/:slug/visit", async (req, res) => {
   return res.status(204).end();
 });
 
+// Beacon från provningen på kroppen i förfrågan (öppnad, foto, motiv, lagd i
+// förfrågan, förfrågan skickad). Samma regler som besöken ovan: vägen måste
+// finnas här, och svaret är alltid 204.
+publicStudioRouter.post("/:slug/try-on-event", async (req, res) => {
+  const rateLimit = enforceVisitTrackingRateLimit(req, "studio-public-try-on");
+
+  if (rateLimit.limited) {
+    return res.status(204).end();
+  }
+
+  try {
+    await requestCrmPublicApi(`/studios/${encodeURIComponent(req.params.slug)}/try-on-event`, {
+      method: "POST",
+      body: { event: req.body?.event },
+      request: req
+    });
+  } catch {
+    // Tyst: ett tappat steg är bättre än ett fel hos besökaren.
+  }
+
+  return res.status(204).end();
+});
+
 publicStudioRouter.post("/:slug/booking-preview", async (req, res) => {
   const rateLimit = enforceBookingPreviewRateLimit(req, "studio-public-booking-preview");
 

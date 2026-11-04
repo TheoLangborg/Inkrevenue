@@ -122,6 +122,19 @@ export function recordStudioVisit(slug, payload) {
   }).catch(() => {});
 }
 
+/**
+ * Ett steg i provningen på kroppen: opened, photo, motif, added eller lead.
+ * Fire-and-forget, som besöken.
+ */
+export function recordTryOnEvent(slug, event) {
+  return fetch(`${API_BASE}/api/public/studios/${encodeURIComponent(slug)}/try-on-event`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ event }),
+    keepalive: true
+  }).catch(() => {});
+}
+
 export function getPublicStudioBySlug(slug) {
   return request(`/api/public/studios/${encodeURIComponent(slug)}`);
 }

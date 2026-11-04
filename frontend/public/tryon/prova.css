@@ -42,6 +42,7 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 [hidden] { display: none !important; }
+html[data-translating] body { visibility: hidden; } /* tills prova-text.js har bytt språk på texterna */
 
 html, body { height: 100%; margin: 0; overflow: hidden; overscroll-behavior: none; }
 body {
@@ -79,6 +80,21 @@ button, label { touch-action: manipulation; }
 .icon-btn:not(:disabled):active { background: var(--panel-2); }
 .close-btn { margin-left: -12px; } /* krysset står nära kanten, så att rubriken får plats */
 
+/*
+ * SV och EN, som växlaren på inkrevenue: det valda språket vitt. Bara på startskärmen: med fotot kommer ångra
+ * och gör om, och då klipptes rubriken på telefoner smalare än 390 px.
+ */
+.lang-switch {
+  display: inline-flex; flex-shrink: 0; gap: 2px; padding: 3px; border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.14);
+}
+.lang-switch button {
+  min-width: 40px; min-height: 34px; padding: 0 10px; border: 0; border-radius: 999px; background: none; cursor: pointer;
+  color: rgba(255, 255, 255, 0.62); font-size: 12px; font-weight: 700; letter-spacing: 0.06em;
+}
+.lang-switch button[aria-pressed="true"] { background: var(--cta); color: var(--cta-text); }
+.app:not([data-screen="start"]) .lang-switch { display: none; }
+
 .pill {
   min-height: 40px; padding: 0 18px; border: 0; border-radius: 999px;
   background: var(--cta); color: var(--cta-text); font-weight: 650; cursor: pointer;
@@ -101,7 +117,9 @@ button, label { touch-action: manipulation; }
 #cv {
   grid-area: 1 / 1; display: block; max-width: 100%; max-height: 100%;
   border-radius: 6px; box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
+  transform-origin: 0 0; /* förstoringen i helskärm och fokus på tatueringen, se applyZoom */
 }
+#cv.glide { transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1); } /* in mot tatueringen och ut igen */
 
 /*
  * Startskärmen: foto, motiv och resultat fyller ytan, med namnen överst i bilderna och knapparna i mitten ovanpå.
@@ -248,7 +266,7 @@ button, label { touch-action: manipulation; }
 
 /*
  * Ark: tar verktygens plats nedtill i stället för att lägga sig över bilden, så att det syns vad som ändras.
- * Bilden krymper lite så länge arket är öppet. Rubriken med Klar står still, och ett långt ark (Avancerat)
+ * Bilden krymper lite så länge arket är öppet. Rubriken med Klar står still, och ett långt ark (Justera)
  * rullar under rubriken i en egen yta, så att inget syns bakom den.
  */
 .sheet {
@@ -266,9 +284,6 @@ button, label { touch-action: manipulation; }
 .sheet-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 12px 0 8px; }
 .sheet-note { margin-bottom: 4px; color: var(--muted); font-size: 13.5px; text-wrap: pretty; }
 .sheet-note.center { margin: 6px 0 0; text-align: center; }
-
-/* Avancerat ligger diskret under Spara, så att det enkla flödet syns först */
-.text-btn.more { min-height: 36px; margin: -4px 0 -6px; font-size: 14px; }
 
 .field { margin-top: 6px; }
 .field-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
@@ -320,6 +335,31 @@ input[type="range"]:disabled { opacity: 0.35; cursor: default; }
   border: 1.5px dashed rgba(255, 255, 255, 0.3); border-radius: 12px; color: var(--accent-soft); font-size: 12.5px; font-weight: 600;
 }
 .tile.add svg { width: 22px; height: 22px; }
+
+/* Studions motiv och exempelfotona (forval/): rutor i arken, en rad som rullar i sidled i dockan */
+.lib { display: grid; gap: 6px; min-width: 0; } /* min-width: raden får inte blåsa ut dockans bredd */
+.lib-head { margin: 10px 0 0; font-size: 14px; font-weight: 600; }
+.dock-stack .lib-head { margin: 0; color: var(--muted); font-size: 13.5px; text-align: center; }
+.lib-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; padding: 4px 4px 6px; }
+.lib-strip {
+  display: grid; grid-auto-flow: column; grid-auto-columns: 100px; gap: 8px; justify-content: safe center;
+  min-width: 0; overflow-x: auto; overscroll-behavior-x: contain; padding: 2px 2px 4px; scrollbar-width: none;
+}
+.lib-strip::-webkit-scrollbar { display: none; }
+.lib-slider { height: 30px; margin-top: -4px; } /* reglaget under raden, när alla motiv inte får plats */
+.lib-tile {
+  display: grid; gap: 4px; align-content: start; padding: 0; cursor: pointer;
+  background: none; border: 0; color: var(--muted); font-size: 12.5px; font-weight: 600; text-align: center;
+}
+/* Motiven står (3:4), som de flesta tatueringar. contain: en äldre kvadratisk liten bild beskärs inte. */
+.lib-tile img {
+  display: block; width: 100%; aspect-ratio: 3 / 4; object-fit: contain; -webkit-user-drag: none;
+  background: #fff; border: 1px solid var(--line); border-radius: 12px; transition: transform 0.08s;
+}
+.lib-tile.photo img { aspect-ratio: 1; object-fit: cover; } /* exempelfotona */
+.lib-tile:active img { transform: scale(0.95); }
+.btn-pic { flex: none; width: 26px; height: 26px; overflow: hidden; background: #fff; border-radius: 7px; }
+.btn-pic img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .toast {
   position: fixed; left: 50%; top: calc(env(safe-area-inset-top) + 58px); z-index: 50; transform: translateX(-50%);
   width: max-content; max-width: min(92vw, 520px); padding: 11px 16px;
@@ -341,13 +381,13 @@ input[type="range"]:disabled { opacity: 0.35; cursor: default; }
 
 .noscript { padding: 24px; text-align: center; }
 
-.app[data-screen="start"] .dock { display: none; }
+.app[data-screen="start"]:not([data-sheet]) .dock { display: none; } /* exempelfotona kan öppna arket redan här */
 
 /* helskärm: bara bilden mot svart. Förstoringen är en transform från canvasens övre vänstra hörn. */
 .app[data-zoom] { grid-template: minmax(0, 1fr) / minmax(0, 1fr); }
 .app[data-zoom] .top, .app[data-zoom] .dock { display: none; }
 .app[data-zoom] .stage { grid-area: 1 / 1 / -1 / -1; padding: 0; background: #000; }
-.app[data-zoom] #cv { border-radius: 0; box-shadow: none; transform-origin: 0 0; }
+.app[data-zoom] #cv { border-radius: 0; box-shadow: none; }
 
 /* smal skärm: bilden kant i kant, varje pixel går till fotot */
 @media (max-width: 600px) {
@@ -363,7 +403,7 @@ input[type="range"]:disabled { opacity: 0.35; cursor: default; }
   .app { grid-template: "top top" auto "stage dock" minmax(0, 1fr) / minmax(0, 1fr) min(360px, 44vw); }
   .top { grid-area: top; min-height: 44px; padding-top: calc(env(safe-area-inset-top) + 2px); padding-bottom: 2px; }
   .stage { grid-area: stage; padding: 6px; }
-  .app[data-screen="start"] .stage { grid-column: 1 / -1; }
+  .app[data-screen="start"]:not([data-sheet]) .stage { grid-column: 1 / -1; }
   .dock {
     grid-area: dock; display: flex; flex-direction: column; overflow-y: auto;
     padding: 10px max(12px, env(safe-area-inset-right)) calc(env(safe-area-inset-bottom) + 10px) 12px;

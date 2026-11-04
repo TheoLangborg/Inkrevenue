@@ -1,8 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { useT } from "../i18n/LanguageContext";
+import { useLanguage } from "../i18n/LanguageContext";
+import { recordTryOnEvent } from "../services/publicSiteApi";
 
-const TRYON_URL = "/tryon/prova.html?inbaddad";
+// studio=: kundvyn läser studions motiv i /tryon/forval/<slug>/ när de finns där.
+// Än så länge kopieras bara forval/alla/ hit (repot är publikt), så utan lista visas allas.
+// lang=: kundvyn visas på sidans språk (sv eller en), inte på webbläsarens.
+const tryOnUrl = (slug, language) =>
+  `/tryon/prova.html?inbaddad&lang=${encodeURIComponent(language)}${slug ? `&studio=${encodeURIComponent(slug)}` : ""}`;
+
+// Stegen som kundvyn rapporterar (tryon:event) och som räknas i CRM:et.
+const TRY_ON_EVENTS = new Set(["opened", "photo", "motif", "added"]);
 
 async function toFile(image) {
   const blob = await (await fetch(image.dataUrl)).blob();
@@ -22,16 +30,20 @@ async function toFile(image) {
  *
  * Portalas till <body> av samma skäl som ConsultationFirstModal: formulärkortet
  * ligger i sektioner med transform.
+ *
+ * Kundvyn rapporterar stegen (öppnad, foto, motiv, lagd i förfrågan) med
+ * tryon:event, och de räknas per studio i CRM:et. Bara antal, inga bilder och
+ * inget som pekar ut kunden.
  */
-export function TryOnLauncher({ images, disabled, onImages }) {
-  const t = useT();
+export function TryOnLauncher({ slug, images, disabled, onImages }) {
+  const { t, language } = useLanguage();
   const [mounted, setMounted] = useState(false);
   const [open, setOpen] = useState(false);
   const frameRef = useRef(null);
   const overlayRef = useRef(null);
   const buttonRef = useRef(null);
-  const latest = useRef({ images, onImages });
-  latest.current = { images, onImages };
+  const latest = useRef({ images, onImages, slug });
+  latest.current = { images, onImages, slug };
 
   useEffect(() => {
     if (!mounted) return undefined;
@@ -45,6 +57,8 @@ export function TryOnLauncher({ images, disabled, onImages }) {
         const motifs = latest.current.images.filter((image) => image.source !== "tryon");
         const files = await Promise.all(motifs.map(toFile));
         frame.contentWindow.postMessage({ type: "tryon:motifs", files }, window.location.origin);
+      } else if (data.type === "tryon:event" && TRY_ON_EVENTS.has(data.event)) {
+        if (latest.current.slug) recordTryOnEvent(latest.current.slug, data.event);
       } else if (data.type === "tryon:close") {
         setOpen(false);
       } else if (data.type === "tryon:send" && Array.isArray(data.files)) {
@@ -119,7 +133,7 @@ export function TryOnLauncher({ images, disabled, onImages }) {
       {mounted && typeof document !== "undefined"
         ? createPortal(
             <div ref={overlayRef} className="tryon-overlay" role="dialog" aria-modal="true" aria-label={t("leadForm.tryOnTitle")} hidden={!open}>
-              <iframe ref={frameRef} className="tryon-overlay__frame" src={TRYON_URL} title={t("leadForm.tryOnTitle")} />
+              <iframe ref={frameRef} className="tryon-overlay__frame" src={tryOnUrl(slug, language)} title={t("leadForm.tryOnTitle")} />
             </div>,
             document.body
           )
