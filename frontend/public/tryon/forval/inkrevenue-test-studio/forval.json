@@ -1,0 +1,80 @@
+{
+  "studio": "inkrevenue-test-studio",
+  "motiv": [
+    {
+      "namn": "Amerika",
+      "fil": "motiv/amerika.png",
+      "liten": "motiv/amerika-liten.jpg",
+      "kalla": "Amerika.jpg",
+      "redigerad": true
+    },
+    {
+      "namn": "Ankare",
+      "fil": "motiv/ankare.png",
+      "liten": "motiv/ankare-liten.jpg",
+      "kalla": "Ankare.jpg",
+      "redigerad": true
+    },
+    {
+      "namn": "Artist",
+      "fil": "motiv/artist.png",
+      "liten": "motiv/artist-liten.jpg",
+      "kalla": "Artist.jpg",
+      "redigerad": true
+    },
+    {
+      "namn": "Drake 1",
+      "fil": "motiv/drake-1.png",
+      "liten": "motiv/drake-1-liten.jpg",
+      "redigerad": true
+    },
+    {
+      "namn": "Drake 2",
+      "fil": "motiv/drake-2.png",
+      "liten": "motiv/drake-2-liten.jpg",
+      "redigerad": true
+    },
+    {
+      "namn": "Drake 3",
+      "fil": "motiv/drake-3.png",
+      "liten": "motiv/drake-3-liten.jpg",
+      "redigerad": true
+    },
+    {
+      "namn": "Fjäril",
+      "fil": "motiv/fjaril.png",
+      "liten": "motiv/fjaril-liten.jpg",
+      "kalla": "Fjäril.jpg",
+      "redigerad": true
+    },
+    {
+      "namn": "Madonna",
+      "fil": "motiv/madonna.png",
+      "liten": "motiv/madonna-liten.jpg",
+      "kalla": "Madonna.jpg",
+      "redigerad": true
+    },
+    {
+      "namn": "Myra",
+      "fil": "motiv/myra.png",
+      "liten": "motiv/myra-liten.jpg",
+      "kalla": "Myra.jpg",
+      "redigerad": true
+    },
+    {
+      "namn": "Sjuksköterska",
+      "fil": "motiv/sjukskoterska.png",
+      "liten": "motiv/sjukskoterska-liten.jpg",
+      "kalla": "Sjuksköterska.jpg",
+      "redigerad": true
+    },
+    {
+      "namn": "Skepp",
+      "fil": "motiv/skepp.png",
+      "liten": "motiv/skepp-liten.jpg",
+      "kalla": "Skepp.jpg",
+      "redigerad": true
+    }
+  ],
+  "kroppar": []
+}
