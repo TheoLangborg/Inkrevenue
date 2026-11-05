@@ -97,3 +97,20 @@ export function enforceDraftSaveRateLimit(request, scope) {
       "Vi har tagit emot många sparningar från samma anslutning på kort tid. Vänta en stund och försök igen."
   });
 }
+
+const tryOnImageState = new Map();
+const tryOnImageMaxRequests = Number(process.env.TRY_ON_IMAGE_RATE_LIMIT_MAX || 150);
+
+/**
+ * Bilderna till studions motiv i provningen på kroppen. Kundvyn hämtar alla
+ * miniatyrer på en gång, långt över publicReadRateLimits 20/min. Samma tak som
+ * CRM-backendens tryOnImageLimiter (routes/tryOnMotifsRoutes.js).
+ */
+export function enforceTryOnImageRateLimit(request, scope) {
+  return enforceRateLimit(request, scope, {
+    state: tryOnImageState,
+    windowMs: 60 * 1000,
+    maxRequests: tryOnImageMaxRequests,
+    message: "För många bilder från samma anslutning. Vänta en kort stund och försök igen."
+  });
+}

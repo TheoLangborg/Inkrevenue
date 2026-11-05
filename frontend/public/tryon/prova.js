@@ -358,11 +358,44 @@
   })();
   const LIB_FILE = { motiv: /^motiv\/[a-z0-9][a-z0-9-]{0,80}\.png$/, kroppar: /^kroppar\/[a-z0-9][a-z0-9-]{0,80}\.jpg$/ };
   const LIB_THUMB = /^(motiv|kroppar)\/[a-z0-9][a-z0-9-]{0,80}\.jpg$/;
-  const lib = { motiv: [], kroppar: [] }; // { namn, url, liten, plats }
+  const lib = { motiv: [], kroppar: [] }; // { namn, url, liten, ext, plats }
   const libFiles = new WeakSet(); // filerna som hämtats ur listan, se addMotifs
+
+  /*
+   * Studions motiv kan också ligga i databasen (tattoo-crm: tryOnMotifsService), hos inkrevenue via
+   * /api/public/studios/<studio>/try-on-motifs. Bilderna kommer genom samma API. Motiv som bara är till för
+   * test syns med nyckeln i ?provmotiv= (studiosidan skickar den vidare). Bara inbäddad (host), eftersom
+   * API:t bara finns hos inkrevenue och inte i labbet.
+   */
+  const TEST_KEY = (() => {
+    const k = new URLSearchParams(location.search).get('provmotiv');
+    return k && /^[A-Za-z0-9_-]{16,128}$/.test(k) ? k : null;
+  })();
+  const MOTIF_ID = /^[a-z0-9][a-z0-9-]{0,80}$/;
+
+  async function loadApiMotifs() {
+    if (!STUDIO || !host) return [];
+    const base = `/api/public/studios/${STUDIO}/try-on-motifs`;
+    const qs = TEST_KEY ? `?key=${encodeURIComponent(TEST_KEY)}` : '';
+    try {
+      const res = await fetch(base + qs, { cache: 'no-cache' });
+      if (!res.ok) return [];
+      const list = (await res.json())?.data?.motiv;
+      return (Array.isArray(list) ? list : []).filter((it) => it && MOTIF_ID.test(it.id)).map((it) => ({
+        namn: String(it.namn || '').slice(0, 60),
+        url: `${base}/${it.id}/bild${qs}`,
+        liten: `${base}/${it.id}/liten${qs}`,
+        ext: '.png',
+        plats: null,
+      }));
+    } catch {
+      return []; // inget API (labbet), eller ett nätfel: då syns bara motiven i forval/
+    }
+  }
 
   async function loadLibrary() {
     const dirs = STUDIO ? [STUDIO, 'alla'] : ['alla'];
+    const apiMotifs = loadApiMotifs();
     const lists = await Promise.all(dirs.map(async (dir) => {
       try {
         const res = await fetch(`forval/${dir}/forval.json`, { cache: 'no-cache' });
@@ -375,10 +408,12 @@
       for (const kind of ['motiv', 'kroppar']) {
         for (const it of Array.isArray(list[kind]) ? list[kind] : []) {
           if (!it || !LIB_FILE[kind].test(it.fil) || !LIB_THUMB.test(it.liten)) continue;
-          lib[kind].push({ namn: String(it.namn || '').slice(0, 60), url: `forval/${dir}/${it.fil}`, liten: `forval/${dir}/${it.liten}`, plats: placeOf(it.plats) });
+          lib[kind].push({ namn: String(it.namn || '').slice(0, 60), url: `forval/${dir}/${it.fil}`, liten: `forval/${dir}/${it.liten}`,
+            ext: it.fil.slice(it.fil.lastIndexOf('.')), plats: placeOf(it.plats) });
         }
       }
     }
+    lib.motiv.push(...await apiMotifs);
     renderLibrary();
   }
 
@@ -458,8 +493,7 @@
         const res = await fetch(it.url);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const blob = await res.blob();
-        const ext = it.url.slice(it.url.lastIndexOf('.'));
-        return new File([blob], `${it.namn || T.image}${ext}`, { type: ext === '.png' ? 'image/png' : 'image/jpeg' });
+        return new File([blob], `${it.namn || T.image}${it.ext}`, { type: it.ext === '.png' ? 'image/png' : 'image/jpeg' });
       });
     } catch (err) {
       toast(T.fetchFailed(whyNot(err)), 7000);

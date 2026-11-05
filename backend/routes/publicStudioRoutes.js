@@ -4,9 +4,10 @@ import {
   enforcePublicReadRateLimit,
   enforceSubmissionRateLimit,
   enforceDraftSaveRateLimit,
-  enforceVisitTrackingRateLimit
+  enforceVisitTrackingRateLimit,
+  enforceTryOnImageRateLimit
 } from "../middleware/rateLimit.js";
-import { requestCrmPublicApi, getCrmProxyMessage } from "../utils/crmClient.js";
+import { requestCrmPublicApi, requestCrmPublicRaw, getCrmProxyMessage } from "../utils/crmClient.js";
 
 export const publicStudioRouter = Router();
 
@@ -111,6 +112,80 @@ publicStudioRouter.post("/:slug/try-on-event", async (req, res) => {
   }
 
   return res.status(204).end();
+});
+
+// Studions motiv i provningen på kroppen (tattoo-crm: tryOnMotifsService.js).
+// ?key= är testnyckeln från studiosidans ?provmotiv=; utan den syns bara
+// studions publika motiv.
+function tryOnKeyQuery(req) {
+  return typeof req.query.key === "string" ? { key: req.query.key } : {};
+}
+
+publicStudioRouter.get("/:slug/try-on-motifs", async (req, res) => {
+  const rateLimit = enforcePublicReadRateLimit(req, "studio-public-try-on-motifs");
+
+  if (rateLimit.limited) {
+    return res.status(429).json({ message: rateLimit.message });
+  }
+
+  try {
+    const { response, payload } = await requestCrmPublicApi(
+      `/studios/${encodeURIComponent(req.params.slug)}/try-on-motifs`,
+      { query: tryOnKeyQuery(req), request: req }
+    );
+
+    res.set("Cache-Control", "private, no-cache");
+    if (!response.ok) {
+      return res.status(response.status).json({
+        message: getCrmProxyMessage(payload, "Kunde inte hämta studions motiv.")
+      });
+    }
+
+    return res.status(200).json(payload || { data: { motiv: [] } });
+  } catch {
+    return res.status(502).json({ message: "Kunde inte ansluta till CRM-backenden." });
+  }
+});
+
+// Bilderna strömmas genom proxyn: Storage-bucketen saknar CORS, och kundvyn
+// läser pixlarna, så de måste komma från samma domän som sidan.
+const TRY_ON_IMAGE_TYPES = new Set(["image/png", "image/jpeg"]);
+
+publicStudioRouter.get("/:slug/try-on-motifs/:id/:kind", async (req, res) => {
+  const rateLimit = enforceTryOnImageRateLimit(req, "studio-public-try-on-image");
+
+  if (rateLimit.limited) {
+    return res.status(429).json({ message: rateLimit.message });
+  }
+
+  const { slug, id, kind } = req.params;
+  if (!/^[a-z0-9][a-z0-9-]{0,80}$/.test(id) || (kind !== "bild" && kind !== "liten")) {
+    return res.status(404).json({ message: "Motivet finns inte." });
+  }
+
+  try {
+    const response = await requestCrmPublicRaw(
+      `/studios/${encodeURIComponent(slug)}/try-on-motifs/${id}/${kind}`,
+      { query: tryOnKeyQuery(req), request: req }
+    );
+    const contentType = String(response.headers.get("content-type") || "").split(";")[0].trim();
+
+    if (!response.ok || !TRY_ON_IMAGE_TYPES.has(contentType)) {
+      const payload = await response.json().catch(() => null);
+      return res.status(response.ok ? 502 : response.status).json({
+        message: getCrmProxyMessage(payload, "Motivet kunde inte hämtas.")
+      });
+    }
+
+    res.set({
+      "Content-Type": contentType,
+      "Cache-Control": response.headers.get("cache-control") || "private, max-age=3600",
+      "X-Content-Type-Options": "nosniff"
+    });
+    return res.status(200).send(Buffer.from(await response.arrayBuffer()));
+  } catch {
+    return res.status(502).json({ message: "Kunde inte ansluta till CRM-backenden." });
+  }
 });
 
 publicStudioRouter.post("/:slug/booking-preview", async (req, res) => {

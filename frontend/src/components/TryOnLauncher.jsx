@@ -3,11 +3,30 @@ import { createPortal } from "react-dom";
 import { useLanguage } from "../i18n/LanguageContext";
 import { recordTryOnEvent } from "../services/publicSiteApi";
 
-// studio=: kundvyn läser studions motiv i /tryon/forval/<slug>/ när de finns där.
-// Än så länge kopieras bara forval/alla/ hit (repot är publikt), så utan lista visas allas.
+// studio=: kundvyn läser studions motiv i /tryon/forval/<slug>/ när de finns där, och i databasen
+// (/api/public/studios/<slug>/try-on-motifs). Bara fria motiv kopieras hit, eftersom repot är publikt.
 // lang=: kundvyn visas på sidans språk (sv eller en), inte på webbläsarens.
-const tryOnUrl = (slug, language) =>
-  `/tryon/prova.html?inbaddad&lang=${encodeURIComponent(language)}${slug ? `&studio=${encodeURIComponent(slug)}` : ""}`;
+// provmotiv=: nyckeln till studions testmotiv i databasen (tattoo-crm: tryOnMotifsService). Den står i
+// studiosidans adress (?provmotiv=…) och sparas i fliken, så att den finns kvar om sidan byter adress.
+const TEST_KEY_STORE = "tryon:provmotiv";
+const validTestKey = (key) => (key && /^[A-Za-z0-9_-]{16,128}$/.test(key) ? key : null);
+
+function testMotifKey() {
+  const fromUrl = validTestKey(new URLSearchParams(window.location.search).get("provmotiv"));
+  try {
+    if (fromUrl) sessionStorage.setItem(TEST_KEY_STORE, fromUrl);
+    return fromUrl || validTestKey(sessionStorage.getItem(TEST_KEY_STORE));
+  } catch {
+    return fromUrl;
+  }
+}
+
+const tryOnUrl = (slug, language) => {
+  const key = slug ? testMotifKey() : null;
+  return `/tryon/prova.html?inbaddad&lang=${encodeURIComponent(language)}` +
+    (slug ? `&studio=${encodeURIComponent(slug)}` : "") +
+    (key ? `&provmotiv=${encodeURIComponent(key)}` : "");
+};
 
 // Stegen som kundvyn rapporterar (tryon:event) och som räknas i CRM:et.
 const TRY_ON_EVENTS = new Set(["opened", "photo", "motif", "added"]);

@@ -56,6 +56,17 @@ export async function requestCrmPublicApi(
   return { response, payload };
 }
 
+// Som requestCrmPublicApi men utan JSON: svaret lämnas orört, för bilder.
+export async function requestCrmPublicRaw(pathname, { query = {}, request } = {}) {
+  return fetch(createCrmPublicUrl(pathname, query), {
+    headers: {
+      ...forwardedClientHeaders(request),
+      Origin: request?.get("origin") || "",
+      Referer: request?.get("referer") || ""
+    }
+  });
+}
+
 export function getCrmProxyMessage(payload, fallbackMessage) {
   return payload?.message || fallbackMessage;
 }
